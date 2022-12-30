@@ -1,3 +1,7 @@
+/**
+ * this file is used for firebase authentication
+ */
+
 import auth from "../config/firebase-config.js";
 
 export const VerifyToken = async (req, res, next) => {

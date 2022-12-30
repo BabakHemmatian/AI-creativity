@@ -1,5 +1,6 @@
 import ChatMessage from "../models/ChatMessage.js";
 
+//used for one user sending message
 export const createMessage = async (req, res) => {
   const newMessage = new ChatMessage(req.body);
 
@@ -13,6 +14,7 @@ export const createMessage = async (req, res) => {
   }
 };
 
+//used for showing messages for user
 export const getMessages = async (req, res) => {
   try {
     const messages = await ChatMessage.find({

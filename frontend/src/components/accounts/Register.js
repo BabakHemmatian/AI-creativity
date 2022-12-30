@@ -32,6 +32,7 @@ export default function Register() {
       await register(email, password);
       navigate("/profile");
     } catch (e) {
+      console.log(e)
       setError("Failed to register");
     }
 

@@ -1,3 +1,8 @@
+/**
+ * initialize connection with mongodb
+ * the connection is used in index.js
+ */
+
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 

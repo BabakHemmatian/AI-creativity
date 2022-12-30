@@ -77,6 +77,8 @@ export default function ChatLayout() {
     setCurrentChat(chat);
   };
 
+
+  //search for perticular user
   const handleSearch = (newSearchQuery) => {
     setSearchQuery(newSearchQuery);
 
