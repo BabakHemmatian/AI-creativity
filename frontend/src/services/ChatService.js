@@ -3,9 +3,10 @@ import auth from "../config/firebase";
 import { io } from "socket.io-client";
 
 // const baseURL = "http://localhost:3001/api";
-const URL = process.env.URL;
-const baseURL = URL + "/api"
-
+const URL = process.env.REACT_APP_URL;
+const baseURL = URL + "/api";
+console.log(URL);
+console.log(baseURL);
 // const baseURL = "https://creativityback.onrender.com/api";
 
 const getUserToken = async () => {
