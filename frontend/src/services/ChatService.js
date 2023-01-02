@@ -2,7 +2,11 @@ import axios from "axios";
 import auth from "../config/firebase";
 import { io } from "socket.io-client";
 
-const baseURL = "http://localhost:3001/api";
+// const baseURL = "http://localhost:3001/api";
+const URL = process.env.URL;
+const baseURL = URL + "/api"
+
+// const baseURL = "https://creativityback.onrender.com/api";
 
 const getUserToken = async () => {
   const user = auth.currentUser;
@@ -13,7 +17,7 @@ const getUserToken = async () => {
 export const initiateSocketConnection = async () => {
   const token = await getUserToken();
 
-  const socket = io("http://localhost:3001", {
+  const socket = io(URL, {
     auth: {
       token,
     },
