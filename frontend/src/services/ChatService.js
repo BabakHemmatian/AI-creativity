@@ -45,7 +45,7 @@ export const getAllUsers = async () => {
     const res = await axios.get(`${baseURL}/user`, header);
     return res.data;
   } catch (e) {
-    console.error(e);
+    console.log(e);
   }
 };
 
@@ -56,7 +56,7 @@ export const getUser = async (userId) => {
     const res = await axios.get(`${baseURL}/user/${userId}`, header);
     return res.data;
   } catch (e) {
-    console.error(e);
+    console.log(e);
   }
 };
 
@@ -67,7 +67,7 @@ export const getUsers = async (users) => {
     const res = await axios.get(`${baseURL}/user/users`, users, header);
     return res.data;
   } catch (e) {
-    console.error(e);
+    console.log(e);
   }
 };
 
@@ -78,7 +78,7 @@ export const getChatRooms = async (userId) => {
     const res = await axios.get(`${baseURL}/room/${userId}`, header);
     return res.data;
   } catch (e) {
-    console.error(e);
+    console.log(e);
   }
 };
 
@@ -92,7 +92,7 @@ export const getChatRoomOfUsers = async (firstUserId, secondUserId) => {
     );
     return res.data;
   } catch (e) {
-    console.error(e);
+    console.log(e);
   }
 };
 
@@ -103,7 +103,7 @@ export const createChatRoom = async (members) => {
     const res = await axios.post(`${baseURL}/room`, members, header);
     return res.data;
   } catch (e) {
-    console.error(e);
+    console.log(e);
   }
 };
 
@@ -114,7 +114,7 @@ export const getMessagesOfChatRoom = async (chatRoomId) => {
     const res = await axios.get(`${baseURL}/message/${chatRoomId}`, header);
     return res.data;
   } catch (e) {
-    console.error(e);
+    console.log(e);
   }
 };
 
@@ -125,6 +125,6 @@ export const sendMessage = async (messageBody) => {
     const res = await axios.post(`${baseURL}/message`, messageBody, header);
     return res.data;
   } catch (e) {
-    console.error(e);
+    console.log(e);
   }
 };
