@@ -53,20 +53,27 @@ io.on("connection", (socket) => {
   socket.on("addUser", (userId) => {
     onlineUsers.set(userId, socket.id);
     socket.emit("getUsers", Array.from(onlineUsers));
+    console.log("login: " + userId);
   });
 
   socket.on("sendMessage", ({ senderId, receiverId, message }) => {
     const sendUserSocket = onlineUsers.get(receiverId);
+    console.log("msg " + senderId + " to " + receiverId);
     if (sendUserSocket) {
+      // if the user is online, send it directly to socket
       socket.to(sendUserSocket).emit("getMessage", {
         senderId,
         message,
       });
+      console.log("reciever is live, send it to sockect");
+    } else {
+      console.log("reciever is not alive no need to send through socket");
     }
   });
 
   socket.on("disconnect", () => {
     onlineUsers.delete(getKey(onlineUsers, socket.id));
     socket.emit("getUsers", Array.from(onlineUsers));
+    console.log("logout: " + us)
   });
 });
