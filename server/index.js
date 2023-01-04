@@ -72,8 +72,9 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    onlineUsers.delete(getKey(onlineUsers, socket.id));
+    const logoutID = getKey(onlineUsers, socket.id)
+    onlineUsers.delete(logoutID);
     socket.emit("getUsers", Array.from(onlineUsers));
-    console.log("logout: " + us)
+    console.log("logout: " + logoutID)
   });
 });
