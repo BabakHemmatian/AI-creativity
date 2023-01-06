@@ -41,6 +41,13 @@ export default function ChatRoom({ currentChat, currentUser, socket }) {
   }, [incomingMessage]);
 
   const handleFormSubmit = async (message) => {
+    const lastMessage = messages[messages.length-1];
+    console.log(lastMessage);
+    if (currentUser.uid === lastMessage.sender) {
+      // current user just send the message
+      alert("you should wait for the reply before sending the next message");
+    }
+
     const receiverId = currentChat.members.find(
       (member) => member !== currentUser.uid
     );
