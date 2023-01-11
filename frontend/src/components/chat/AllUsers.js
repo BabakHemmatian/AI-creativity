@@ -19,11 +19,12 @@ export default function AllUsers({
   socket,
 }) {
   const [selectedChat, setSelectedChat] = useState();
-  const [nonContacts, setNonContacts] = useState([]);
+  // const [nonContacts, setNonContacts] = useState([]);
   const [contactIds, setContactIds] = useState([]);
   const [matching , setMatching] = useState(false);
 
   
+  // console.log(socket.current.id);
 
   useEffect(() => {
     const Ids = chatRooms.map((chatRoom) => {
@@ -32,28 +33,35 @@ export default function AllUsers({
     setContactIds(Ids);
   }, [chatRooms, currentUser.uid]);
 
-  useEffect(() => {
-    setNonContacts(
-      users.filter(
-        (f) => f.uid !== currentUser.uid && !contactIds.includes(f.uid)
-      )
-    );
-  }, [contactIds, users, currentUser.uid]);
+  // useEffect(() => {
+  //   setNonContacts(
+  //     users.filter(
+  //       (f) => f.uid !== currentUser.uid && !contactIds.includes(f.uid)
+  //     )
+  //   );
+  // }, [contactIds, users, currentUser.uid]);
 
-  useEffect(() => {
-    socket.current?.on("matchedUserCreate", (data) => {
-      console.log(`create back data: ${data}`);
-      if (matching) {
-        setMatching(false);
-        handleNewChatRoom(data);
-      }
-    });
-  });
+  // useEffect(() => {
+  //   socket.current?.on("matchedUserCreate", (data) => {
+  //     console.log(`socket ${socket.current.id} recieve data`);
+  //     console.log(`create back data: ${data}`);
+  //     if (matching) {
+  //       setMatching(false);
+  //       // handleNewChatRoom(data);
+  //     }
+  //   });
+  // });
 
   useEffect(() => {
     socket.current?.on("matchedUser", (data) => {
-      console.log(`not back data: ${data}`);
-      setMatching(false);
+      if (matching) {
+        console.log(`socket ${socket.current.id} recieve data`);
+        // console.log(`not back data: ${data}`);
+        console.log(data);
+        setChatRooms((prev) => [...prev, data]);
+        changeChat(data);
+        setMatching(false);
+      }
     });
   })
 
@@ -63,15 +71,15 @@ export default function AllUsers({
   };
 
   // this function will call the API for creating new chat room
-  const handleNewChatRoom = async (userId) => {
-    const members = {
-      senderId: currentUser.uid,
-      receiverId: userId,
-    };
-    const res = await createChatRoom(members);
-    setChatRooms((prev) => [...prev, res]);
-    changeChat(res);
-  };
+  // const handleNewChatRoom = async (userId) => {
+  //   const members = {
+  //     senderId: currentUser.uid,
+  //     receiverId: userId,
+  //   };
+  //   const res = await createChatRoom(members);
+  //   setChatRooms((prev) => [...prev, res]);
+  //   changeChat(res);
+  // };
 
 
 

@@ -1,6 +1,7 @@
 import axios from "axios";
 import auth from "../config/firebase";
 import { io } from "socket.io-client";
+// import { async } from "@firebase/util";
 
 // const baseURL = "http://localhost:3001/api";
 const URL = process.env.REACT_APP_URL;
@@ -24,6 +25,7 @@ export const initiateSocketConnection = async () => {
     },
   });
 
+  // console.log(socket.id);
   return socket;
 };
 

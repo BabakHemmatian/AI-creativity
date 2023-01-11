@@ -10,6 +10,8 @@ import chatRoomRoutes from "./routes/chatRoom.js";
 import chatMessageRoutes from "./routes/chatMessage.js";
 import userRoutes from "./routes/user.js";
 
+import ChatRoom from "./models/ChatRoom.js";
+
 const app = express();
 
 dotenv.config();
@@ -79,7 +81,7 @@ io.on("connection", (socket) => {
     console.log("logout: " + logoutID)
   });
 
-  socket.on("matchUser", ({userId}) => {
+  socket.on("matchUser", async ({userId}) => {
     // the java script seems to be one thread, so it should be thread safe
     var matched = false;
     // console.log("recieved matching request");
@@ -102,8 +104,14 @@ io.on("connection", (socket) => {
           if (!currentUserSocket) {
             console.log("current user not alive");
           }
-          socket.to(currentUserSocket).emit("matchedUser", firstUser);
-          socket.to(matchedUserSocket).emit("matchedUserCreate", userId);
+          console.log(`two sockets: ${currentUserSocket} ${matchedUserSocket}`);
+          
+          //create chat room manually
+          const newChatRoom = new ChatRoom({members: [firstUser, userId]});
+          await newChatRoom.save();
+
+          socket.emit("matchedUser", newChatRoom);
+          socket.to(matchedUserSocket).emit("matchedUser", newChatRoom);
           matched = true;
         }
       } else {
