@@ -121,6 +121,7 @@ export default function ChatLayout() {
             onlineUsersId={onlineUsersId}
             currentUser={currentUser}
             changeChat={handleChatChange}
+            socket={socket}
           />
         </div>
 
