@@ -42,14 +42,14 @@ export default function ChatLayout() {
     getSocket();
   }, [currentUser.uid]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const res = await getChatRooms(currentUser.uid);
-      setChatRooms(res);
-    };
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     const res = await getChatRooms(currentUser.uid);
+  //     setChatRooms(res);
+  //   };
 
-    fetchData();
-  }, [currentUser.uid]);
+  //   fetchData();
+  // }, [currentUser.uid]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -117,6 +117,7 @@ export default function ChatLayout() {
           <AllUsers
             users={searchQuery !== "" ? filteredUsers : users}
             chatRooms={searchQuery !== "" ? filteredRooms : chatRooms}
+            // chatRooms={[]}
             setChatRooms={setChatRooms}
             onlineUsersId={onlineUsersId}
             currentUser={currentUser}

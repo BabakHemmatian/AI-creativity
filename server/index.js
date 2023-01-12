@@ -2,16 +2,19 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { Server } from "socket.io";
-
+// import Math;
 import "./config/mongo.js";
 
 import { VerifyToken, VerifySocketToken } from "./middlewares/VerifyToken.js";
+
+// import { getOneRandomInstruction } from "./service/instruction.js";
+
 import chatRoomRoutes from "./routes/chatRoom.js";
 import chatMessageRoutes from "./routes/chatMessage.js";
 import userRoutes from "./routes/user.js";
 
 import ChatRoom from "./models/ChatRoom.js";
-
+import Instruction from "./models/Instruction.js";
 const app = express();
 
 dotenv.config();
@@ -107,12 +110,48 @@ io.on("connection", (socket) => {
           console.log(`two sockets: ${currentUserSocket} ${matchedUserSocket}`);
           
           //create chat room manually
-          const newChatRoom = new ChatRoom({members: [firstUser, userId]});
-          await newChatRoom.save();
-
-          socket.emit("matchedUser", newChatRoom);
-          socket.to(matchedUserSocket).emit("matchedUser", newChatRoom);
-          matched = true;
+          var insText;
+          try {
+            const oneInstruction = await Instruction.findOne();
+            console.log(oneInstruction);
+            insText = oneInstruction.text;
+          } catch (error) {
+            console.log(error);
+            insText = "there is no instruction in databse!";
+          }
+          
+          try {
+            if (Math.random() > 0.5) {
+              const newChatRoom = new ChatRoom({
+                members: [userId,firstUser],
+                instruction: insText,
+                isEnd: false
+              });
+              await newChatRoom.save();
+              console.log(insText);
+              console.log(newChatRoom);
+  
+              socket.emit("matchedUser", newChatRoom);
+              socket.to(matchedUserSocket).emit("matchedUser", newChatRoom);
+              matched = true;
+            } else {
+              const newChatRoom = new ChatRoom({
+                members: [firstUser, userId],
+                instruction: insText,
+                isEnd: false
+              });
+              await newChatRoom.save();
+              console.log(insText);
+              console.log(newChatRoom);
+  
+              socket.emit("matchedUser", newChatRoom);
+              socket.to(matchedUserSocket).emit("matchedUser", newChatRoom);
+              matched = true;
+            }
+            
+          } catch (error) {
+            console.log(error);
+          }
         }
       } else {
         console.log(`user ${firstUser} is not online, go next`);
