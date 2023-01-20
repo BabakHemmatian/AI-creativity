@@ -1,36 +1,49 @@
 import { useState, useEffect, useRef } from "react";
-
-import { getMessagesOfChatRoom, sendMessage } from "../../services/ChatService";
+import { useTimer } from 'use-timer';
+import { getMessagesOfChatRoom, sendMessage, endChatRoom} from "../../services/ChatService";
 
 import Message from "./Message";
 import Contact from "./Contact";
 import ChatForm from "./ChatForm";
+import { set } from "mongoose";
 
 const startIns = "Hi! This is a game where you and a matched player take turns coming up with creative uses for an everyday object, one at a time. If you have already entered a response, please wait for your co-player to provide their entry before providing another creative use. Once started, you and your co-player will have 4 minutes to come up with as many responses as you can. You will be evaluated based on how many uses you come up with, their originality, diversity and usefulness. When ready, please respond in the chat with 'ready'."
-const yourTurn = "It is now your turn.";
 const otherTurn = "It is now the other player's turn."
 
+// https://openbase.com/js/use-timer, library used for timer
 //currentChat is the object of ChatRoom
-export default function ChatRoom({ currentChat, currentUser, socket }) {
+export default function ChatRoom({ currentChat, currentUser, socket, handleEndChatRoom}) {
   const [messages, setMessages] = useState([]);
   const [incomingMessage, setIncomingMessage] = useState(null);
+  const [ready, setReady] = useState(0);
 
+  // const latestCount = useRef(count);
+  const { time, start, pause, reset, status } = useTimer({
+    initialTime: process.env.REACT_APP_SESSION_TIME,
+    endTime: 0,
+    timerType: 'DECREMENTAL',
+    onTimeOver: () => {
+      // console.log("send end request");
+      endChatRoom(currentChat._id);
+      handleEndChatRoom();
+      currentChat.isEnd = true;
+    },
+  }); 
   const scrollRef = useRef();
 
-  var instruction = "";
-  if (currentChat.members[0] === currentUser.uid) {
-    //user first
-    instruction = startIns.concat(currentChat.instruction, yourTurn);
-  } else {
-    instruction = startIns.concat(currentChat.instruction, otherTurn);
-  }
+  useEffect(() => {
+    if (ready === 3) {
+      start();
+    }
+  }, [ready])
 
   useEffect(() => {
     const fetchData = async () => {
       const res = await getMessagesOfChatRoom(currentChat._id);
       setMessages(res);
     };
-
+    setReady(0);
+    reset();
     fetchData();
   }, [currentChat._id]);
 
@@ -38,15 +51,26 @@ export default function ChatRoom({ currentChat, currentUser, socket }) {
     scrollRef.current?.scrollIntoView({
       behavior: "smooth",
     });
+    // console.log(messages);
   }, [messages]);
 
   useEffect(() => {
     socket.current?.on("getMessage", (data) => {
+      // console.log("message data");
+      // console.log(data);
       setIncomingMessage({
         senderId: data.senderId,
         message: data.message,
       });
     });
+    socket.current?.on("userReady", (data) => {
+      setReady(prevready => prevready | 1);
+      setIncomingMessage({
+        senderId: data.senderId,
+        message: "ready",
+      });
+      
+    })
   }, [socket]);
 
   useEffect(() => {
@@ -54,35 +78,33 @@ export default function ChatRoom({ currentChat, currentUser, socket }) {
   }, [incomingMessage]);
 
   const handleFormSubmit = async (message) => {
-    //check if the last message is sent by current user
-    if (messages.length > 0) {
-      const lastMessage = messages[messages.length-1];
-      if (currentUser.uid === lastMessage.sender) {
-        // if yes, alert user wait for reply
-        alert("you should wait for the reply before sending the next message");
-      }
-    } else if (currentChat.members[0] !== currentUser.uid) {
-      //the user is not suppose to start the message
-      alert("you should wait for the reply before sending the next message");
+    if (message === "ready" && ready !== 3) {
+      setReady(prevready => prevready | 2);
+      setMessages([...messages, {chatRoomId: currentChat._id, sender: currentUser.uid, message: "ready"}]); //set but will not write to mongodb
+      socket.current.emit("ready", {chatRoom: currentChat, userId: currentUser.uid});
+    } else if (ready !== 3) {
+      alert("please first type ready!");
+    } else if (currentChat.isEnd) {
+      alert("current chat room has ended, but you can match a new one");
+    } else {
+      const receiverId = currentChat.members.find(
+        (member) => member !== currentUser.uid
+      );
+  
+      socket.current.emit("sendMessage", {
+        senderId: currentUser.uid,
+        receiverId: receiverId,
+        message: message,
+      });
+  
+      const messageBody = {
+        chatRoomId: currentChat._id,
+        sender: currentUser.uid,
+        message: message,
+      };
+      const res = await sendMessage(messageBody);
+      setMessages([...messages, res]);
     }
-
-    const receiverId = currentChat.members.find(
-      (member) => member !== currentUser.uid
-    );
-
-    socket.current.emit("sendMessage", {
-      senderId: currentUser.uid,
-      receiverId: receiverId,
-      message: message,
-    });
-
-    const messageBody = {
-      chatRoomId: currentChat._id,
-      sender: currentUser.uid,
-      message: message,
-    };
-    const res = await sendMessage(messageBody);
-    setMessages([...messages, res]);
   };
 
   return (
@@ -95,8 +117,16 @@ export default function ChatRoom({ currentChat, currentUser, socket }) {
         <div className="relative w-full p-6 overflow-y-auto h-[30rem] bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
           <ul className="space-y-2">
             <li>
+              {`This chat room will end in ${time} seconds`}
+            </li>
+            <li>
               <div>
-                {instruction}
+                {startIns}
+              </div>
+            </li>
+            <li>
+              <div>
+                {(ready===3) && (currentChat.instruction)}
               </div>
             </li>
             {messages.map((message, index) => (

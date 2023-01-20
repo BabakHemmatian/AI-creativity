@@ -108,6 +108,11 @@ export default function ChatLayout() {
     }
   };
 
+
+  const handleEndChatRoom = async () => {
+    setChatRooms([]);
+  }
+
   return (
     <div className="container mx-auto">
       <div className="min-w-full bg-white border-x border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700 rounded lg:grid lg:grid-cols-3">
@@ -131,6 +136,7 @@ export default function ChatLayout() {
             currentChat={currentChat}
             currentUser={currentUser}
             socket={socket}
+            handleEndChatRoom={handleEndChatRoom}
           />
         ) : (
           <Welcome />

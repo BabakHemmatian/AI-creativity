@@ -2,6 +2,7 @@ import axios from "axios";
 import auth from "../config/firebase";
 import { io } from "socket.io-client";
 // import { async } from "@firebase/util";
+// import { async } from "@firebase/util";
 
 // const baseURL = "http://localhost:3001/api";
 const URL = process.env.REACT_APP_URL;
@@ -109,6 +110,18 @@ export const createChatRoom = async (members) => {
     console.log(e);
   }
 };
+
+export const endChatRoom = async (roomId) => {
+  const header = await createHeader();
+  // console.log(header);
+  console.log(roomId);
+  try {
+    const res = await axios.put(`${baseURL}/room/${roomId}`,{}, header);
+    return res.data;
+  } catch (e) {
+    console.log(e);
+  }
+}
 
 
 export const getMessagesOfChatRoom = async (chatRoomId) => {

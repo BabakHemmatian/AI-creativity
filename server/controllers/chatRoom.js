@@ -1,4 +1,5 @@
 import ChatRoom from "../models/ChatRoom.js";
+import { endChatRoomService } from "../service/chatRoom.js";
 
 export const createChatRoom = async (req, res) => {
   const newChatRoom = new ChatRoom({
@@ -40,3 +41,23 @@ export const getChatRoomOfUsers = async (req, res) => {
     });
   }
 };
+
+
+export const endChatRoom = async (req, res) => {
+  try {
+    console.log(req);
+    const success = await endChatRoomService(req.params.roomId, false);
+    if (success) {
+      res.status(200).json({
+        message: "OK"
+      });
+    } else {
+      res.status(500).json({
+        message: "fail to end chatroom"
+      })
+    }
+  } catch (error) {
+    console.log(error);
+  }
+
+}

@@ -4,9 +4,9 @@ const ChatRoomSchema = mongoose.Schema(
   {
     members: Array,
     instruction: String,
-    isEnd: Boolean
+    isEnd: Boolean,
+    earlyEnd: Boolean
   },
-  { timestamps: true }
 );
 
 const ChatRoom = mongoose.model("ChatRoom", ChatRoomSchema);

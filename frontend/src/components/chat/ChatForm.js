@@ -1,23 +1,16 @@
 import { useState, useEffect, useRef } from "react";
-
 import { PaperAirplaneIcon } from "@heroicons/react/solid";
-import { EmojiHappyIcon } from "@heroicons/react/outline";
-import Picker from "emoji-picker-react";
 
 export default function ChatForm(props) {
   const [message, setMessage] = useState("");
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const scrollRef = useRef();
-
-  useEffect(() => {
-    scrollRef.current?.scrollIntoView();
-  }, [showEmojiPicker]);
-
-  const handleEmojiClick = (event, emojiObject) => {
-    let newMessage = message + emojiObject.emoji;
-    setMessage(newMessage);
-  };
+  const handleKeyUp = async (e) => {
+    if (e.keyCode === 13) {
+      // enter should send the message
+      handleFormSubmit()
+    }
+  }
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
@@ -28,23 +21,8 @@ export default function ChatForm(props) {
 
   return (
     <div ref={scrollRef}>
-      {showEmojiPicker && (
-        <Picker className="dark:bg-gray-900" onEmojiClick={handleEmojiClick} />
-      )}
       <form onSubmit={handleFormSubmit}>
         <div className="flex items-center justify-between w-full p-3 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              setShowEmojiPicker(!showEmojiPicker);
-            }}
-          >
-            <EmojiHappyIcon
-              className="h-7 w-7 text-blue-600 dark:text-blue-500"
-              aria-hidden="true"
-            />
-          </button>
-
           <input
             type="text"
             placeholder="Write a message"
@@ -53,6 +31,7 @@ export default function ChatForm(props) {
             required
             value={message}
             onChange={(e) => setMessage(e.target.value)}
+            onKeyUp={handleKeyUp}
           />
           <button type="submit">
             <PaperAirplaneIcon
