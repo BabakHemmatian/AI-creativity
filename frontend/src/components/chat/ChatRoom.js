@@ -5,7 +5,7 @@ import { getMessagesOfChatRoom, sendMessage, endChatRoom} from "../../services/C
 import Message from "./Message";
 import Contact from "./Contact";
 import ChatForm from "./ChatForm";
-import { set } from "mongoose";
+// import { set } from "mongoose";
 
 const startIns = "Hi! This is a game where you and a matched player take turns coming up with creative uses for an everyday object, one at a time. If you have already entered a response, please wait for your co-player to provide their entry before providing another creative use. Once started, you and your co-player will have 4 minutes to come up with as many responses as you can. You will be evaluated based on how many uses you come up with, their originality, diversity and usefulness. When ready, please respond in the chat with 'ready'."
 const otherTurn = "It is now the other player's turn."
