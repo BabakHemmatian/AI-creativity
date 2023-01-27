@@ -1,12 +1,17 @@
 import ChatMessage from "../models/ChatMessage.js";
-
+import { createChatMessageService } from "../service/chatMessage.js";
 //used for one user sending message
 export const createMessage = async (req, res) => {
-  const newMessage = new ChatMessage(req.body);
-
   try {
-    await newMessage.save();
-    res.status(201).json(newMessage);
+    const newMessage = await createChatMessageService(req.body.chatRoomId, req.body.sender, req.body.message);
+    if (newMessage !== null) {
+      res.status(201).json(newMessage);
+    } else {
+      res.status(500).json({
+        message: "service error"
+      });
+    }
+    
   } catch (error) {
     res.status(409).json({
       message: error.message,

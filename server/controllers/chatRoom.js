@@ -45,7 +45,7 @@ export const getChatRoomOfUsers = async (req, res) => {
 
 export const endChatRoom = async (req, res) => {
   try {
-    console.log(req);
+    // console.log(req);
     const success = await endChatRoomService(req.params.roomId, false);
     if (success) {
       res.status(200).json({
