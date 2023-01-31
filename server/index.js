@@ -225,6 +225,7 @@ io.on("connection", (socket) => {
       if (newChatRoom !== null) {
         socket.emit("matchedUser", newChatRoom);
         chatMessage.set(userId, [{txt: insText, sender: 0}]);
+        userToRoom.set(userId, newChatRoom._id);
       }
       
     }
