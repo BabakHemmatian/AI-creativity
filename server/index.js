@@ -11,6 +11,7 @@ import { getOneRandomInstruction } from "./service/instruction.js";
 import { generateCompletion } from "./service/openAI.js";
 import { createChatRoomService, endChatRoomService } from "./service/chatRoom.js";
 import { createChatMessageService } from "./service/chatMessage.js";
+import { chatgptReply } from "./service/openAI.js";
 
 import chatRoomRoutes from "./routes/chatRoom.js";
 import chatMessageRoutes from "./routes/chatMessage.js";
@@ -29,6 +30,7 @@ const PORT = process.env.PORT || 8080;
 const MATCH_AI = (process.env.MATCH_AI==='true') || false; //default we will not match AI
 const AI_UID = process.env.AI_UID || '';
 const WAIT_TIME = process.env.WAIT_TIME || 5;
+const AI_VERSION = process.env.AI_VERSION || 1;
 
 console.log(MATCH_AI);
 app.use("/api/room", chatRoomRoutes);
@@ -56,6 +58,7 @@ global.userToRoom = new Map();
 //this will be used only when there user is matched with AI
 global.chatMessage = new Map(); //[{txt: message, sender: int}] 0 for instruction, 1 for user, 2 for AI
 global.userToTimer = new Map();
+global.userToRes = new Map();
 
 const getKey = (map, val) => {
   for (let [key, value] of map.entries()) {
@@ -68,44 +71,51 @@ const getKey = (map, val) => {
 
 io.on("connection", (socket) => {
 
-  const reply_message = async (userId, message='') => {
+  const reply_message = async (userId) => {
     try {
+      console.log(AI_VERSION);
       let messages = chatMessage.get(userId);
       const roomId = userToRoom.get(userId);
-      if (message !== '') {
-        // AI goes first
-        messages.push({txt: message, sender: 1});
+      let response = null;
+      if (AI_VERSION === "2") {
+        const userMessage = messages.filter(m => m.sender === 1);
+        const res = userToRes.get(userId);
+        if (userMessage.length === 0) {
+          response = await chatgptReply(messages[0].txt, res);
+          userToRes.set(userId, response);
+        } else {
+          // console.log(userMessage[userMessage.length-1]);
+          response = await chatgptReply(userMessage[userMessage.length-1].txt, res)
+          userToRes.set(userId, response);
+        }
+        messages.push({txt: response.text, sender: 2});
+        await createChatMessageService(roomId, AI_UID, response.text);
+      } else {
+        response = await generateCompletion(messages);
+        messages.push({txt: response, sender: 2});
+        await createChatMessageService(roomId, AI_UID, response);
       }
-
-      //send message back
-      const response = await generateCompletion(messages);
-      messages.push({txt: response, sender: 2});
-      await createChatMessageService(roomId, AI_UID, response);
+      
       const sendUserSocket = onlineUsers.get(userId);
       if ( sendUserSocket ) {
         socket.emit("getMessage", {
           userId: AI_UID,
-          message: response
+          message: response.text
         })
       }
       return true;
+      
     } catch (error) {
       console.log(error);
       return false;
     }
-    
-    
-
-    // set next reply for
-    // let newTimer = setTimeout(reply_message(userId, ''), WAIT_TIME * 1000);
-    // userToTimer.set(userId, newTimer);
   };
 
   global.chatSocket = socket;
 
   socket.on("addUser", (userId) => {
     onlineUsers.set(userId, socket.id);
-    userToRoom.set(userId, null); //dont update previous room
+    userToRoom.set(userId, null); // dont update previous room
     socket.emit("getUsers", Array.from(onlineUsers));
     console.log("login: " + userId);
   });
@@ -128,11 +138,11 @@ io.on("connection", (socket) => {
     } else {
       // TODO: communicate with AI
       // console.log(message);
-      let oldTimer = userToTimer.get(senderId);
-      clearTimeout(oldTimer);
-      const result = await reply_message(senderId, message);
-      let newTimer = setTimeout(() => reply_message(senderId, ''), WAIT_TIME*1000);
-      userToTimer.set(senderId, newTimer);
+      // we can just push user's message and let AI response with that messages
+      const messages = chatMessage.get(senderId);
+      if (messages !== null) {
+        messages.push({txt: message, sender: 1});
+      }
     }
   });
 
@@ -141,15 +151,16 @@ io.on("connection", (socket) => {
     onlineUsers.delete(logoutID);
     socket.emit("getUsers", Array.from(onlineUsers));
 
-    let oldTimer = userToTimer.get(logoutID);
-    if ( oldTimer ) {
-      clearTimeout(oldTimer);
-      userToTimer.delete(logoutID);
-    }
+    // let oldTimer = userToTimer.get(logoutID);
+    // if ( oldTimer ) {
+    //   clearTimeout(oldTimer);
+    //   userToTimer.delete(logoutID);
+    // }
     //close user's chatroom
     const roomId = userToRoom.get(logoutID);
     if (roomId !== null) {
       endChatRoomService(roomId, true);
+      userToRoom.delete(logoutID);
     }
     console.log("logout: " + logoutID)
   });
@@ -188,13 +199,6 @@ io.on("connection", (socket) => {
             }
             const newChatRoom = await createChatRoomService([userId,firstUser], insText);
 
-            // auto send ready to user after several seconds
-
-            // let timer = setTimeout(() => {
-            //   socket.emit("userReady", {senderId: AI_UID})
-            // }, WAIT_TIME*1000);
-            // userToTimer.set(userId, timer);
-
             if (newChatRoom !== null) {
               socket.emit("matchedUser", newChatRoom);
               socket.to(matchedUserSocket).emit("matchedUser", newChatRoom);
@@ -216,7 +220,7 @@ io.on("connection", (socket) => {
       var insText;
       const oneInstruction = await getOneRandomInstruction();
       if (oneInstruction !== null) {
-        insText = oneInstruction.text;
+        insText = oneInstruction.text
       } else {
         insText = "there is no instruction in databse!";
       }
@@ -225,7 +229,7 @@ io.on("connection", (socket) => {
       if (newChatRoom !== null) {
         socket.emit("matchedUser", newChatRoom);
         chatMessage.set(userId, [{txt: insText, sender: 0}]);
-        userToRoom.set(userId, newChatRoom._id);
+        userToRoom.set(userId, newChatRoom._id.toString());
       }
       
     }
@@ -233,9 +237,18 @@ io.on("connection", (socket) => {
 
   socket.on("ready", async({chatRoom, userId}) => {
     if (MATCH_AI) {
+      // await new Promise(r => setTimeout(r, 2000));
       socket.emit("userReady", {senderId: AI_UID});
-      let newTimer = setTimeout(() => reply_message(userId, ''), WAIT_TIME * 1000);
-      userToTimer.set(userId, newTimer);
+      setTimeout(async function chat() {
+        const roomId = userToRoom.get(userId);
+        if (roomId !== undefined) {
+          // check if the room has ended
+          await reply_message(userId);
+
+          // chat is still alive, set next timer for reply
+          setTimeout(chat, WAIT_TIME*1000);
+        }
+      }, WAIT_TIME*1000);
     } else {
       let otherUser = chatRoom.members[0];
       if (otherUser === userId) {
@@ -246,5 +259,19 @@ io.on("connection", (socket) => {
       socket.to(toSocket).emit("userReady", {senderId: userId});
     }
 
+  })
+
+  socket.on("timeout", async({roomId, userId}) => {
+    
+    const mapRoomId = userToRoom.get(userId);
+    if (roomId === mapRoomId) {
+      // everything good, end the chat room
+      userToRoom.delete(userId);
+      endChatRoomService(roomId, false);
+    } else {
+      console.log("roomId is not equal to mapped roomId!");
+      console.log(roomId);
+      console.log(mapRoomId)
+    }
   })
 });

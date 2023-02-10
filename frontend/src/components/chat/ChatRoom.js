@@ -19,12 +19,14 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
   // const latestCount = useRef(count);
   const { time, start, pause, reset, status } = useTimer({
     initialTime: process.env.REACT_APP_SESSION_TIME,
+    initialTime: 60,
     endTime: 0,
     timerType: 'DECREMENTAL',
     onTimeOver: () => {
       // console.log("send end request");
-      endChatRoom(currentChat._id);
-      handleEndChatRoom();
+      socket.current.emit("timeout", {roomId: currentChat._id, userId: currentUser.uid});
+      // endChatRoom(currentChat._id);
+      // handleEndChatRoom();
       currentChat.isEnd = true;
     },
   }); 
