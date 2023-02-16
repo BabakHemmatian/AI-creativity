@@ -9,6 +9,8 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 
 const MAX_TOKEN = process.env.MAX_TOKEN || 3000;
+const AI_INS = process.env.AI_INS;
+const NON_REPLY_PROMPT = process.env.NON_REPLY_PROMPT;
 
 const generatePrompt = (messages) => {
     if (messages.length === 1) {
@@ -50,7 +52,7 @@ export const generateCompletion = async (messages) => {
             max_tokens: MAX_TOKEN,
         });
         // console.log(completion.data.choices[0].text);
-        return completion.data.choices[0].text;
+        return completion.data.choices[0];
     } catch(error) {
         console.log(error);
         return "......";
@@ -58,18 +60,28 @@ export const generateCompletion = async (messages) => {
 }
 
 export const chatgptReply = async(message, lastres) => {
-    console.log(message);
+    // console.log(message);
     if (lastres !== undefined) {
-        const res = await chatgpt.sendMessage(message, {
-            conversationId: lastres.conversationId,
-            parentMessageId: lastres.id
-        });
-        console.log(res.text);
-        return res;
+        console.log(message);
+        if (message.replied === true) {
+            // last message is replied
+            const res = await chatgpt.sendMessage(NON_REPLY_PROMPT, {
+                conversationId: lastres.conversationId,
+                parentMessageId: lastres.id
+            })
+            return res;
+        } else {
+            message.replied = true;
+            const res = await chatgpt.sendMessage(message.text, {
+                conversationId: lastres.conversationId,
+                parentMessageId: lastres.id
+            });
+            // console.log(res.text);
+            return res;
+        }        
     } else {
-        const insForAI = `Hi! This is a game where you and a paired player collectively generate a 
-        list of creative uses for an everyday object. Please one time come up with one creative use. 
-        The object you will be coming up with creative uses for is: ${message}.`;
+        // generate first idea
+        const insForAI = `${AI_INS} ${message.text}.`;
         const res = await chatgpt.sendMessage(insForAI);
         console.log(res.text);
         return res;

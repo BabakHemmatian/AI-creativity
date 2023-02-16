@@ -30,7 +30,11 @@ const PORT = process.env.PORT || 8080;
 const MATCH_AI = (process.env.MATCH_AI==='true') || false; //default we will not match AI
 const AI_UID = process.env.AI_UID || '';
 const WAIT_TIME = process.env.WAIT_TIME || 5;
-const AI_VERSION = process.env.AI_VERSION || 1;
+const AI_VERSION = process.env.AI_VERSION || "GPT-3";
+const CONS_LIST = process.env.CONS_LIST;
+const WAIT_TIME_DIFF = process.env.WAIT_TIME_DIFF || 2;
+const reply_list = CONS_LIST.split(",")
+const NON_REPLY_PROMPT = process.env.NON_REPLY_PROMPT;
 
 console.log(MATCH_AI);
 app.use("/api/room", chatRoomRoutes);
@@ -56,9 +60,10 @@ global.userToRoom = new Map();
 
 
 //this will be used only when there user is matched with AI
-global.chatMessage = new Map(); //[{txt: message, sender: int}] 0 for instruction, 1 for user, 2 for AI
+global.chatMessage = new Map(); //[{text: message, sender: int}] 0 for instruction, 1 for user, 2 for AI
 global.userToTimer = new Map();
 global.userToRes = new Map();
+// global.userToIndex = new Map();
 
 const getKey = (map, val) => {
   for (let [key, value] of map.entries()) {
@@ -66,6 +71,10 @@ const getKey = (map, val) => {
   }
 };
 
+const randSubAdd = () => {
+  const randNum = Math.floor(Math.random() * WAIT_TIME_DIFF * 2);
+  return randNum - WAIT_TIME;
+}
 
 
 
@@ -73,29 +82,48 @@ io.on("connection", (socket) => {
 
   const reply_message = async (userId) => {
     try {
-      console.log(AI_VERSION);
+      // console.log(AI_VERSION);
       let messages = chatMessage.get(userId);
       const roomId = userToRoom.get(userId);
       let response = null;
-      if (AI_VERSION === "2") {
+      if (AI_VERSION === "ChatGPT") {
         const userMessage = messages.filter(m => m.sender === 1);
+        const aiMessage = messages.filter(m => m.sender === 2);
         const res = userToRes.get(userId);
-        if (userMessage.length === 0) {
-          response = await chatgptReply(messages[0].txt, res);
+        if (aiMessage.length === 0) {
+          // the first message of ai should always consider the idea
+          console.log(messages);
+          response = await chatgptReply(messages[0], res);
+          userToRes.set(userId, response);
+        } else if (userMessage.length === 0) {
+          // console.log(userMessage[userMessage.length-1]);
+          response = await chatgptReply({text: NON_REPLY_PROMPT, replied: true}, res)
           userToRes.set(userId, response);
         } else {
-          // console.log(userMessage[userMessage.length-1]);
-          response = await chatgptReply(userMessage[userMessage.length-1].txt, res)
+          response = await chatgptReply(userMessage[userMessage.length-1], res)
           userToRes.set(userId, response);
         }
-        messages.push({txt: response.text, sender: 2});
+        messages.push({text: response.text, sender: 2, replied: true});
+        await createChatMessageService(roomId, AI_UID, response.text);
+      } else if (AI_VERSION === "GPT-3") {
+        response = await generateCompletion(messages);
+        messages.push({text: response.text, sender: 2, replied: true});
         await createChatMessageService(roomId, AI_UID, response.text);
       } else {
-        response = await generateCompletion(messages);
-        messages.push({txt: response, sender: 2});
-        await createChatMessageService(roomId, AI_UID, response);
+        //TODO: reply constant
+        const userMessage = messages.filter(m => m.sender === 2);
+        const index = userMessage.length;
+        if (index >= reply_list.length) {
+          // the list of reply is not enough
+          console.log("list reply not enough");
+
+        }
+        response = {text: reply_list[index % reply_list.length]};
+        messages.push({text: response.text, sender: 2, replied: true});
+        await createChatMessageService(roomId, AI_UID, response.text);
       }
-      
+      // console.log(response.text);
+      // console.log(response);
       const sendUserSocket = onlineUsers.get(userId);
       if ( sendUserSocket ) {
         socket.emit("getMessage", {
@@ -141,7 +169,7 @@ io.on("connection", (socket) => {
       // we can just push user's message and let AI response with that messages
       const messages = chatMessage.get(senderId);
       if (messages !== null) {
-        messages.push({txt: message, sender: 1});
+        messages.push({text: message, sender: 1, replied: false});
       }
     }
   });
@@ -151,17 +179,17 @@ io.on("connection", (socket) => {
     onlineUsers.delete(logoutID);
     socket.emit("getUsers", Array.from(onlineUsers));
 
-    // let oldTimer = userToTimer.get(logoutID);
-    // if ( oldTimer ) {
-    //   clearTimeout(oldTimer);
-    //   userToTimer.delete(logoutID);
-    // }
-    //close user's chatroom
     const roomId = userToRoom.get(logoutID);
     if (roomId !== null) {
       endChatRoomService(roomId, true);
       userToRoom.delete(logoutID);
     }
+
+    // const index = userToIndex.get(logoutID);
+    // if (index !== null) {
+    //   userToIndex.delete(logoutID);
+    // }
+
     console.log("logout: " + logoutID)
   });
 
@@ -228,8 +256,9 @@ io.on("connection", (socket) => {
       const newChatRoom = await createChatRoomService([userId, AI_UID], insText);
       if (newChatRoom !== null) {
         socket.emit("matchedUser", newChatRoom);
-        chatMessage.set(userId, [{txt: insText, sender: 0}]);
+        chatMessage.set(userId, [{text: insText, sender: 0, replied: true}]);
         userToRoom.set(userId, newChatRoom._id.toString());
+        // userToIndex.set(userId, 0); //start with zero one,
       }
       
     }
@@ -246,9 +275,10 @@ io.on("connection", (socket) => {
           await reply_message(userId);
 
           // chat is still alive, set next timer for reply
-          setTimeout(chat, WAIT_TIME*1000);
+          // const timeDiff = ;
+          setTimeout(chat, (WAIT_TIME-randSubAdd())*1000);
         }
-      }, WAIT_TIME*1000);
+      }, (WAIT_TIME-randSubAdd())*1000);
     } else {
       let otherUser = chatRoom.members[0];
       if (otherUser === userId) {

@@ -8,7 +8,7 @@ import ChatForm from "./ChatForm";
 // import { set } from "mongoose";
 
 const startIns = process.env.REACT_APP_INSTRUCTION
-const otherTurn = "It is now the other player's turn."
+// const otherTurn = "It is now the other player's turn."
 // https://openbase.com/js/use-timer, library used for timer
 //currentChat is the object of ChatRoom
 export default function ChatRoom({ currentChat, currentUser, socket, handleEndChatRoom}) {

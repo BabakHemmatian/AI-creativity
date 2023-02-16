@@ -1,7 +1,34 @@
+const REACT_APP_AVATAR_OPTION = process.env.REACT_APP_AVATAR_OPTION || "default";
+
 export default function UserLayout({ user, onlineUsersId }) {
+  const url = user?.photoURL;
+  let avatarUrl = url;
+
+  if (avatarUrl !== undefined) {
+    console.log(url);
+    let start = 0;
+    const end = url.length-4;
+    if (url[33] === 'a') {
+      start = 43;
+    } else if (url[33] === 'b') {
+      start = 40;
+    } else {
+      start = 39;
+    }
+    const f = url.substring(start, end);
+    console.log(f);
+    
+    if (REACT_APP_AVATAR_OPTION === "human") {
+      avatarUrl = `https://avatars.dicebear.com/api/avataaars/${f}.svg`;
+    } else if (REACT_APP_AVATAR_OPTION === "bot") {
+      avatarUrl = `https://avatars.dicebear.com/api/bottts/${f}.svg`;
+    }
+  }
+  
+
   return (
     <div className="relative flex items-center">
-      <img className="w-10 h-10 rounded-full" src={user?.photoURL} alt="" />
+      <img className="w-10 h-10 rounded-full" src={avatarUrl} alt="" />
       <span className="block ml-2 text-gray-500 dark:text-gray-400">
         {user?.displayName}
       </span>
