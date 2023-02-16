@@ -33,7 +33,9 @@ $\color{CornflowerBlue} \text{"ADD DATA"-"Import File"-"Choose a file"}$
 
 ![mongoDB4.png](./content/mongoDB4.png)
 
-Note that we don’t need to add further instruction text like “now it is your turn” to the database. These sentences are duplicated and will be added by the server. Also the file needs to be .csv format rather than .xlsx(it is easy to transfer format)
+Note that we don’t need to add further instruction text like “now it is your turn” to the database. These sentences are duplicated and will be added by the server. Also the file needs to be .csv format rather than .xlsx(it is easy to transfer format). Also, after adding or removing data from this collection, the env variable 
+$\color{CornflowerBlue} {ITEM\textunderscore LEN}$
+needs to be changed.
 
 ## Export Data to File
 Click the button and follow the steps. 
@@ -82,6 +84,7 @@ Adding more functions is simple, just go to the right function, there is python 
 * $\color{CornflowerBlue} {REACT\textunderscore APP\textunderscore URL}$: url for backend api
 * $\color{CornflowerBlue} {REACT\textunderscore APP\textunderscore SESSION\textunderscore TIME}$: time for how long a chat room lasts in seconds
 * $\color{CornflowerBlue} {REACT\textunderscore APP\textunderscore INSTRUCTION}$: instructions for user to get started 
+* $\color{CornflowerBlue} {REACT\textunderscore APP\textunderscore AVATAR\textunderscore OPTION}$: "human" (human avatar) | "bot" (rebot avatar) | "default" (user's avatar)
 
 ### Backend
 * $\color{CornflowerBlue} {PORT}$: port the service is listening to (default 8080)
@@ -96,3 +99,5 @@ Adding more functions is simple, just go to the right function, there is python 
 * $\color{CornflowerBlue} {WAIT\textunderscore TIME}$: seconds of waitting for AI to send message (default 5)
 * $\color{CornflowerBlue} {WAIT\textunderscore TIME\textunderscore DIFF}$: changes of waitting time, the actual waiting time will be in range [WAIT_TIME-WAIT_TIME_DIFF, WAIT_TIME+WAIT_TIME_DIFF]
 * $\color{CornflowerBlue} {AI\textunderscore INS}$: instruction of prompt for ChatGPT
+* $\color{CornflowerBlue} {NON\textunderscore REPLY\textunderscore PROMPT}$: instruction of prompt for ChatGPT when user have no response yet, the prompt is used to let AI come up with new idea
+* $\color{CornflowerBlue} {ITEM\textunderscore LEN}$: the total number of items (this should be changed when push new items to database)
