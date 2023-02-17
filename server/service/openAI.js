@@ -13,20 +13,21 @@ const AI_INS = process.env.AI_INS;
 const NON_REPLY_PROMPT = process.env.NON_REPLY_PROMPT;
 
 const generatePrompt = (messages) => {
+    const item = messages[0].text
     if (messages.length === 1) {
-        return `This is a single creative use for a ${messages[0].txt}:`;
+        return `This is a single creative use for a ${item}:`;
     } else if (messages.length === 2 && messages[1].sender === 1) {
         // human send first message
-        return `This is a single creative use for a ${messages[0].txt} that is very different from ${messages[1].txt}:`;
+        return `This is a single creative use for a ${item} that is very different from ${messages[1].text}:`;
     } else {
         let list_idea = '';
         messages.forEach(element => {
             if (element.sender !== 0) {
-                list_idea = list_idea + ',' + element.txt;
+                list_idea = list_idea + ',' + element.text;
             }
         })
 
-        return `I already have this list for creative uses for a ${messages[0].txt}: ${list_idea}. This is a single creative use for a paper clip that is very different from any others in my current list:`
+        return `I already have this list for creative uses for a ${item}: ${list_idea}. This is a single creative use for a ${item} that is very different from any others in my current list:`
     }
 }
 
@@ -44,9 +45,10 @@ export const generateCompletion = async (messages) => {
         
         const prompt = generatePrompt(messages);
         console.log("one completion");
+        console.log(prompt);
         // console.log(prompt);
         const completion = await openai.createCompletion({
-            model: "text-davinci-003",
+            model: "text-davinci-002",
             prompt: prompt,
             temperature: 0.6,
             max_tokens: MAX_TOKEN,
