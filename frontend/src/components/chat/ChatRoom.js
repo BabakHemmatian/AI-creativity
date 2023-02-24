@@ -18,8 +18,8 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
 
   // const latestCount = useRef(count);
   const { time, start, pause, reset, status } = useTimer({
-    initialTime: process.env.REACT_APP_SESSION_TIME,
-    initialTime: 60,
+    initialTime: process.env.REACT_APP_SESSION_TIME || 240,
+    // initialTime: 60,
     endTime: 0,
     timerType: 'DECREMENTAL',
     onTimeOver: () => {
@@ -128,7 +128,10 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
               </div>
             </li>
             <li style={{ fontWeight: 'bold' }}>
-              {(time <= 10) && (`This chat room will end in ${time} seconds`)}
+              {(time <= 10) && (time > 0) && (`This chat room will end in ${time} seconds`)}
+            </li>
+            <li style={{ fontWeight: 'bold' }}>
+              {(time === 0) && (`The session has ended`)}
             </li>
             {messages.map((message, index) => (
               <div key={index} ref={scrollRef}>
