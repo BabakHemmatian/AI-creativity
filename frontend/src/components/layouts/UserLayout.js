@@ -16,7 +16,7 @@ export default function UserLayout({ user, onlineUsersId }) {
       start = 39;
     }
     const f = url.substring(start, end);
-    console.log(f);
+    // console.log(f);
     
     if (REACT_APP_AVATAR_OPTION === "human") {
       avatarUrl = `https://avatars.dicebear.com/api/avataaars/${f}.svg`;

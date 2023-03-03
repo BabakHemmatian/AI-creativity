@@ -93,14 +93,14 @@ io.on("connection", (socket) => {
         if (aiMessage.length === 0) {
           // the first message of ai should always consider the idea
           console.log(messages);
-          response = await chatgptReply(messages[0], res);
+          response = await chatgptReply(messages[0], messages, res);
           userToRes.set(userId, response);
         } else if (userMessage.length === 0) {
           // console.log(userMessage[userMessage.length-1]);
-          response = await chatgptReply({text: NON_REPLY_PROMPT, replied: true}, res)
+          response = await chatgptReply({text: NON_REPLY_PROMPT, replied: true}, messages, res)
           userToRes.set(userId, response);
         } else {
-          response = await chatgptReply(userMessage[userMessage.length-1], res)
+          response = await chatgptReply(userMessage[userMessage.length-1], messages,res)
           userToRes.set(userId, response);
         }
         messages.push({text: response.text, sender: 2, replied: true});

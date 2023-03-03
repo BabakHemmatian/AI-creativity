@@ -19,7 +19,6 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
   // const latestCount = useRef(count);
   const { time, start, pause, reset, status } = useTimer({
     initialTime: process.env.REACT_APP_SESSION_TIME || 240,
-    // initialTime: 60,
     endTime: 0,
     timerType: 'DECREMENTAL',
     onTimeOver: () => {
@@ -118,26 +117,26 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
         <div className="relative w-full p-6 overflow-y-auto h-[30rem] bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
           <ul className="space-y-2">
             <li>
-              <div>
+              <div className='dark:text-white' >
                 {startIns}
               </div>
             </li>
-            <li style={{ fontWeight: 'bold' }}>
+            <li className='dark:text-white' style={{ fontWeight: 'bold' }}>
               <div>
                 {(ready===3) && (`The object you will be coming up with creative uses for is: ${currentChat.instruction}`)}
               </div>
             </li>
-            <li style={{ fontWeight: 'bold' }}>
+            <li className='dark:text-white' style={{ fontWeight: 'bold' }}>
               {(time <= 10) && (time > 0) && (`This chat room will end in ${time} seconds`)}
-            </li>
-            <li style={{ fontWeight: 'bold' }}>
-              {(time === 0) && (`The session has ended`)}
-            </li>
+            </li >
             {messages.map((message, index) => (
               <div key={index} ref={scrollRef}>
                 <Message message={message} self={currentUser.uid} />
               </div>
             ))}
+            <li className='dark:text-white' style={{ fontWeight: 'bold' }}>
+              {(time === 0) && (`The session has ended`)}
+            </li>
           </ul>
         </div>
 
