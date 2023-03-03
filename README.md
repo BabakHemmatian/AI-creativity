@@ -74,6 +74,8 @@ Adding more functions is simple, just go to the right function, there is python 
 ![render2.png](./content/render2.png)
 
 ## Environment Variables
+### Note for Update Env
+All the environment variables will be treated as string in Python for update. Even some of them are actually number, such as $\color{CornflowerBlue} {WAIT\textunderscore TIME}$=2. You should set it to "2" in Python.
 ### Frontend
 * $\color{CornflowerBlue} {REACT\textunderscore APP\textunderscore FIREBASE\textunderscore API\textunderscore KEY}$: for firebase, dont change
 * $\color{CornflowerBlue} {REACT\textunderscore APP\textunderscore FIREBASE\textunderscore AUTH\textunderscore DOMAIN}$: for firebase, dont change
@@ -81,23 +83,28 @@ Adding more functions is simple, just go to the right function, there is python 
 * $\color{CornflowerBlue} {REACT\textunderscore APP\textunderscore FIREBASE\textunderscore STORAGE\textunderscore BUCKET}$: for firebase, dont change
 * $\color{CornflowerBlue} {REACT\textunderscore APP\textunderscore FIREBASE\textunderscore MESSAGING\textunderscore SENDER\textunderscore ID}$: for firebase, dont change
 * $\color{CornflowerBlue} {REACT\textunderscore APP\textunderscore FIREBASE\textunderscore APP\textunderscore ID}$: for firebase, dont change
-* $\color{CornflowerBlue} {REACT\textunderscore APP\textunderscore URL}$: url for backend api
-* $\color{CornflowerBlue} {REACT\textunderscore APP\textunderscore SESSION\textunderscore TIME}$: time for how long a chat room lasts in seconds
-* $\color{CornflowerBlue} {REACT\textunderscore APP\textunderscore INSTRUCTION}$: instructions for user to get started 
-* $\color{CornflowerBlue} {REACT\textunderscore APP\textunderscore AVATAR\textunderscore OPTION}$: "human" (human avatar) | "bot" (rebot avatar) | "default" (user's avatar)
+* $\color{CornflowerBlue} {REACT\textunderscore APP\textunderscore URL}$ (string): url for backend api
+* $\color{CornflowerBlue} {REACT\textunderscore APP\textunderscore SESSION\textunderscore TIME}$ (integer): time for how long a chat room lasts in seconds (default $\color{green} {240}$)
+* $\color{CornflowerBlue} {REACT\textunderscore APP\textunderscore INSTRUCTION}$ (string): instructions for user to get started 
+* $\color{CornflowerBlue} {REACT\textunderscore APP\textunderscore AVATAR\textunderscore OPTION}$ (string): 
+$\color{green} {human}$ (human avatar) | 
+$\color{green} {bot}$ (rebot avatar) | 
+$\color{green} {default}$ (user's avatar)
 
 ### Backend
-* $\color{CornflowerBlue} {PORT}$: port the service is listening to (default 8080)
-* $\color{CornflowerBlue} {MONGO\textunderscore URI}$: url for connection to mongoDB
-* $\color{CornflowerBlue} {MATCH\textunderscore AI}$: whether to match user with AI
-* $\color{CornflowerBlue} {OPENAI\textunderscore API\textunderscore KEY}$: key for openAI API key
-* $\color{CornflowerBlue} {AI\textunderscore UID}$: UID that is actually AI
-* $\color{CornflowerBlue} {AI\textunderscore VERSION}$: version of AI: 
-"GPT-3" (using davinci-002, no conversation) | 
-"ChatGPT" (using davinci-003, make conversation) | 
-"Constant" (no model, constant list of responses)
-* $\color{CornflowerBlue} {WAIT\textunderscore TIME}$: seconds of waitting for AI to send message (default 5)
-* $\color{CornflowerBlue} {WAIT\textunderscore TIME\textunderscore DIFF}$: changes of waitting time, the actual waiting time will be in range [WAIT_TIME-WAIT_TIME_DIFF, WAIT_TIME+WAIT_TIME_DIFF]
-* $\color{CornflowerBlue} {AI\textunderscore INS}$: instruction of prompt for ChatGPT
-* $\color{CornflowerBlue} {NON\textunderscore REPLY\textunderscore PROMPT}$: instruction of prompt for ChatGPT when user have no response yet, the prompt is used to let AI come up with new idea
-* $\color{CornflowerBlue} {ITEM\textunderscore LEN}$: the total number of items (this should be changed when push new items to database)
+* $\color{CornflowerBlue} {PORT} $ (integer): port the service is listening to (default $\color{green} {8080}$)
+* $\color{CornflowerBlue} {MONGO\textunderscore URI}$ (string): url for connection to mongoDB
+* $\color{CornflowerBlue} {MATCH\textunderscore AI}$ (string): whether to match user with AI
+* $\color{CornflowerBlue} {OPENAI\textunderscore API\textunderscore KEY}$ (string): key for openAI API key
+* $\color{CornflowerBlue} {AI\textunderscore UID}$ (string): UID that is actually AI
+* $\color{CornflowerBlue} {AI\textunderscore VERSION}$ (string): version of AI: 
+$\color{green} {GPT-3}$ (using davinci-002, no conversation) | 
+$\color{green} {ChatGPT}$ (using davinci-003, make conversation) | 
+$\color{green} {Constant}$ (no model, constant list of responses)
+* $\color{CornflowerBlue} {WAIT\textunderscore TIME}$ (integer): seconds of waitting for AI to send message (default $\color{green} {5}$)
+* $\color{CornflowerBlue} {WAIT\textunderscore TIME\textunderscore DIFF}$ (integer): changes of waitting time (default $\color{green} {2}$), the actual waiting time will be in range [WAIT_TIME-WAIT_TIME_DIFF, WAIT_TIME+WAIT_TIME_DIFF]
+* $\color{CornflowerBlue} {AI\textunderscore INS}$ (string): instruction of prompt for ChatGPT
+* $\color{CornflowerBlue} {NON\textunderscore REPLY\textunderscore PROMPT}$ (string): instruction of prompt for ChatGPT when user have no response yet, the prompt is used to let AI come up with new idea
+* $\color{CornflowerBlue} {ITEM\textunderscore LEN}$ (integer): the total number of items (this should be changed when push new items to database)
+* $\color{CornflowerBlue} {CONS\textunderscore LIST}$ (string): The list of replies for constant version of AI. e.g. $\color{green} {reply1,reply2,reply3,reply4,reply5,reply6,reply7,reply8}$
+* $\color{CornflowerBlue} {ITEM}$ (string): The determined item for one experiment, e.g. $\color{green} {paperclip}$
