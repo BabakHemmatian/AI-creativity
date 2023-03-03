@@ -5,7 +5,6 @@ export default function UserLayout({ user, onlineUsersId }) {
   let avatarUrl = url;
 
   if (avatarUrl !== undefined) {
-    console.log(url);
     let start = 0;
     const end = url.length-4;
     if (url[33] === 'a') {
