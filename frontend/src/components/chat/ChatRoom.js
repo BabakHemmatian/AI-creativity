@@ -135,16 +135,19 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
                 {(ready===3) && (`The object you will be coming up with creative uses for is: ${currentChat.instruction}`)}
               </div>
             </li>
-            <li className='dark:text-white' style={{ fontWeight: 'bold' }}>
-              {(time <= 10) && (time > 0) && (`This chat room will end in ${time} seconds`)}
-            </li >
             {messages.map((message, index) => (
               <div key={index} ref={scrollRef}>
                 <Message message={message} self={currentUser.uid} />
               </div>
             ))}
             <li className='dark:text-white' style={{ fontWeight: 'bold' }}>
-              {(time === 0) && (`The session has ended`)}
+              {`This chat room will end in ${time} seconds`}
+            </li >
+            <li className='dark:text-white' style={{ fontWeight: 'bold' }}>
+              {(time === 0) && (
+                <span>Please follow this links
+                  <a href="https://www.w3schools.com">Visit W3Schools.com!</a>
+                </span>)}
             </li>
           </ul>
         </div>
