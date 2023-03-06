@@ -50,6 +50,13 @@ export default function AllUsers({
   // }, [chatRooms])
 
   useEffect(() => {
+    if (chatRooms.length == 0) {
+      setHasRoom(false);
+      setMatching(false);
+    }
+  }, [chatRooms])
+
+  useEffect(() => {
     socket.current?.on("matchedUser", (data) => {
       if (matching) {
         // console.log(`socket ${socket.current.id} recieve data`);

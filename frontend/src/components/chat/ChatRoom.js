@@ -5,6 +5,8 @@ import { getMessagesOfChatRoom, sendMessage, endChatRoom} from "../../services/C
 import Message from "./Message";
 import Contact from "./Contact";
 import ChatForm from "./ChatForm";
+import { async } from "@firebase/util";
+import { Collection } from "mongoose";
 // import { set } from "mongoose";
 
 const startIns = process.env.REACT_APP_INSTRUCTION
@@ -15,6 +17,7 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
   const [messages, setMessages] = useState([]);
   const [incomingMessage, setIncomingMessage] = useState(null);
   const [ready, setReady] = useState(0);
+  // const [end, setEnd] = useState(false);
 
   // const latestCount = useRef(count);
   const { time, start, pause, reset, status } = useTimer({
@@ -25,7 +28,7 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
       // console.log("send end request");
       socket.current.emit("timeout", {roomId: currentChat._id, userId: currentUser.uid});
       // endChatRoom(currentChat._id);
-      // handleEndChatRoom();
+      handleEndChatRoom();
       currentChat.isEnd = true;
     },
   }); 
@@ -34,6 +37,15 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
   useEffect(() => {
     if (ready === 3) {
       start();
+
+      //heart check avoiding auto disconnection
+      setTimeout(async function chat() {
+        if (!currentChat.isEnd) {
+          console.log('ping');
+          socket.current.emit('ping', {userId: currentUser});
+          setTimeout(chat, 40*1000);
+        }
+      }, 40*1000);
     }
   }, [ready])
 

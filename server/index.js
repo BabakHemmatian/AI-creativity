@@ -104,11 +104,9 @@ io.on("connection", (socket) => {
           userToRes.set(userId, response);
         }
         messages.push({text: response.text, sender: 2, replied: true});
-        await createChatMessageService(roomId, AI_UID, response.text);
       } else if (AI_VERSION === "GPT-3") {
         response = await generateCompletion(messages);
         messages.push({text: response.text, sender: 2, replied: true});
-        await createChatMessageService(roomId, AI_UID, response.text);
       } else {
         //TODO: reply constant
         const userMessage = messages.filter(m => m.sender === 2);
@@ -116,20 +114,22 @@ io.on("connection", (socket) => {
         if (index >= reply_list.length) {
           // the list of reply is not enough
           console.log("list reply not enough");
-
         }
         response = {text: reply_list[index % reply_list.length]};
         messages.push({text: response.text, sender: 2, replied: true});
-        await createChatMessageService(roomId, AI_UID, response.text);
+        
       }
       // console.log(response.text);
       // console.log(response);
-      const sendUserSocket = onlineUsers.get(userId);
-      if ( sendUserSocket ) {
-        socket.emit("getMessage", {
-          userId: AI_UID,
-          message: response.text
-        })
+      if (response.text.length > 0) {
+        await createChatMessageService(roomId, AI_UID, response.text);
+        const sendUserSocket = onlineUsers.get(userId);
+        if ( sendUserSocket ) {
+          socket.emit("getMessage", {
+            userId: AI_UID,
+            message: response.text
+          })
+        }
       }
       return true;
       
@@ -169,7 +169,7 @@ io.on("connection", (socket) => {
       // we can just push user's message and let AI response with that messages
       const messages = chatMessage.get(senderId);
       if (messages !== null) {
-        messages.push({text: message, sender: 1, replied: false});
+        messages.push({text: message.trim(), sender: 1, replied: false});
       }
     }
   });
@@ -302,6 +302,14 @@ io.on("connection", (socket) => {
       console.log("roomId is not equal to mapped roomId!");
       console.log(roomId);
       console.log(mapRoomId)
+    }
+  })
+
+  socket.on("ping", async({userId}) => {
+    console.log('pong');
+    const sendUserSocket = onlineUsers.get(userId);
+    if (sendUserSocket !== undefined) {
+      socket.to(sendUserSocket).emit('pong');
     }
   })
 });
