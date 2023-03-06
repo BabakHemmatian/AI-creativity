@@ -5,9 +5,6 @@ import { getMessagesOfChatRoom, sendMessage, endChatRoom} from "../../services/C
 import Message from "./Message";
 import Contact from "./Contact";
 import ChatForm from "./ChatForm";
-import { async } from "@firebase/util";
-import { Collection } from "mongoose";
-// import { set } from "mongoose";
 
 const startIns = process.env.REACT_APP_INSTRUCTION
 // const otherTurn = "It is now the other player's turn."
