@@ -145,8 +145,8 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
             </li >
             <li className='dark:text-white' style={{ fontWeight: 'bold' }}>
               {(time === 0) && (
-                <span>Please follow this links
-                  <a href="https://www.w3schools.com">Visit W3Schools.com!</a>
+                <span>The 2-player part of our study has ended. Thank you! When ready please click on the following link to answer a few more questions and finish the study:
+                  <a href="https://illinoisaces.co1.qualtrics.com/jfe/form/SV_81EIXvlwZDAncOi">Final Survey</a>
                 </span>)}
             </li>
           </ul>
