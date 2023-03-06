@@ -54,7 +54,7 @@ const filterContent = (messages, sentence) => {
         `You can use a ${item}`,
         `You can also use`,
         `One creative use for a ${item} is`,
-        `Use a ${item}`
+        `Use a ${item}`,
         `Use ${item}`
     ]
     filterArray.forEach((prefix) => {
