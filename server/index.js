@@ -143,7 +143,7 @@ io.on("connection", (socket) => {
 
   socket.on("addUser", (userId) => {
     onlineUsers.set(userId, socket.id);
-    userToRoom.set(userId, null); // dont update previous room
+    userToRoom.set(userId, undefined); // dont update previous room
     socket.emit("getUsers", Array.from(onlineUsers));
     console.log("login: " + userId);
   });
