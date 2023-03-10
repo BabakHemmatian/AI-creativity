@@ -180,7 +180,7 @@ io.on("connection", (socket) => {
     socket.emit("getUsers", Array.from(onlineUsers));
 
     const roomId = userToRoom.get(logoutID);
-    if (roomId !== null) {
+    if (roomId !== null && roomId !== undefined) {
       endChatRoomService(roomId, true);
       userToRoom.delete(logoutID);
     }
@@ -270,7 +270,7 @@ io.on("connection", (socket) => {
       socket.emit("userReady", {senderId: AI_UID});
       setTimeout(async function chat() {
         const roomId = userToRoom.get(userId);
-        if (roomId !== undefined) {
+        if (roomId !== null && roomId !== undefined) {
           // check if the room has ended
           await reply_message(userId);
 
@@ -294,10 +294,11 @@ io.on("connection", (socket) => {
   socket.on("timeout", async({roomId, userId}) => {
     
     const mapRoomId = userToRoom.get(userId);
+    endChatRoomService(roomId, false);
     if (roomId === mapRoomId) {
       // everything good, end the chat room
       userToRoom.delete(userId);
-      endChatRoomService(roomId, false);
+      // endChatRoomService(roomId, false);
     } else {
       console.log("roomId is not equal to mapped roomId!");
       console.log(roomId);
