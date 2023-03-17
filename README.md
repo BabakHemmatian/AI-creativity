@@ -77,8 +77,8 @@ All the environment variables will be treated as string in Python for update. Ev
 * `REACT_APP_FIREBASE_MESSAGING_SENDER_ID` (string): for firebase, dont change
 * `REACT_APP_FIREBASE_APP_I` (string): for firebase, dont change
 * `REACT_APP_URL` (string): url for backend api
-* `REACT_APP_SESSION_TIME` (integer): time for how long a chat room lasts in seconds (default 240)
-* `REACT_APP_INSTRUCTION` (string): instructions for user to get started 
+* `REACT_APP_SESSION_TIME` (integer): how long a chat lasts, in seconds (default 240)
+* `REACT_APP_INSTRUCTION` (string): Instructions for the user, to be read before the team session is started 
 * `REACT_APP_AVATAR_OPTION` (string): 
 **human** (human avatar) | 
 **bot** (rebot avatar) | 
@@ -87,18 +87,18 @@ All the environment variables will be treated as string in Python for update. Ev
 ### Backend
 * `PORT` $ (integer): port the service is listening to (default 8080)
 * `MONGO_URI` (string): url for connection to mongoDB
-* `MATCH_AI` (string): whether to match user with AI
+* `MATCH_AI` (string): whether to match user with AI. values: 'true', 'false'
 * `OPENAI_API_KEY` (string): key for openAI API key
-* `AI_UID` (string): UID that is actually AI
+* `AI_UID` (string): UID that is actually the AI
 * `AI_VERSION` (string): version of AI: 
-**GPT-3** (using davinci-002, no conversation) | 
-**ChatGPT** (using davinci-003, make conversation) | 
-**Constant** (no model, constant list of responses)
-* `WAIT_TIME` (integer): seconds of waitting for AI to send message (default 5)
-* `WAIT_TIME_DIFF` (integer): changes of waitting time (default 2), the actual waiting time will be in range [WAIT_TIME-WAIT_TIME_DIFF, WAIT_TIME+WAIT_TIME_DIFF]
-* `AI_INS` (string): instruction of prompt for ChatGPT
-* `END_PROMPT` (string): instruction of prompt for ChatGPT when user have no response yet, the prompt is used to let AI come up with new idea
-* `ITEM_LEN` (integer): the total number of items (this should be changed when push new items to database)
-* `CONS_LIST` (string): The list of replies for constant version of AI. e.g. 'reply1,reply2,reply3,reply4,reply5,reply6,reply7,reply8'
-* `ITEM` (string): The determined item for one experiment, e.g. 'paperclip'
-* `COMMON_WORD` (string): words that is not counted as repeated in while loop
+**GPT-3** (using davinci-002, not optimized for conversation) | 
+**ChatGPT** (using davinci-003, more optimized for conversation) | 
+**Constant** (no model, a constant list of responses)
+* `WAIT_TIME` (integer): seconds of waitting after the last response before the AI sends another (default 5)
+* `WAIT_TIME_DIFF` (integer): the actual waiting time for a particular response will be randomly chosen from the range [WAIT_TIME-WAIT_TIME_DIFF, WAIT_TIME+WAIT_TIME_DIFF]
+* `AI_INS` (string): the prompt used for requesting completions from ChatGPT
+* `END_PROMPT` (string): the prompt for ChatGPT when user has generated no response yet.
+* `ITEM_LEN` (integer): the total number of items for which creative ideas can be generated (this should be changed when new items are pushed to the database)
+* `CONS_LIST` (string): The list of replies for the constant version of AI. Formatted as follows: 'reply1,reply2,reply3,reply4,reply5,reply6,reply7,reply8'
+* `ITEM` (string): The target item to be used for the next session, e.g. 'paperclip'
+* `COMMON_WORD` (string): Words that are not counted as repeated if they show up in previous responses. These are used to identify cases where the AI generates responses that are identical to or very close to previous ones, so that they are prevented from getting added to prompts for the next response or being posted to the chat.
