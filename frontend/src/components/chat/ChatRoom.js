@@ -34,17 +34,21 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
   useEffect(() => {
     if (ready === 3) {
       start();
-
-      //heart check avoiding auto disconnection
-      setTimeout(async function chat() {
-        if (!currentChat.isEnd) {
-          console.log('ping');
-          socket.current.emit('ping', {userId: currentUser});
-          setTimeout(chat, 40*1000);
-        }
-      }, 40*1000);
     }
   }, [ready])
+
+  useEffect(() => {
+    //heart check avoiding auto disconnection
+    setTimeout(async function chat() {
+      if (!currentChat.isEnd) {
+        console.log('ping');
+        socket.current.emit('ping', {userId: currentUser});
+        if (currentChat.isEnd) {
+          setTimeout(chat, 40*1000);
+        }
+      }
+    }, 40*1000);
+  }, [])
 
   useEffect(() => {
     const fetchData = async () => {

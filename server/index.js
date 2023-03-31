@@ -30,7 +30,7 @@ const PORT = process.env.PORT || 8080;
 const MATCH_AI = (process.env.MATCH_AI==='true') || false; //default we will not match AI
 const AI_UID = process.env.AI_UID || '';
 const WAIT_TIME = process.env.WAIT_TIME || 5;
-const AI_VERSION = process.env.AI_VERSION || "GPT-3";
+const AI_VERSION = process.env.AI_VERSION || "GPT-3.5";
 const CONS_LIST = process.env.CONS_LIST;
 const WAIT_TIME_DIFF = process.env.WAIT_TIME_DIFF || 2;
 const reply_list = CONS_LIST.split(",")
@@ -104,7 +104,7 @@ io.on("connection", (socket) => {
           userToRes.set(userId, response);
         }
         messages.push({text: response.text, sender: 2, replied: true});
-      } else if (AI_VERSION === "GPT-3") {
+      } else if (AI_VERSION === "GPT-3.5") {
         response = await generateCompletion(messages);
         messages.push({text: response.text, sender: 2, replied: true});
       } else {

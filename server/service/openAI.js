@@ -1,5 +1,8 @@
 import { Configuration, OpenAIApi } from "openai";
 import { ChatGPTAPI } from 'chatgpt'
+import axios from 'axios';
+import { response } from "express";
+
 
 const chatgpt = new ChatGPTAPI({ apiKey: process.env.OPENAI_API_KEY });
 const configuration = new Configuration({
@@ -21,6 +24,12 @@ COMMON_SET.push(process.env.ITEM);
 const isPunc = (s) => {
     return /^(\.|\,|\!|\?|\:|\;|\"|\'|\-|\(|\))*$/g.test(s);
 }
+
+const httpheaders = {
+    'Content-Type': 'application/json',
+    'Authorization':`Bearer ${process.env.OPENAI_API_KEY}`,
+}
+
 
 // the function will filter one sentence and remove duplicate punc at the end
 // if the sentence end has no punc, it will append one.
@@ -50,16 +59,21 @@ const filterContent = (messages, sentence) => {
         `A ${item} can be used`,
         `A ${item} can also be used`,
         `${item}s can also be used`,
+        `${item} can also be used`,
+        `${item} can be used as`
         `You can use ${item}s`,
         `You can use a ${item}`,
         `You can also use`,
         `One creative use for a ${item} is`,
         `Use a ${item}`,
         `Use ${item}`,
-        `One creative use for a ${item} could be to`
+        `One creative use for a ${item} could be`,
+        `The ${item} can be userd`,
     ]
     filterArray.forEach((prefix) => {
         s = s.replace(prefix, ' ');
+        s = s.replace(prefix+' to', ' ');
+        s = s.replace(prefix+' to act', ' ');
     })
     s = s.replace(/\s{2,}/g," ");
     return s;
@@ -135,6 +149,32 @@ const noPuncFilter = (sentence) => {
 //         return `I already have this list for creative uses for a ${item}: ${list_idea}. This is a single creative use for a ${item} that is very different from any others in my current list:`
 //     }
 // }
+const httpGPTCompletion = async(model, message, temperature) => {
+    const content = {
+        'model':model,
+        'messages':[{'role':'user', 'content':message}],
+        'temperature': temperature
+    }
+    const response = await axios.post("https://api.openai.com/v1/chat/completions", content, {headers: httpheaders});
+    if (response.status === 200) {
+        console.log(response.data);
+        return response.data.choices[0].message.content;
+    } else {
+        console.log("http gpt failed");
+        console.log(response);
+    }
+}
+
+const apiGPTCompletion = async(model, message, temperature) => {
+    const completion = await openai.createCompletion({
+        model: model,
+        prompt: message,
+        temperature: temperature,
+        max_tokens: MAX_TOKEN,
+    });
+    return res = completion.data.choices[0];
+}
+
 
 const generateChatGPTPrompt = (messages) => {
     const item = messages[0].text
@@ -152,7 +192,7 @@ const generateChatGPTPrompt = (messages) => {
  * @returns string
  */
 export const generateCompletion = async (messages) => {
-    console.log('GPT-3 completion');
+    console.log('GPT-3.5 completion');
     const prompt = generateChatGPTPrompt(messages)+' '+END_PROMPT;
     const setArray = [];
     // console.log(prompt);
@@ -164,13 +204,8 @@ export const generateCompletion = async (messages) => {
     if (messages.filter((m) => m.sender===2).length > 0) {
         let tryTimes = 0;
         do {
-            const completion = await openai.createCompletion({
-                model: "text-davinci-002",
-                prompt: prompt,
-                temperature: 0.8,
-                max_tokens: MAX_TOKEN,
-            });
-            const res = completion.data.choices[0];
+            const restext = await httpGPTCompletion("gpt-3.5-turbo-0301", prompt, 0.7);
+            const res = {text: restext};
             res.text = filterContent(messages, res.text);
             const i = checkRepeat(setArray, res.text);
             if ( i === -1) {
@@ -186,13 +221,8 @@ export const generateCompletion = async (messages) => {
         let tryTimes = 0;
         const insForAI = `${AI_INS} ${messages[0].text}. ${prompt}`;
         do {
-            const completion = await openai.createCompletion({
-                model: "text-davinci-002",
-                prompt: insForAI,
-                temperature: 0.8,
-                max_tokens: MAX_TOKEN,
-            });
-            const res = completion.data.choices[0];
+            const restext = await httpGPTCompletion("gpt-3.5-turbo-0301", insForAI, 0.7);
+            const res = {text: restext};
             res.text = filterContent(messages, res.text);
             const i = checkRepeat(setArray, res.text);
             if ( i === -1) {
