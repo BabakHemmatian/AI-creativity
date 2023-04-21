@@ -60,7 +60,7 @@ const filterContent = (messages, sentence) => {
         `A ${item} can also be used`,
         `${item}s can also be used`,
         `${item} can also be used`,
-        `${item} can be used as`
+        `${item} can be used as`,
         `You can use ${item}s`,
         `You can use a ${item}`,
         `You can also use`,
@@ -161,7 +161,8 @@ const httpGPTCompletion = async(model, message, temperature) => {
         return response.data.choices[0].message.content;
     } else {
         console.log("http gpt failed");
-        console.log(response);
+        console.log(response.statusText);
+        // console.log(response);
     }
 }
 
