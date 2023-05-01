@@ -38,8 +38,25 @@ The output file format has the same format we use to import data.
 ![mongoDB6.png](./content/mongoDB6.png)
 
 
-## Schema
+## Schema for mongoDB
+### ChatMessage
+* `chatRoomId` (String): id of the `ChatRoom` the message is in.
+* `sender` (String): id of the user who sends the message.
+* `message` (String): content of message.
+* `timestamp`: create time and update time.
 
+### ChatRoom
+* `members` (Array): length should be always 2. Each elements in array is one id of user.
+* `instruction` (String): the item for discussion.
+* `isEnd` (Boolean): whether the room session has ended.
+* `earlyEnd` (Boolean): whether the room session has ended early.
+* `chatRoomList` (String): id of `ChatRoomList` that current room belongs to.
+* `chatType` (String): type of current room, type will be "HUM", "CON" or "GPT".
+
+### ChatRoomListSchema
+* `user` (String): id of the user who matches that list.
+* `chatTypes` (Array): length should be always 3. Each elements in array is type of room ("HUM", "CON" or "GPT").
+* `chatRooms` (Array): length should be 3 if the user acts correctly. Less than 3 if user refresh website or exit before completion. Each elements is id of `ChatRoom`.
 
 # Firebase
 Most of the function of the firebase is not used. We only use firebase for account authentication. Go to “Build”-”Authentication” and we will see the user emails and user UID. The UID here corresponds to the user UID in MongoDB.
