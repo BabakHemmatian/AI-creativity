@@ -78,7 +78,9 @@ All the environment variables will be treated as string in Python for update. Ev
 * `REACT_APP_FIREBASE_APP_I` (string): for firebase, dont change
 * `REACT_APP_URL` (string): url for backend api
 * `REACT_APP_SESSION_TIME` (integer): how long a chat lasts, in seconds (default 240)
-* `REACT_APP_INSTRUCTION` (string): Instructions for the user, to be read before the team session is started 
+* `REACT_APP_INSTRUCTION_1` (string): Instructions for the user, appears in order 1/3
+* `REACT_APP_INSTRUCTION_2` (string): Instructions for the user, appears in order 2/3
+* `REACT_APP_INSTRUCTION_3` (string): Instructions for the user, appears in order 3/3
 * `REACT_APP_AVATAR_OPTION` (string): 
 **human** (human avatar) | 
 **bot** (rebot avatar) | 
@@ -96,9 +98,10 @@ All the environment variables will be treated as string in Python for update. Ev
 **Constant** (no model, a constant list of responses)
 * `WAIT_TIME` (integer): seconds of waitting after the last response before the AI sends another (default 5)
 * `WAIT_TIME_DIFF` (integer): the actual waiting time for a particular response will be randomly chosen from the range [WAIT_TIME-WAIT_TIME_DIFF, WAIT_TIME+WAIT_TIME_DIFF]
+* `ITEM_LEN` (integer): the total number of items for which creative ideas can be generated (this should be changed when new items are pushed to the database)
+* `TRY_TIME` (integer): the number of retries when OPENAI gets repeated.
+* `ITEM` (string): The target item to be used for the next session, e.g. 'paperclip'
 * `AI_INS` (string): the prompt used for requesting completions from ChatGPT
 * `END_PROMPT` (string): the prompt for ChatGPT when user has generated no response yet.
-* `ITEM_LEN` (integer): the total number of items for which creative ideas can be generated (this should be changed when new items are pushed to the database)
 * `CONS_LIST` (string): The list of replies for the constant version of AI. Formatted as follows: 'reply1,reply2,reply3,reply4,reply5,reply6,reply7,reply8'
-* `ITEM` (string): The target item to be used for the next session, e.g. 'paperclip'
 * `COMMON_WORD` (string): Words that are not counted as repeated if they show up in previous responses. These are used to identify cases where the AI generates responses that are identical to or very close to previous ones, so that they are prevented from getting added to prompts for the next response or being posted to the chat.
