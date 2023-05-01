@@ -17,7 +17,7 @@ const END_PROMPT = process.env.END_PROMPT;
 const COMMON_WORD = process.env.COMMON_WORD;
 const COMMON_SET = COMMON_WORD.split(',');
 const TRY_TIME = process.env.TRY_TIME;
-const FILTER_CONTENT = process.env.FILTER_CONTENT;
+// const FILTER_CONTENT = process.env.FILTER_CONTENT;
 COMMON_SET.push(process.env.ITEM);
 
 // check string is fully punc
@@ -155,15 +155,20 @@ const httpGPTCompletion = async(model, message, temperature) => {
         'messages':[{'role':'user', 'content':message}],
         'temperature': temperature
     }
-    const response = await axios.post("https://api.openai.com/v1/chat/completions", content, {headers: httpheaders});
-    if (response.status === 200) {
-        console.log(response.data);
-        return response.data.choices[0].message.content;
-    } else {
-        console.log("http gpt failed");
-        console.log(response.statusText);
-        // console.log(response);
+    try {
+        const response = await axios.post("https://api.openai.com/v1/chat/completions", content, {headers: httpheaders});
+        if (response.status === 200) {
+            console.log(response.data);
+            return response.data.choices[0].message.content;
+        } else {
+            console.log("http gpt failed");
+            console.log(response.statusText);
+            // console.log(response);
+        }
+    } catch (error) {
+        console.log("axios error");
     }
+    
 }
 
 const apiGPTCompletion = async(model, message, temperature) => {
