@@ -57,11 +57,13 @@ export default function AllUsers({
   }, [chatRooms])
 
   useEffect(() => {
-    socket.current?.on("matchedUser", (data) => {
+    socket.current?.on("matchedUser", ({data, index}) => {
+      // console.log("recieved matching");
       if (matching) {
         // console.log(`socket ${socket.current.id} recieve data`);
         // console.log(`not back data: ${data}`);
         console.log(data);
+        data.index = index;
         setChatRooms([data]);
         setHasRoom(true);
         setMatching(false);

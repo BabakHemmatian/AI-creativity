@@ -9,7 +9,7 @@ import { VerifyToken, VerifySocketToken } from "./middlewares/VerifyToken.js";
 
 import { getOneRandomInstruction } from "./service/instruction.js";
 import { generateCompletion } from "./service/openAI.js";
-import { createChatRoomService, endChatRoomService } from "./service/chatRoom.js";
+import { createChatRoomService, endChatRoomService, createRandomChatRoomListService, appendChatRoomService, createChatRoomListService} from "./service/chatRoom.js";
 import { createChatMessageService } from "./service/chatMessage.js";
 import { chatgptReply } from "./service/openAI.js";
 
@@ -30,11 +30,29 @@ const PORT = process.env.PORT || 8080;
 const MATCH_AI = (process.env.MATCH_AI==='true') || false; //default we will not match AI
 const AI_UID = process.env.AI_UID || '';
 const WAIT_TIME = process.env.WAIT_TIME || 5;
-const AI_VERSION = process.env.AI_VERSION || "GPT-3.5";
+// const AI_VERSION = process.env.AI_VERSION || "GPT-3.5";
 const CONS_LIST = process.env.CONS_LIST;
 const WAIT_TIME_DIFF = process.env.WAIT_TIME_DIFF || 2;
 const reply_list = CONS_LIST.split(",")
 const NON_REPLY_PROMPT = process.env.NON_REPLY_PROMPT;
+
+var lastOder = -1;
+const ORDERS = [
+  [['HUM','CON','GPT'],['HUM','GPT','CON']],
+  [['HUM','CON','GPT'],['HUM','CON','GPT']],
+  [['HUM','GPT','CON'],['HUM','GPT','CON']],
+  [['HUM','GPT','CON'],['HUM','CON','GPT']],
+
+  [['CON','HUM','GPT'],['GPT','HUM','CON']],
+  [['CON','HUM','GPT'],['CON','HUM','GPT']],
+  [['GPT','HUM','CON'],['GPT','HUM','CON']],
+  [['GPT','HUM','CON'],['CON','HUM','GPT']],
+  
+  [['CON','GPT','HUM'],['GPT','CON','HUM']],
+  [['CON','GPT','HUM'],['CON','GPT','HUM']],
+  [['GPT','CON','HUM'],['GPT','CON','HUM']],
+  [['GPT','CON','HUM'],['CON','GPT','HUM']]
+]
 
 console.log(MATCH_AI);
 app.use("/api/room", chatRoomRoutes);
@@ -61,9 +79,10 @@ global.userToRoom = new Map();
 
 //this will be used only when there user is matched with AI
 global.chatMessage = new Map(); //[{text: message, sender: int}] 0 for instruction, 1 for user, 2 for AI
-global.userToTimer = new Map();
+// global.userToTimer = new Map();
 global.userToRes = new Map();
-// global.userToIndex = new Map();
+global.userToTypes = new Map();
+global.userToList = new Map();
 
 const getKey = (map, val) => {
   for (let [key, value] of map.entries()) {
@@ -76,6 +95,25 @@ const randSubAdd = () => {
   return randNum - WAIT_TIME;
 }
 
+const getRandomOrders = () => {
+  if (lastOder === -1) {
+    const index = Math.floor(Math.random() * 24);
+    const i = Math.round(index/2)
+    const j = Math.round(index%2)
+    lastOder = index;
+    return ORDERS[i][j]
+  } else {
+    const i = Math.round(lastOder/2)
+    const j = Math.round(lastOder%2)
+    lastOder = -1;
+    if (j === 0) {
+      return ORDERS[i][1];
+    } else {
+      return ORDERS[i][0];
+    }
+  }
+  
+}
 
 
 io.on("connection", (socket) => {
@@ -85,8 +123,17 @@ io.on("connection", (socket) => {
       // console.log(AI_VERSION);
       let messages = chatMessage.get(userId);
       const roomId = userToRoom.get(userId);
+      const types = userToTypes.get(userId);
+
+      if (!types) {
+        console.log(`reply message: no types for user ${userId}`);
+      } else if (types.length==0) {
+        console.log(`reply message: types length is 0 for ${userId}`);
+      }
+      const curType = types[0];
+      // const curType = 
       let response = null;
-      if (AI_VERSION === "ChatGPT") {
+      if (curType==="CHT") {
         const userMessage = messages.filter(m => m.sender === 1);
         const aiMessage = messages.filter(m => m.sender === 2);
         const res = userToRes.get(userId);
@@ -104,7 +151,7 @@ io.on("connection", (socket) => {
           userToRes.set(userId, response);
         }
         messages.push({text: response.text, sender: 2, replied: true});
-      } else if (AI_VERSION === "GPT-3.5") {
+      } else if (curType === "GPT") {
         response = await generateCompletion(messages);
         messages.push({text: response.text, sender: 2, replied: true});
       } else {
@@ -144,11 +191,16 @@ io.on("connection", (socket) => {
   socket.on("addUser", (userId) => {
     onlineUsers.set(userId, socket.id);
     userToRoom.set(userId, undefined); // dont update previous room
+    userToTypes.set(userId, []);
     socket.emit("getUsers", Array.from(onlineUsers));
     console.log("login: " + userId);
   });
 
   socket.on("sendMessage", async ({ senderId, receiverId, message }) => {
+    const roomId = userToRoom.get(senderId);
+    if (!roomId) {
+      console.log(`sendMessage: roomId not found for ${senderId}`);
+    }
     if (receiverId !== AI_UID) {
       // user is communicating with human
       const sendUserSocket = onlineUsers.get(receiverId);
@@ -171,7 +223,9 @@ io.on("connection", (socket) => {
       if (messages !== null) {
         messages.push({text: message.trim(), sender: 1, replied: false});
       }
+      
     }
+    createChatMessageService(roomId, senderId, message.trim());
   });
 
   socket.on("disconnect", () => {
@@ -179,10 +233,19 @@ io.on("connection", (socket) => {
     onlineUsers.delete(logoutID);
     socket.emit("getUsers", Array.from(onlineUsers));
 
-    const roomId = userToRoom.get(logoutID);
-    if (roomId !== null && roomId !== undefined) {
+    // const roomId = userToRoom.get(logoutID);
+    // if (roomId !== null && roomId !== undefined) {
+    //   endChatRoomService(roomId, true);
+    //   userToRoom.delete(logoutID);
+    // }
+    try {
+      const roomId = userToRoom.get(logoutID);
       endChatRoomService(roomId, true);
       userToRoom.delete(logoutID);
+      userToList.delete(logoutID);
+      userToTypes.set(logoutID, []);
+    } catch (error) {
+      console.log(error);
     }
 
     // const index = userToIndex.get(logoutID);
@@ -194,12 +257,34 @@ io.on("connection", (socket) => {
   });
 
   socket.on("matchUser", async ({userId}) => {
-    if (!MATCH_AI) {
-      // the java script seems to be one thread, so it should be thread safe
+    const types = userToTypes.get(userId);
+    if (types.length == 0) {
+      //1. If current user does not have an order, create one and create the first chat room
+      //const typeList = await createRandomChatRoomListService(userId);
+      const newOrder = getRandomOrders();
+      console.log("create new order list");
+      console.log(newOrder);
+      const typeList = await createChatRoomListService(userId, newOrder);
+      userToList.set(userId, typeList._id.toString());
+      typeList.chatTypes.forEach(e => {
+        types.push(e);
+      });
+      console.log(`create three types for ${userId}`);
+      console.log(types);
+    }
+
+    const curType = types[0];
+    const curI = 3-types.length;
+    console.log(`curI: ${curI}`);
+    const curList = userToList.get(userId);
+    if (curType=="HUM") {
+      // match with human
       var matched = false;
       // we will match human for user, behavior will be normal
       while (matchingUsers.length > 0 && !matched) {
         const firstUser = matchingUsers.shift();
+        const firstTypes = userToTypes.get(firstUser);
+        const firstI = 3-firstTypes.length;
         if (onlineUsers.has(firstUser)) {
           // this user is waiting for match
           if (!onlineUsers.has(userId)) {
@@ -225,13 +310,17 @@ io.on("connection", (socket) => {
             } else {
               insText = "there is no instruction in databse!";
             }
-            const newChatRoom = await createChatRoomService([userId,firstUser], insText);
-
+            const newChatRoom = await createChatRoomService([userId,firstUser], insText, curType, curList);
+            await appendChatRoomService(newChatRoom._id, curList);
+            userToRoom.set(userId, newChatRoom._id.toString());
+            userToRoom.set(firstUser, newChatRoom._id.toString());
             if (newChatRoom !== null) {
-              socket.emit("matchedUser", newChatRoom);
-              socket.to(matchedUserSocket).emit("matchedUser", newChatRoom);
-              matched = true;
+              socket.emit("matchedUser", {data:newChatRoom, index:curI});
+              socket.to(matchedUserSocket).emit("matchedUser", {data:newChatRoom, index:firstI});   
+            } else {
+              console.log("chatroom create failed");
             }
+            matched = true;
           }
         } else {
           console.log(`user ${firstUser} is not online, go next`);
@@ -243,8 +332,7 @@ io.on("connection", (socket) => {
         matchingUsers.push(userId);
       }
     } else {
-      // TODO:we can directly match AI with user
-      // create a chat room for user'
+      // match with AI
       var insText;
       const oneInstruction = await getOneRandomInstruction();
       if (oneInstruction !== null) {
@@ -253,19 +341,22 @@ io.on("connection", (socket) => {
         insText = "there is no instruction in databse!";
       }
 
-      const newChatRoom = await createChatRoomService([userId, AI_UID], insText);
+      const newChatRoom = await createChatRoomService([userId, AI_UID], insText, curType, curList);
+      await appendChatRoomService(newChatRoom._id, curList);
       if (newChatRoom !== null) {
-        socket.emit("matchedUser", newChatRoom);
+        socket.emit("matchedUser", {data:newChatRoom, index:curI});
         chatMessage.set(userId, [{text: insText, sender: 0, replied: true}]);
         userToRoom.set(userId, newChatRoom._id.toString());
         // userToIndex.set(userId, 0); //start with zero one,
       }
-      
     }
   });
 
   socket.on("ready", async({chatRoom, userId}) => {
-    if (MATCH_AI) {
+    const curType = chatRoom.chatType;
+    // console.log(`ready: ${curType}`);
+    if (curType !=='HUM') {
+      // console.log("ready: AI");
       // await new Promise(r => setTimeout(r, 2000));
       socket.emit("userReady", {senderId: AI_UID});
       setTimeout(async function chat() {
@@ -280,6 +371,7 @@ io.on("connection", (socket) => {
         }
       }, (WAIT_TIME-randSubAdd())*1000);
     } else {
+      // console.log("ready: human")
       let otherUser = chatRoom.members[0];
       if (otherUser === userId) {
         otherUser = chatRoom.members[1];
@@ -292,8 +384,19 @@ io.on("connection", (socket) => {
   })
 
   socket.on("timeout", async({roomId, userId}) => {
-    
+    //time is running out, the chat room ends normally
     const mapRoomId = userToRoom.get(userId);
+    const types = userToTypes.get(userId);
+    if (!types) {
+      console.log(`timeout: no types for user ${userId}`);
+    } else if (types.length==0) {
+      console.log(`timeout: types length is 0 for ${userId}`);
+    } else {
+      types.shift();
+      userToTypes.set(userId, types);
+    }
+    
+    //normally end the chat room
     endChatRoomService(roomId, false);
     if (roomId === mapRoomId) {
       // everything good, end the chat room

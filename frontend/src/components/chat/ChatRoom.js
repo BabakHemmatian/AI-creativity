@@ -6,11 +6,14 @@ import Message from "./Message";
 import Contact from "./Contact";
 import ChatForm from "./ChatForm";
 
-const startIns = process.env.REACT_APP_INSTRUCTION
-// const otherTurn = "It is now the other player's turn."
+const Ins1 = process.env.REACT_APP_INSTRUCTION_1
+const Ins2 = process.env.REACT_APP_INSTRUCTION_2
+const Ins3 = process.env.REACT_APP_INSTRUCTION_3
+
 // https://openbase.com/js/use-timer, library used for timer
 //currentChat is the object of ChatRoom
 export default function ChatRoom({ currentChat, currentUser, socket, handleEndChatRoom}) {
+  // console.log(currentChat);
   const [messages, setMessages] = useState([]);
   const [incomingMessage, setIncomingMessage] = useState(null);
   const [ready, setReady] = useState(0);
@@ -108,6 +111,7 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
         senderId: currentUser.uid,
         receiverId: receiverId,
         message: message,
+        chatRoom: currentChat,
       });
   
       const messageBody = {
@@ -115,8 +119,8 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
         sender: currentUser.uid,
         message: message,
       };
-      const res = await sendMessage(messageBody);
-      setMessages([...messages, res]);
+      // const res = await sendMessage(messageBody);
+      setMessages([...messages, messageBody]);
     }
   };
 
@@ -131,7 +135,9 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
           <ul className="space-y-2">
             <li>
               <div className='dark:text-white' >
-                {startIns}
+                {(currentChat.index === 0) && (Ins1)}
+                {(currentChat.index === 1) && (Ins2)}
+                {(currentChat.index === 2) && (Ins3)}
               </div>
             </li>
             <li className='dark:text-white' style={{ fontWeight: 'bold' }}>
@@ -148,10 +154,17 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
               {`This chat room will end in ${time} seconds`}
             </li >
             <li className='dark:text-white' style={{ fontWeight: 'bold' }}>
-              {(time === 0) && (
+              {(time === 0 && currentChat.index==2) && (
                 <span>The 2-player part of our study has ended. Thank you! When ready please click on the following link to answer a few more questions and finish the study:
                   <a href="https://illinoisaces.co1.qualtrics.com/jfe/form/SV_81EIXvlwZDAncOi">Final Survey</a>
                 </span>)}
+              {(time === 0 && currentChat.index < 2) && (
+                <span>
+                  Thank you. This round of the game has ended. 
+                  <span style={{fontWeight:'bold'}}>Please do NOT refresh this page.</span> 
+                  Click on the “match” button again to start the next round.
+                </span>
+              )}
             </li>
           </ul>
         </div>

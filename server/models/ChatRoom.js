@@ -5,7 +5,9 @@ const ChatRoomSchema = mongoose.Schema(
     members: Array,
     instruction: String,
     isEnd: Boolean,
-    earlyEnd: Boolean
+    earlyEnd: Boolean,
+    chatRoomList: String,
+    chatType: String,
   },
 );
 
