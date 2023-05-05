@@ -97,20 +97,22 @@ const randSubAdd = () => {
 
 const getRandomOrders = () => {
   if (lastOder === -1) {
-    const index = Math.floor(Math.random() * 24);
-    const i = Math.round(index/2)
-    const j = Math.round(index%2)
+    const index = Math.floor(Math.random() * 12);
+    // const i = Math.round(index/2)
+    // const j = Math.round(index%2)
     lastOder = index;
-    return ORDERS[i][j]
+    return ORDERS[index][0]
   } else {
-    const i = Math.round(lastOder/2)
-    const j = Math.round(lastOder%2)
+    // const i = Math.round(lastOder/2)
+    // const j = Math.round(lastOder%2)
+    const index = lastOder;
     lastOder = -1;
-    if (j === 0) {
-      return ORDERS[i][1];
-    } else {
-      return ORDERS[i][0];
-    }
+    return ORDERS[index][1]
+    // if (j === 0) {
+    //   return ORDERS[i][1];
+    // } else {
+    //   return ORDERS[i][0];
+    // }
   }
   
 }
