@@ -122,3 +122,6 @@ All the environment variables will be treated as string in Python for update. Ev
 * `END_PROMPT` (string): the prompt for ChatGPT when user has generated no response yet.
 * `CONS_LIST` (string): The list of replies for the constant version of AI. Formatted as follows: 'reply1,reply2,reply3,reply4,reply5,reply6,reply7,reply8'
 * `COMMON_WORD` (string): Words that are not counted as repeated if they show up in previous responses. These are used to identify cases where the AI generates responses that are identical to or very close to previous ones, so that they are prevented from getting added to prompts for the next response or being posted to the chat.
+
+## Edit instruction text in the code
+###
