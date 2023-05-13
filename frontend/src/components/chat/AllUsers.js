@@ -12,7 +12,7 @@ function classNames(...classes) {
 export default function AllUsers({
   users,
   chatRooms,
-  setChatRooms,
+  setCurrentChat,
   onlineUsersId,
   currentUser,
   changeChat,
@@ -64,7 +64,7 @@ export default function AllUsers({
         // console.log(`not back data: ${data}`);
         console.log(data);
         data.index = index;
-        setChatRooms([data]);
+        setCurrentChat(data);
         setHasRoom(true);
         setMatching(false);
         setMatchedRoom(data);

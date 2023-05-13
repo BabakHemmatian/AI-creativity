@@ -54,7 +54,7 @@ const ORDERS = [
   [['GPT','CON','HUM'],['CON','GPT','HUM']]
 ]
 
-console.log(MATCH_AI);
+// console.log(MATCH_AI);
 app.use("/api/room", chatRoomRoutes);
 app.use("/api/message", chatMessageRoutes);
 app.use("/api/user", userRoutes);
@@ -96,23 +96,24 @@ const randSubAdd = () => {
 }
 
 const getRandomOrders = () => {
+  // if (lastOder === -1) {
+  //   const index = Math.floor(Math.random() * 12);
+  //   lastOder = index;
+  //   return ORDERS[index][0]
+  // } else {
+  //   const index = lastOder;
+  //   lastOder = -1;
+  //   return ORDERS[index][1]
+  // }
+
   if (lastOder === -1) {
-    const index = Math.floor(Math.random() * 12);
-    // const i = Math.round(index/2)
-    // const j = Math.round(index%2)
+    const index = 9
     lastOder = index;
     return ORDERS[index][0]
   } else {
-    // const i = Math.round(lastOder/2)
-    // const j = Math.round(lastOder%2)
     const index = lastOder;
     lastOder = -1;
     return ORDERS[index][1]
-    // if (j === 0) {
-    //   return ORDERS[i][1];
-    // } else {
-    //   return ORDERS[i][0];
-    // }
   }
   
 }
@@ -129,7 +130,7 @@ io.on("connection", (socket) => {
 
       if (!types) {
         console.log(`reply message: no types for user ${userId}`);
-      } else if (types.length==0) {
+      } else if (types.length === 0) {
         console.log(`reply message: types length is 0 for ${userId}`);
       }
       const curType = types[0];
@@ -162,7 +163,7 @@ io.on("connection", (socket) => {
         const index = userMessage.length;
         if (index >= reply_list.length) {
           // the list of reply is not enough
-          console.log("list reply not enough");
+          console.log("CON reply message: list reply not enough");
         }
         response = {text: reply_list[index % reply_list.length]};
         messages.push({text: response.text, sender: 2, replied: true});
@@ -175,14 +176,16 @@ io.on("connection", (socket) => {
         const sendUserSocket = onlineUsers.get(userId);
         if ( sendUserSocket ) {
           socket.emit("getMessage", {
-            userId: AI_UID,
-            message: response.text
+            senderId: AI_UID,
+            message: response.text,
+            roomId: roomId
           })
         }
       }
       return true;
       
     } catch (error) {
+      console.log("reply message: throw an error");
       console.log(error);
       return false;
     }
@@ -212,6 +215,7 @@ io.on("connection", (socket) => {
         socket.to(sendUserSocket).emit("getMessage", {
           senderId,
           message,
+          roomId,
         });
         console.log("reciever is live, send it to sockect");
       } else {
@@ -247,6 +251,7 @@ io.on("connection", (socket) => {
       userToList.delete(logoutID);
       userToTypes.set(logoutID, []);
     } catch (error) {
+      console.log("disconnect: throws an error")
       console.log(error);
     }
 
@@ -259,8 +264,11 @@ io.on("connection", (socket) => {
   });
 
   socket.on("matchUser", async ({userId}) => {
-    const types = userToTypes.get(userId);
-    if (types.length == 0) {
+    const types = userToTypes.get(userId) || [];
+    if (types === undefined) {
+      console.log("matchUser: types is undefined");
+    }
+    if (types === undefined || types.length === 0) {
       //1. If current user does not have an order, create one and create the first chat room
       //const typeList = await createRandomChatRoomListService(userId);
       const newOrder = getRandomOrders();
@@ -363,13 +371,16 @@ io.on("connection", (socket) => {
       socket.emit("userReady", {senderId: AI_UID});
       setTimeout(async function chat() {
         const roomId = userToRoom.get(userId);
-        if (roomId !== null && roomId !== undefined) {
+        // console.log(roomId);
+        if (roomId === chatRoom._id) {
           // check if the room has ended
           await reply_message(userId);
 
           // chat is still alive, set next timer for reply
           // const timeDiff = ;
           setTimeout(chat, (WAIT_TIME-randSubAdd())*1000);
+        } else {
+          console.log(`AI reply for ${userId} has ended`);
         }
       }, (WAIT_TIME-randSubAdd())*1000);
     } else {

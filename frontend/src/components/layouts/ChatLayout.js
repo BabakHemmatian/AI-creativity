@@ -18,7 +18,7 @@ export default function ChatLayout() {
   const [chatRooms, setChatRooms] = useState([]);
   const [filteredRooms, setFilteredRooms] = useState([]);
 
-  const [currentChat, setCurrentChat] = useState();
+  const [currentChat, setCurrentChat] = useState(null);
   const [onlineUsersId, setonlineUsersId] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -123,7 +123,7 @@ export default function ChatLayout() {
             users={searchQuery !== "" ? filteredUsers : users}
             chatRooms={searchQuery !== "" ? filteredRooms : chatRooms}
             // chatRooms={[]}
-            setChatRooms={setChatRooms}
+            setCurrentChat={setCurrentChat}
             onlineUsersId={onlineUsersId}
             currentUser={currentUser}
             changeChat={handleChatChange}
@@ -131,7 +131,7 @@ export default function ChatLayout() {
           />
         </div>
 
-        {currentChat ? (
+        {(currentChat !== null) ? (
           <ChatRoom
             currentChat={currentChat}
             currentUser={currentUser}
