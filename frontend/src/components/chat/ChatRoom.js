@@ -19,6 +19,8 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
   const [ready, setReady] = useState(0);
   const [prevAI, setPrevAI] = useState(false);
   const [change, setChange] = useState(false);
+  // const [currentId, setCurrentId] = useState(currentChat._id);
+  const currentId = useRef(currentChat._id);
   // const [end, setEnd] = useState(false);
 
   // const latestCount = useRef(count);
@@ -48,6 +50,7 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
 
   useEffect(() => {
     //heart check avoiding auto disconnection
+
     setTimeout(async function chat() {
       if (!currentChat.isEnd) {
         console.log('ping');
@@ -65,9 +68,12 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
       const res = await getMessagesOfChatRoom(currentChat._id);
       setMessages(res);
     };
-    console.log(currentChat.chatType);
+    console.log(`changed id ${currentChat._id}`);
+    // setCurrentId(currentChat._id);
+    currentId.current = currentChat._id;
     setReady(0);
     reset();
+    setMessages([]);
     fetchData();
     if (prevAI) {
       setChange(true);
@@ -78,26 +84,38 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
     scrollRef.current?.scrollIntoView({
       behavior: "smooth",
     });
-    // console.log(messages);
+    console.log("messages")
+    console.log(messages);
+    console.log("filtered")
+    console.log(messages.filter(mess => mess.roomId === currentId.current))
   }, [messages]);
 
   useEffect(() => {
     socket.current?.on("getMessage", (data) => {
       // console.log("message data");
-      // console.log(data);
-      if (data.chatRoomId === currentChat._id) {
+      // console.log(data)
+      console.log("recieved data");
+      if (data.roomId === currentId.current) {
+        console.log("equal room id")
         setIncomingMessage({
           senderId: data.senderId,
           message: data.message,
+          roomId: data.roomId
         });
+        // console.log(messages)
+        // setMessages((prev) => [...prev, {senderId: data.senderId, message: data.message,}])
+      } else {
+        console.log(`current chat id ${currentId.current}`);
+        console.log(`message room id ${data.roomId}`);
       }
-      
+      console.log(messages);
     });
     socket.current?.on("userReady", (data) => {
       setReady(prevready => prevready | 1);
       setIncomingMessage({
         senderId: data.senderId,
         message: "ready",
+        roomId: currentId.current,
       });
       
     })
@@ -110,7 +128,7 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
   const handleFormSubmit = async (message) => {
     if (message === "ready" && ready !== 3) {
       setReady(prevready => prevready | 2);
-      setMessages([...messages, {chatRoomId: currentChat._id, sender: currentUser.uid, message: "ready"}]); //set but will not write to mongodb
+      setMessages([...messages, {roomId: currentId.current, sender: currentUser.uid, message: "ready"}]); //set but will not write to mongodb
       socket.current.emit("ready", {chatRoom: currentChat, userId: currentUser.uid});
     } else if (ready !== 3) {
       alert("please first type ready!");
@@ -129,11 +147,12 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
       });
   
       const messageBody = {
-        chatRoomId: currentChat._id,
+        roomId: currentId.current,
         sender: currentUser.uid,
         message: message,
       };
       // const res = await sendMessage(messageBody);
+      console.log(messageBody);
       setMessages([...messages, messageBody]);
     }
   };
@@ -155,10 +174,10 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
                      In each round, you and a paired player will use this chat platform to collectively 
                      generate a list of creative uses for an everyday object. Once the game starts, 
                      your team will have 4 minutes to produce as many high-quality responses as you can. 
-                     You will be <span style={{'font-weight':'bold'}}>evaluated as a team</span> based 
+                     You will be <span style={{'fontWeight':'bold'}}>evaluated as a team</span> based 
                      on how many uses you generate, their originality, 
                      surprisingness, and practical usefulness. There is no turn-taking in this game. 
-                     Either player can post a response at any point during the <span style={{'font-weight':'bold'}}>4 minutes</span>.
+                     Either player can post a response at any point during the <span style={{'fontWeight':'bold'}}>4 minutes</span>.
                     However, it is important for your team’s score to keep track of your co-player’s responses. When ready, please respond in the chat with 'ready'. Once both matched players have indicated their readiness, the game’s target object will be revealed underneath this instruction and the timer will begin.
                   </span>
                   )}
@@ -166,17 +185,17 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
                 {(currentChat.index === 2) && (Ins3)}
                 {(currentChat.chatType === "HUM") && (
                   <span>
-                    Your partner for this round will be a fellow <span style={{'font-weight':'bold'}}>human</span>.
+                    Your partner for this round will be a fellow <span style={{'fontWeight':'bold'}}>human</span>.
                   </span>
                 )}
                 {(currentChat.chatType !== "HUM") && (!change) && (
                   <span>
-                    Your partner for this round will be an <span style={{'font-weight':'bold'}}>AI</span>.
+                    Your partner for this round will be an <span style={{'fontWeight':'bold'}}>AI</span>.
                   </span>
                   )}
                 {(currentChat.chatType !== "HUM") && (change) && (
                   <span>
-                    Your partner for this round will be a <span style={{'font-weight':'bold'}}>different AI</span>.
+                    Your partner for this round will be a <span style={{'fontWeight':'bold'}}>different AI</span>.
                   </span>
                   )}
               </div>
@@ -186,7 +205,7 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
                 {(ready===3) && (`The object you will be coming up with creative uses for is: ${currentChat.instruction}`)}
               </div>
             </li>
-            {messages.map((message, index) => (
+            {messages.filter(mess => mess.roomId === currentId.current).map((message, index) => (
               <div key={index} ref={scrollRef}>
                 <Message message={message} self={currentUser.uid} />
               </div>
