@@ -19,37 +19,47 @@ export default function ChatLayout() {
   const [filteredRooms, setFilteredRooms] = useState([]);
 
   const [currentChat, setCurrentChat] = useState(null);
-  const [onlineUsersId, setonlineUsersId] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [cursession, setCursession] = useState(null);
 
   const [isContact, setIsContact] = useState(false);
+
+  /** disable operation, try to figure out current session */
+  const [load, setLoad] = useState(false);
 
   const socket = useRef();
 
   const { currentUser } = useAuth();
+
 
   useEffect(() => {
     const getSocket = async () => {
       const res = await initiateSocketConnection();
       socket.current = res;
       socket.current.emit("addUser", currentUser.uid);
-      socket.current.on("getUsers", (users) => {
-        const userId = users.map((u) => u[0]);
-        setonlineUsersId(userId);
+      setLoad(true); /** disable operation */
+      socket.current.on("getSession", ({isRecover, session}) => {
+        console.log(`getSession: recieved`);
+        // console.log(session);
+        if (isRecover) {
+          /** TODO: recover session */
+
+          if (session.currentChatRoom !== null && session.currentChatRoom !== undefined) {
+            const curroom = session.currentChatRoom;
+            curroom.index = session.currentI;
+            setCurrentChat(curroom);
+            setChatRooms([curroom]);
+          }
+          
+          setCursession(session);
+          
+        } 
+        setLoad(false);
       });
     };
 
     getSocket();
   }, [currentUser.uid]);
-
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     const res = await getChatRooms(currentUser.uid);
-  //     setChatRooms(res);
-  //   };
-
-  //   fetchData();
-  // }, [currentUser.uid]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -77,37 +87,16 @@ export default function ChatLayout() {
     setCurrentChat(chat);
   };
 
+  useEffect(() => {
+    //heart check avoiding auto disconnection
 
-  //search for perticular user
-  const handleSearch = (newSearchQuery) => {
-    setSearchQuery(newSearchQuery);
-
-    const searchedUsers = users.filter((user) => {
-      return user.displayName
-        .toLowerCase()
-        .includes(newSearchQuery.toLowerCase());
-    });
-
-    const searchedUsersId = searchedUsers.map((u) => u.uid);
-
-    // If there are initial contacts
-    if (chatRooms.length !== 0) {
-      chatRooms.forEach((chatRoom) => {
-        // Check if searched user is a contact or not.
-        const isUserContact = chatRoom.members.some(
-          (e) => e !== currentUser.uid && searchedUsersId.includes(e)
-        );
-        setIsContact(isUserContact);
-
-        isUserContact
-          ? setFilteredRooms([chatRoom])
-          : setFilteredUsers(searchedUsers);
-      });
-    } else {
-      setFilteredUsers(searchedUsers);
-    }
-  };
-
+    setTimeout(async function chat() {
+      console.log('ping');
+      socket.current.emit('ping', {userId: currentUser});
+      setTimeout(chat, 40*1000);
+    }, 40*1000);
+    // console.log(currentChat)
+  }, [])
 
   const handleEndChatRoom = async () => {
     setChatRooms([]);
@@ -117,14 +106,15 @@ export default function ChatLayout() {
     <div className="container mx-auto">
       <div className="min-w-full bg-white border-x border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700 rounded lg:grid lg:grid-cols-3">
         <div className="bg-white border-r border-gray-200 dark:bg-gray-900 dark:border-gray-700 lg:col-span-1">
-          <SearchUsers handleSearch={handleSearch} />
-
+          {/* <SearchUsers handleSearch={handleSearch} /> */}
+          {load && (
+          <div id="load-mask">
+            <span id="load-alert">loading user information...</span>
+          </div>)}
           <AllUsers
-            users={searchQuery !== "" ? filteredUsers : users}
             chatRooms={searchQuery !== "" ? filteredRooms : chatRooms}
-            // chatRooms={[]}
+            currentSession={cursession}
             setCurrentChat={setCurrentChat}
-            onlineUsersId={onlineUsersId}
             currentUser={currentUser}
             changeChat={handleChatChange}
             socket={socket}
@@ -137,6 +127,7 @@ export default function ChatLayout() {
             currentUser={currentUser}
             socket={socket}
             handleEndChatRoom={handleEndChatRoom}
+            currentSession={cursession}
           />
         ) : (
           <Welcome />

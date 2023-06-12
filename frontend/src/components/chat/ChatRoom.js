@@ -12,7 +12,13 @@ const Ins3 = "Welcome to the last round! The rules are the same as before. When 
 
 // https://openbase.com/js/use-timer, library used for timer
 //currentChat is the object of ChatRoom
-export default function ChatRoom({ currentChat, currentUser, socket, handleEndChatRoom}) {
+export default function ChatRoom({
+  currentChat, 
+  currentUser, 
+  socket, 
+  handleEndChatRoom,
+  currentSession
+}) {
   // console.log(currentChat);
   const [messages, setMessages] = useState([]);
   const [incomingMessage, setIncomingMessage] = useState(null);
@@ -35,13 +41,21 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
       handleEndChatRoom();
       currentChat.isEnd = true;
       if (currentChat.chatType!=="HUM") {
-        console.log(currentChat.chatType);
+        // console.log(currentChat.chatType);
         setPrevAI(true);
       }
     },
   }); 
   const scrollRef = useRef();
-
+  // useEffect(() => {
+  //   /** recover part */
+  //   setMessages([]);
+  //   // setIncomingMessage([]);
+  //   setReady(0);
+  //   // const curI = currentSession.currentI;
+  //   // if ()
+    
+  // }, [currentSession])
   useEffect(() => {
     if (ready === 3) {
       start();
@@ -49,32 +63,12 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
   }, [ready])
 
   useEffect(() => {
-    //heart check avoiding auto disconnection
-
-    setTimeout(async function chat() {
-      if (!currentChat.isEnd) {
-        console.log('ping');
-        socket.current.emit('ping', {userId: currentUser});
-        if (currentChat.isEnd) {
-          setTimeout(chat, 40*1000);
-        }
-      }
-    }, 40*1000);
-    // console.log(currentChat)
-  }, [])
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const res = await getMessagesOfChatRoom(currentChat._id);
-      setMessages(res);
-    };
-    console.log(`changed id ${currentChat._id}`);
+    // console.log(`changed id ${currentChat._id}`);
     // setCurrentId(currentChat._id);
     currentId.current = currentChat._id;
     setReady(0);
     reset();
     setMessages([]);
-    fetchData();
     if (prevAI) {
       setChange(true);
     }
@@ -84,19 +78,19 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
     scrollRef.current?.scrollIntoView({
       behavior: "smooth",
     });
-    console.log("messages")
-    console.log(messages);
-    console.log("filtered")
-    console.log(messages.filter(mess => mess.roomId === currentId.current))
+    // console.log("messages")
+    // console.log(messages);
+    // console.log("filtered")
+    // console.log(messages.filter(mess => mess.roomId === currentId.current))
   }, [messages]);
 
   useEffect(() => {
     socket.current?.on("getMessage", (data) => {
       // console.log("message data");
       // console.log(data)
-      console.log("recieved data");
+      console.log("getMessage: recieved");
       if (data.roomId === currentId.current) {
-        console.log("equal room id")
+        // console.log("equal room id")
         setIncomingMessage({
           senderId: data.senderId,
           message: data.message,
@@ -105,12 +99,13 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
         // console.log(messages)
         // setMessages((prev) => [...prev, {senderId: data.senderId, message: data.message,}])
       } else {
-        console.log(`current chat id ${currentId.current}`);
-        console.log(`message room id ${data.roomId}`);
+        // console.log(`current chat id ${currentId.current}`);
+        // console.log(`message room id ${data.roomId}`);
       }
-      console.log(messages);
+      // console.log(messages);
     });
     socket.current?.on("userReady", (data) => {
+      console.log('userReady: recieved')
       setReady(prevready => prevready | 1);
       setIncomingMessage({
         senderId: data.senderId,
@@ -118,6 +113,9 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
         roomId: currentId.current,
       });
       
+    })
+    socket.current?.on("refresh", () => {
+      alert('The co-player’s connection to the server was severed. Please refresh this page to start this session again. We apologize for the inconvenience.');
     })
   }, [socket]);
 
@@ -152,7 +150,7 @@ export default function ChatRoom({ currentChat, currentUser, socket, handleEndCh
         message: message,
       };
       // const res = await sendMessage(messageBody);
-      console.log(messageBody);
+      // console.log(messageBody);
       setMessages([...messages, messageBody]);
     }
   };
