@@ -10,21 +10,16 @@ function classNames(...classes) {
 }
 
 export default function AllUsers({
-  users,
   chatRooms,
   setCurrentChat,
-  onlineUsersId,
   currentUser,
   changeChat,
   socket,
+  currentSession
 }) {
   const [selectedChat, setSelectedChat] = useState();
-  // const [nonContacts, setNonContacts] = useState([]);
-  const [contactIds, setContactIds] = useState([]);
   const [matching , setMatching] = useState(false);
   const [hasRoom, setHasRoom] = useState(chatRooms.length > 0);
-  const [matchedRoom, setMatchedRoom] = useState(null);
-  // console.log(socket.current.id);
 
   useEffect(() => {
     const Ids = chatRooms.filter(chatRoom => !chatRoom.isEnd).map((chatRoom) => {
@@ -33,41 +28,38 @@ export default function AllUsers({
     if (Ids.length === 0) {
       setHasRoom(false);
     }
-    setContactIds(Ids);
   }, [chatRooms, currentUser.uid]);
 
-
-  // useEffect(() => {
-  //   setNonContacts(
-  //     users.filter(
-  //       (f) => f.uid !== currentUser.uid && !contactIds.includes(f.uid)
-  //     )
-  //   );
-  // }, [contactIds, users, currentUser.uid]);
-
-  // useEffect(() => {
-  //   if 
-  // }, [chatRooms])
+  /** recover session */
+  /**
+   * change current chatroom to unfinished one
+   * frontend should recieve it right after refresh or reopen
+   * Future: disable possible operation if recieved it
+   */
 
   useEffect(() => {
     if (chatRooms.length == 0) {
       setHasRoom(false);
       setMatching(false);
+    } else {
+      setHasRoom(true);
     }
   }, [chatRooms])
 
   useEffect(() => {
     socket.current?.on("matchedUser", ({data, index}) => {
       // console.log("recieved matching");
+      // console.log(`match: ${matching}`);
+      console.log('matchedUser: recieved');
+
       if (matching) {
         // console.log(`socket ${socket.current.id} recieve data`);
         // console.log(`not back data: ${data}`);
-        console.log(data);
+        
         data.index = index;
         setCurrentChat(data);
         setHasRoom(true);
         setMatching(false);
-        setMatchedRoom(data);
       }
     });
   })
@@ -126,7 +118,7 @@ export default function AllUsers({
             >
               <Contact
                 chatRoom={chatRoom}
-                onlineUsersId={onlineUsersId}
+                // onlineUsersId={onlineUsersId}
                 currentUser={currentUser}
               />
             </div>

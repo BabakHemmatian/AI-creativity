@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { getUser } from "../../services/ChatService";
 import UserLayout from "../layouts/UserLayout";
 
-export default function Contact({ chatRoom, onlineUsersId, currentUser }) {
+export default function Contact({ chatRoom, currentUser }) {
   const [contact, setContact] = useState();
 
   useEffect(() => {
@@ -19,5 +19,5 @@ export default function Contact({ chatRoom, onlineUsersId, currentUser }) {
     fetchData();
   }, [chatRoom, currentUser]);
 
-  return <UserLayout user={contact} onlineUsersId={onlineUsersId} />;
+  return <UserLayout user={contact} />;
 }
