@@ -5,10 +5,10 @@ import { getMessagesOfChatRoom, sendMessage, endChatRoom} from "../../services/C
 import Message from "./Message";
 import Contact from "./Contact";
 import ChatForm from "./ChatForm";
+import { parseInstruction } from "../../utils/parseInstruction";
 
 const Ins1 = "We will now play three rounds of a two-player version of the game you just practiced. In each round, you and a paired player will use this chat platform to collectively generate a list of creative uses for an everyday object. Once the game starts, your team will have 4 minutes to produce as many high-quality responses as you can. You will be evaluated as a team based on how many uses you generate, their originality, surprisingness, and practical usefulness. There is no turn-taking in this game. Either player can post a response at any point during the 4 minutes. However, it is important for your team’s score to keep track of your co-player’s responses. When ready, please respond in the chat with 'ready'. Once both matched players have indicated their readiness, the game’s target object will be revealed underneath this instruction and the timer will begin."
-const Ins2 = "Welcome to the second round! The rules are the same as before. When ready to start this round, please respond in the chat with ‘ready’. Once both matched players have indicated their readiness, the game’s target object will be revealed underneath this instruction and the timer will begin."
-const Ins3 = "Welcome to the last round! The rules are the same as before. When ready to start this round, please respond in the chat with ‘ready’. "
+
 
 // https://openbase.com/js/use-timer, library used for timer
 //currentChat is the object of ChatRoom
@@ -165,38 +165,7 @@ export default function ChatRoom({
         <div className="relative w-full p-6 overflow-y-auto h-[30rem] bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
           <ul className="space-y-2">
             <li>
-              <div className='dark:text-white' >
-                {(currentChat.index === 0) && (
-                  <span>
-                    We will now play three rounds of a two-player version of the game you just practiced.
-                     In each round, you and a paired player will use this chat platform to collectively 
-                     generate a list of creative uses for an everyday object. Once the game starts, 
-                     your team will have 4 minutes to produce as many high-quality responses as you can. 
-                     You will be <span style={{'fontWeight':'bold'}}>evaluated as a team</span> based 
-                     on how many uses you generate, their originality, 
-                     surprisingness, and practical usefulness. There is no turn-taking in this game. 
-                     Either player can post a response at any point during the <span style={{'fontWeight':'bold'}}>4 minutes</span>.
-                    However, it is important for your team’s score to keep track of your co-player’s responses. When ready, please respond in the chat with 'ready'. Once both matched players have indicated their readiness, the game’s target object will be revealed underneath this instruction and the timer will begin.
-                  </span>
-                  )}
-                {(currentChat.index === 1) && (Ins2)}
-                {(currentChat.index === 2) && (Ins3)}
-                {(currentChat.chatType === "HUM") && (
-                  <span>
-                    Your partner for this round will be a fellow <span style={{'fontWeight':'bold'}}>human</span>.
-                  </span>
-                )}
-                {(currentChat.chatType !== "HUM") && (!change) && (
-                  <span>
-                    Your partner for this round will be an <span style={{'fontWeight':'bold'}}>AI</span>.
-                  </span>
-                  )}
-                {(currentChat.chatType !== "HUM") && (change) && (
-                  <span>
-                    Your partner for this round will be a <span style={{'fontWeight':'bold'}}>different AI</span>.
-                  </span>
-                  )}
-              </div>
+              {parseInstruction(currentChat.index, currentChat.chatType, change)}
             </li>
             <li className='dark:text-white' style={{ fontWeight: 'bold' }}>
               <div>
