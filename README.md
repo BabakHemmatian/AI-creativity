@@ -92,17 +92,19 @@ All the environment variables will be treated as string in Python for update. Ev
 * `REACT_APP_FIREBASE_PROJECT_ID` (string): for firebase, dont change
 * `REACT_APP_FIREBASE_STORAGE_BUCKET` (string): for firebase, dont change
 * `REACT_APP_FIREBASE_MESSAGING_SENDER_ID` (string): for firebase, dont change
-* `REACT_APP_FIREBASE_APP_I` (string): for firebase, dont change
+* `REACT_APP_FIREBASE_APP_ID` (string): for firebase, dont change
 * `REACT_APP_URL` (string): url for backend api
 * `REACT_APP_SESSION_TIME` (integer): how long a chat lasts, in seconds (default 240)
-* `REACT_APP_INSTRUCTION_1` (string): Instructions for the user, appears in order 1/3
-* `REACT_APP_INSTRUCTION_2` (string): Instructions for the user, appears in order 2/3
-* `REACT_APP_INSTRUCTION_3` (string): Instructions for the user, appears in order 3/3
 * `REACT_APP_AVATAR_OPTION` (string): 
 **human** (human avatar) | 
 **bot** (rebot avatar) | 
 **default** (user's avatar)
-
+* `REACT_APP_MATCH_CONDITION` (string): the match condition for frontend, mainly for controling the instruction
+**HUM** (human only) | 
+**CON** (constant only) | 
+**GPT** (chatgpt only) |
+**ALL** (all of above in one session)
+  
 ### Backend
 * `PORT` $ (integer): port the service is listening to (default 8080)
 * `MONGO_URI` (string): url for connection to mongoDB
@@ -124,4 +126,5 @@ All the environment variables will be treated as string in Python for update. Ev
 * `COMMON_WORD` (string): Words that are not counted as repeated if they show up in previous responses. These are used to identify cases where the AI generates responses that are identical to or very close to previous ones, so that they are prevented from getting added to prompts for the next response or being posted to the chat.
 
 ## Edit instruction text in the code
-###
+### Frontend
+The instruction text can only be edit in the code (because we wanna bold specific text). All the instruction text can be found in **"/frontend/src/utils/parseInstruction.js"**. The function `parseInstruction` will handle all the instruction text. The function has three text, `index` means current chatroom index(0-2). `chatType` is the current chatroom type('HUM','CON' or 'GPT'). `change` is used for handle 'AI' and 'different AI'. For editing text, we just need to edit the text in `<span> <span/>` element.
