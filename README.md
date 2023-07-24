@@ -127,4 +127,5 @@ All the environment variables will be treated as string in Python for update. Ev
 
 ## Edit instruction text in the code
 ### Frontend
-The instruction text can only be edit in the code (because we wanna bold specific text). All the instruction text can be found in **"/frontend/src/utils/parseInstruction.js"**. The function `parseInstruction` will handle all the instruction text. The function has three text, `index` means current chatroom index(0-2). `chatType` is the current chatroom type('HUM','CON' or 'GPT'). `change` is used for handle 'AI' and 'different AI'. For editing text, we just need to edit the text in `<span> <span/>` element.
+The instruction text can only be edit in the code (because we wanna bold specific text). All the instruction text can be found in **"/frontend/src/utils/parseInstruction.js"**. The function `parseInstruction` will handle all the instruction text. The function has three text, `index` means current chatroom index(0-2). `chatType` is the current chatroom type('HUM','CON' or 'GPT'). `change` is used for handle 'AI' and 'different AI'. For editing text, we just need to edit the text in `<span> <span/>` element(see below).
+![parseins1.png](./content/parseIns1.png)
