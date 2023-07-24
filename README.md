@@ -38,8 +38,25 @@ The output file format has the same format we use to import data.
 ![mongoDB6.png](./content/mongoDB6.png)
 
 
-## Schema
+## Schema for mongoDB
+### ChatMessage
+* `chatRoomId` (String): id of the `ChatRoom` the message is in.
+* `sender` (String): id of the user who sends the message.
+* `message` (String): content of message.
+* `timestamp`: create time and update time.
 
+### ChatRoom
+* `members` (Array): length should be always 2. Each elements in array is one id of user.
+* `instruction` (String): the item for discussion.
+* `isEnd` (Boolean): whether the room session has ended.
+* `earlyEnd` (Boolean): whether the room session has ended early.
+* `chatRoomList` (String): id of `ChatRoomList` that current room belongs to.
+* `chatType` (String): type of current room, type will be "HUM", "CON" or "GPT".
+
+### ChatRoomListSchema
+* `user` (String): id of the user who matches that list.
+* `chatTypes` (Array): length should be always 3. Each elements in array is type of room ("HUM", "CON" or "GPT").
+* `chatRooms` (Array): length should be 3 if the user acts correctly. Less than 3 if user refresh website or exit before completion. Each elements is id of `ChatRoom`.
 
 # Firebase
 Most of the function of the firebase is not used. We only use firebase for account authentication. Go to “Build”-”Authentication” and we will see the user emails and user UID. The UID here corresponds to the user UID in MongoDB.
@@ -75,15 +92,19 @@ All the environment variables will be treated as string in Python for update. Ev
 * `REACT_APP_FIREBASE_PROJECT_ID` (string): for firebase, dont change
 * `REACT_APP_FIREBASE_STORAGE_BUCKET` (string): for firebase, dont change
 * `REACT_APP_FIREBASE_MESSAGING_SENDER_ID` (string): for firebase, dont change
-* `REACT_APP_FIREBASE_APP_I` (string): for firebase, dont change
+* `REACT_APP_FIREBASE_APP_ID` (string): for firebase, dont change
 * `REACT_APP_URL` (string): url for backend api
 * `REACT_APP_SESSION_TIME` (integer): how long a chat lasts, in seconds (default 240)
-* `REACT_APP_INSTRUCTION` (string): Instructions for the user, to be read before the team session is started 
 * `REACT_APP_AVATAR_OPTION` (string): 
 **human** (human avatar) | 
 **bot** (rebot avatar) | 
 **default** (user's avatar)
-
+* `REACT_APP_MATCH_CONDITION` (string): the match condition for frontend, mainly for controling the instruction
+**HUM** (human only) | 
+**CON** (constant only) | 
+**GPT** (chatgpt only) |
+**ALL** (all of above in one session)
+  
 ### Backend
 * `PORT` $ (integer): port the service is listening to (default 8080)
 * `MONGO_URI` (string): url for connection to mongoDB
@@ -96,12 +117,14 @@ All the environment variables will be treated as string in Python for update. Ev
 **Constant** (no model, a constant list of responses)
 * `WAIT_TIME` (integer): seconds of waitting after the last response before the AI sends another (default 5)
 * `WAIT_TIME_DIFF` (integer): the actual waiting time for a particular response will be randomly chosen from the range [WAIT_TIME-WAIT_TIME_DIFF, WAIT_TIME+WAIT_TIME_DIFF]
+* `ITEM_LEN` (integer): the total number of items for which creative ideas can be generated (this should be changed when new items are pushed to the database)
+* `TRY_TIME` (integer): the number of retries when OPENAI gets repeated.
+* `ITEM` (string): The target item to be used for the next session, e.g. 'paperclip'
 * `AI_INS` (string): the prompt used for requesting completions from ChatGPT
 * `END_PROMPT` (string): the prompt for ChatGPT when user has generated no response yet.
-* `ITEM_LEN` (integer): the total number of items for which creative ideas can be generated (this should be changed when new items are pushed to the database)
 * `CONS_LIST` (string): The list of replies for the constant version of AI. Formatted as follows: 'reply1,reply2,reply3,reply4,reply5,reply6,reply7,reply8'
-* `ITEM` (string): The target item to be used for the next session, e.g. 'paperclip'
 * `COMMON_WORD` (string): Words that are not counted as repeated if they show up in previous responses. These are used to identify cases where the AI generates responses that are identical to or very close to previous ones, so that they are prevented from getting added to prompts for the next response or being posted to the chat.
 
 ## Edit instruction text in the code
-###
+### Frontend
+The instruction text can only be edit in the code (because we wanna bold specific text). All the instruction text can be found in **"/frontend/src/utils/parseInstruction.js"**. The function `parseInstruction` will handle all the instruction text. The function has three text, `index` means current chatroom index(0-2). `chatType` is the current chatroom type('HUM','CON' or 'GPT'). `change` is used for handle 'AI' and 'different AI'. For editing text, we just need to edit the text in `<span> <span/>` element.
