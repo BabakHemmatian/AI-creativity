@@ -38,6 +38,7 @@ const WAIT_TIME_DIFF = process.env.WAIT_TIME_DIFF || 2;
 const reply_list = CONS_LIST.split(",")
 const NON_REPLY_PROMPT = process.env.NON_REPLY_PROMPT;
 const SESSION_TIME = process.env.SESSION_TIME || 120;
+const MATCH_CONDITION = process.env.MATCH_CONDITION || 'ALL'
 
 /** maps needed for functioning */
 global.onlineUsers = new Map();
@@ -166,6 +167,31 @@ const getRandomItems = () => {
   }
 }
 
+const getOneRandomItem = () => {
+  const items = [];
+
+  if (MATCH_CONDITION === 'HUM') {
+    if (lastItem === -1) {
+      /** switch from test to online */
+      // const index = 6 // uncomment for testing
+      const index = Math.floor(Math.random() * 3);
+      lastItem = index;
+      items.push(ITEMS[index]);
+      return items;
+    } else {
+      const index = lastItem;
+      lastItem = -1
+      items.push(ITEMS[index]);
+      return items;
+    }
+  } else {
+    const index = Math.floor(Math.random() * 3);
+    items.push(ITEMS[index]);
+    return items;
+  }
+
+}
+
 
 io.on("connection", (socket) => {
 
@@ -257,7 +283,7 @@ io.on("connection", (socket) => {
     
   };
 
-  global.chatSocket = socket;
+  // global.chatSocket = socket;
 
 // {
 //   TYPES: Array,
@@ -270,8 +296,9 @@ io.on("connection", (socket) => {
   socket.on("addUser", async (userId) => {
     //TODO: check whether current user has unfinished session
 
-    /** current user is the first time visiting */
+    
     if (!userSession.has(userId)) {
+      /** current user is the first time visiting */
       print_log(`userId ${userId} not in userSession`);
       const newsession = {...DEFAULT_SESSION};
       userSession.set(userId, newsession);
@@ -282,6 +309,7 @@ io.on("connection", (socket) => {
     print_log(`time diff ${timediff} seconds`, 4);
     print_log(cursession.disconnecttime, 4);
     if (!cursession.ended && timediff < SESSION_TIME) {
+      /** last session has not ended and it has not timeout yet */
       print_log("recover session", 4);
       socket.emit("getSession", {isRecover: true, session: cursession});
     } else if (!cursession.ended) {
@@ -291,18 +319,18 @@ io.on("connection", (socket) => {
       //   print_log("someuser are still waiting for");
       //   /** we need to setboth */
       // }
+      /** last session has not ended, but it has timeout */
       print_log("session time out, start new", 4);
       const newsession = {...DEFAULT_SESSION};
       userSession.set(userId, newsession);
       socket.emit("getSession", {isRecover: false, session: newsession});
     } else {
+      /** last session has ended, start new */
       print_log("previous session ended, start new", 4)
       socket.emit("getSession", {isRecover: false, session: cursession});
     }
     
     onlineUsers.set(userId, socket.id);
-    // userToRoom.set(userId, undefined); // dont update previous room
-    // 
     print_log(`login: ${userId}`, 4);
   });
 
@@ -389,27 +417,55 @@ io.on("connection", (socket) => {
     print_log(`matchUser: for ${userId}`, 5);
     if (session.ended) {
       /** we need a new session */
-      const newOrder = getRandomOrders();
-      const newItems = getRandomItems(userId);
-      session = userSession.get(userId);
-      print_log("matchUser: previous session is ended, create new one", 5);
-      print_log(newOrder);
-      print_log(newItems);
-      if (lastUser !== '' && lastUser !== userId) {
-        /** matched user */
-        
-        const lastsession = userSession.get(lastUser);
-        session = {...session, ...{matchedUser: lastUser}};
+      if (MATCH_CONDITION === 'ALL') {
+        /** three chatroom in one session */
+        const newOrder = getRandomOrders();
+        const newItems = getRandomItems(userId);
+        session = userSession.get(userId);
+        print_log("matchUser: previous session is ended, create new one", 5);
+        print_log(newOrder, 5);
+        print_log(newItems, 5);
+        if (lastUser !== '' && lastUser !== userId) {
+          /** matched user */
+          const lastsession = userSession.get(lastUser);
+          session = {...session, ...{matchedUser: lastUser}};
+          userSession.set(userId, session);
+          userSession.set(lastUser, {...lastsession, ...{matchedUser: userId}});
+          print_log(`matchUser: ${userId} matched to ${lastUser}`, 5);
+          lastUser = '';
+        } else {
+          lastUser = userId;
+        }
+        const typeList = await createChatRoomListService(userId, newOrder);
+        session = {...session, ...{ended: false,  types: newOrder, items: newItems, currentI: 0, currentList: typeList._id}};
         userSession.set(userId, session);
-        userSession.set(lastUser, {...lastsession, ...{matchedUser: userId}});
-        print_log(`matchUser: ${userId} matched to ${lastUser}`, 5);
-        lastUser = '';
       } else {
-        lastUser = userId;
+        /** match with HUM or CON or GPT */
+        const newOrder = [MATCH_CONDITION];
+        const newItems = getOneRandomItem();
+        session = userSession.get(userId);
+        print_log("matchUser: previous session is ended, create new one", 5);
+        print_log(newOrder, 5);
+        print_log(newItems, 5);
+        if (MATCH_CONDITION === 'HUM') {
+          // TODO: match users together
+          if (lastUser !== '' && lastUser !== userId) {
+            /** matched user */
+            const lastsession = userSession.get(lastUser);
+            session = {...session, ...{matchedUser: lastUser}};
+            userSession.set(userId, session);
+            userSession.set(lastUser, {...lastsession, ...{matchedUser: userId}});
+            print_log(`matchUser: ${userId} matched to ${lastUser}`, 5);
+            lastUser = '';
+          } else {
+            lastUser = userId;
+          }
+        } 
+        const typeList = await createChatRoomListService(userId, newOrder);
+        session = {...session, ...{ended: false,  types: newOrder, items: newItems, currentI: 0, currentList: typeList._id}};
+        userSession.set(userId, session);
       }
-      const typeList = await createChatRoomListService(userId, newOrder);
-      session = {...session, ...{ended: false,  types: newOrder, items: newItems, currentI: 0, currentList: typeList._id}};
-      userSession.set(userId, session);
+
     }
 
 
@@ -521,7 +577,7 @@ io.on("connection", (socket) => {
         if (curroomId !== roomId) {
           print_log(`timeout: given roomId ${roomId} does not match current roomId ${curroomId}`);
         }
-        if (curI === 2) {
+        if (curI === session.types.length-1) {
           /** current three session has ended */
           session = {...DEFAULT_SESSION, ...{disconnecttime: new Date()}};
         } else {
