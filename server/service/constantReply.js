@@ -5,11 +5,11 @@ export const generateConReply = (messages, quality, item) => {
     //TODO: check input
     if (!constResponses[item]) {
         print_log(`generateConReply: ${item} is not in existing items`);
-        return "";
+        return {text:""};
     }
     if (!constResponses[item][quality]) {
         print_log(`generateConReply: ${quality} is not in existing quality`);
-        return "";
+        return {text:""};
     }
 
     const aiMessage = [];
@@ -21,10 +21,10 @@ export const generateConReply = (messages, quality, item) => {
     const notUsed = constResponses[item][quality].filter(s => !aiMessage.includes(s));
     if (notUsed.length === 0) {
         print_log('generateConReply: run out of responses', 1);
-        return "";
+        return {text:""};
     }
 
     const randomI = Math.floor(Math.random() * notUsed.length);
-    return notUsed[randomI];
+    return {text:notUsed[randomI]};
 
 }
