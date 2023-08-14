@@ -9,6 +9,7 @@ import { VerifyToken, VerifySocketToken } from "./middlewares/VerifyToken.js";
 
 import { getOneRandomInstruction } from "./service/instruction.js";
 import { generateCompletion } from "./service/openAI.js";
+import { generateConReply } from "./service/constantReply.js";
 import { createChatRoomService, endChatRoomService, createRandomChatRoomListService, appendChatRoomService, createChatRoomListService} from "./service/chatRoom.js";
 import { createChatMessageService } from "./service/chatMessage.js";
 import { chatgptReply } from "./service/openAI.js";
@@ -117,7 +118,29 @@ const io = new Server(server, {
 
 io.use(VerifySocketToken);
 
-
+// console.log('test start');
+// const dummyMessages = [
+//   {text:"build a children's house", sender:2, replied:true},
+//   {text:"to make music, can be used as a drum", sender:2, replied:true},
+//   {text:"used in place of a cutting board when slicing vegetables or meat", sender:2, replied:true},
+//   {text:"ruler",sender:2},
+//   {text:"to eat",sender:2},
+//   {text:"brick",sender:2},
+//   {text:"cat bed",sender:2},
+//   {text:"absorb spilled liquid",sender:2},
+//   {text:"to send secret message",sender:2},
+//   {text:"to make music, can be used as a drum",sender:2},
+//   {text:"table tennis pool",sender:2},
+//   {text:"help with balance when doing yoga",sender:2},
+//   {text:"Make a book into a clock by attaching clock hands to the cover",sender:2},
+//   {text:"handkerchief",sender:2},
+//   {text:"sex toy",sender:2},
+//   {text:"Make a purse out of an old book",sender:2},
+//   {text:"used in place of a cutting board when slicing vegetables or meat",sender:2}
+// ]
+// const re = generateConReply(dummyMessages, 'high', 'book');
+// console.assert(re === "juggling")
+// console.log('test end');
 
 const getKey = (map, val) => {
   for (let [key, value] of map.entries()) {
@@ -203,13 +226,20 @@ io.on("connection", (socket) => {
         const roomId = room._id.toString();
         let messages = chatMessage.get(userId);
         const types = session.types;
+        const items = session.items;
         if (!types) {
           print_log(`reply message: no types for user ${userId}`, -1)
         } else if (types.length === 0) {
           print_log(`reply message: types length is 0 for ${userId}`, -1);
         }
+        if (!items) {
+          print_log(`reply message: no items for user ${userId}`, -1)
+        } else if (types.length === 0) {
+          print_log(`reply message: items length is 0 for ${userId}`, -1);
+        }
         const curI = session.currentI;
         const curType = types[curI];
+        const curItem = items[curI];
         print_log(`reply_message: start reply for ${userId}, current (Index,type): ${session.currentI},${curType}`, 1);
         // const curType = 
         let response = null;
@@ -236,15 +266,8 @@ io.on("connection", (socket) => {
           messages.push({text: response.text, sender: 2, replied: true});
         } else {
           /** constant reply */
-          const userMessage = messages.filter(m => m.sender === 2);
-          const index = userMessage.length;
-          if (index >= reply_list.length) {
-            // the list of reply is not enough
-            print_log("CON reply message: list reply not enough", -1);
-          }
-          response = {text: reply_list[index % reply_list.length]};
-          messages.push({text: response.text, sender: 2, replied: true});
-          
+          response = await generateConReply(messages, curItem, session.quality);
+          messages.push({text: response, sender: 2, replied: true});
         }
         // print_log(response.text);
         // print_log(response);
@@ -461,6 +484,14 @@ io.on("connection", (socket) => {
             lastUser = userId;
           }
         } 
+        if (MATCH_CONDITION === 'CON') {
+          /** randomly assign user high or low quality response */
+          if (Math.random() >= 0.5) {
+            session = {...session, ...{quality: 'high'}};
+          } else {
+            session = {...session, ...{quality: 'low'}}; 
+          }
+        }
         const typeList = await createChatRoomListService(userId, newOrder);
         session = {...session, ...{ended: false,  types: newOrder, items: newItems, currentI: 0, currentList: typeList._id}};
         userSession.set(userId, session);
