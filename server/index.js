@@ -266,7 +266,7 @@ io.on("connection", (socket) => {
           messages.push({text: response.text, sender: 2, replied: true});
         } else {
           /** constant reply */
-          response = await generateConReply(messages, curItem, session.quality);
+          response = await generateConReply(messages, session.quality, curItem);
           messages.push({text: response, sender: 2, replied: true});
         }
         // print_log(response.text);
