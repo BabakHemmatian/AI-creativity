@@ -14,7 +14,7 @@ import { createChatRoomService, endChatRoomService, createRandomChatRoomListServ
 import { createChatMessageService } from "./service/chatMessage.js";
 import { chatgptReply } from "./service/openAI.js";
 import { print_log } from "./service/utils.js";
-
+import { constResponses } from "./config/constResponse.js";
 import chatRoomRoutes from "./routes/chatRoom.js";
 import chatMessageRoutes from "./routes/chatMessage.js";
 import userRoutes from "./routes/user.js";
@@ -266,7 +266,7 @@ io.on("connection", (socket) => {
           messages.push({text: response.text, sender: 2, replied: true});
         } else {
           /** constant reply */
-          response = await generateConReply(messages, session.quality, curItem);
+          response = await generateConReply(messages, session.conMes);
           messages.push({text: response, sender: 2, replied: true});
         }
         // print_log(response.text);
@@ -491,6 +491,11 @@ io.on("connection", (socket) => {
           } else {
             session = {...session, ...{quality: 'low'}}; 
           }
+          //TODO: get shuffle messages
+          const curItem = newItems[0];
+          const curResponse = constResponses[curItem][session.quality];
+          const toShuffle = [...curResponse].sort(() => Math.random() - 0.5);
+          session = {...session, ...{conMes: toShuffle}};
         }
         const typeList = await createChatRoomListService(userId, newOrder);
         session = {...session, ...{ended: false,  types: newOrder, items: newItems, currentI: 0, currentList: typeList._id}};

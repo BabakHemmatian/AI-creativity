@@ -10,3 +10,4 @@ server/config/serviceAccountKey.json
 
 ## Env file
 .env
+serviceAccountKey.json

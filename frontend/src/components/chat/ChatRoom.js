@@ -5,7 +5,7 @@ import { getMessagesOfChatRoom, sendMessage, endChatRoom} from "../../services/C
 import Message from "./Message";
 import Contact from "./Contact";
 import ChatForm from "./ChatForm";
-import { parseInstruction } from "../../utils/parseInstruction";
+import { parseInstruction, parseEndInstruction } from "../../utils/parseInstruction";
 
 const Ins1 = "We will now play three rounds of a two-player version of the game you just practiced. In each round, you and a paired player will use this chat platform to collectively generate a list of creative uses for an everyday object. Once the game starts, your team will have 4 minutes to produce as many high-quality responses as you can. You will be evaluated as a team based on how many uses you generate, their originality, surprisingness, and practical usefulness. There is no turn-taking in this game. Either player can post a response at any point during the 4 minutes. However, it is important for your team’s score to keep track of your co-player’s responses. When ready, please respond in the chat with 'ready'. Once both matched players have indicated their readiness, the game’s target object will be revealed underneath this instruction and the timer will begin."
 
@@ -181,7 +181,8 @@ export default function ChatRoom({
               {`This chat room will end in ${time} seconds`}
             </li >
             <li className='dark:text-white' style={{ fontWeight: 'bold' }}>
-              {(time === 0 && currentChat.index===0) && (
+              {time === 0 && parseEndInstruction(currentChat.index)}
+              {/* {(time === 0 && currentChat.index===0) && (
                 <span>
                   You have completed the first round of the two-player version of the game. 
                   You have two more rounds left to play. 
@@ -194,7 +195,7 @@ export default function ChatRoom({
               {(time === 0 && currentChat.index===2) && (
                 <span>The 2-player part of our study has ended. Thank you! When ready please click on the following link to answer a few more questions and finish the study:
                   <a href="https://illinoisaces.co1.qualtrics.com/jfe/form/SV_81EIXvlwZDAncOi">Final Survey</a>
-                </span>)}
+                </span>)} */}
               {/* {(time === 0 && currentChat.index < 2) && (
                 <span>
                   Thank you. This round of the game has ended. 
