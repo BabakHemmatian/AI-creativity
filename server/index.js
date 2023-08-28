@@ -496,6 +496,10 @@ io.on("connection", (socket) => {
           const curResponse = constResponses[curItem][session.quality];
           const toShuffle = [...curResponse].sort(() => Math.random() - 0.5);
           session = {...session, ...{conMes: toShuffle}};
+          if (!toShuffle) {
+            print_log(`toshuffle is empty, curItem: ${curItem}, quality: ${session.quality}`);
+          }
+          print_log(toShuffle,-1);
         }
         const typeList = await createChatRoomListService(userId, newOrder);
         session = {...session, ...{ended: false,  types: newOrder, items: newItems, currentI: 0, currentList: typeList._id}};
