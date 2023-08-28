@@ -498,8 +498,9 @@ io.on("connection", (socket) => {
           session = {...session, ...{conMes: toShuffle}};
           if (!toShuffle) {
             print_log(`toshuffle is empty, curItem: ${curItem}, quality: ${session.quality}`);
+            print_log(toShuffle,-1);
           }
-          print_log(toShuffle,-1);
+          
         }
         const typeList = await createChatRoomListService(userId, newOrder);
         session = {...session, ...{ended: false,  types: newOrder, items: newItems, currentI: 0, currentList: typeList._id}};
