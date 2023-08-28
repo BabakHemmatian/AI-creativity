@@ -1,7 +1,7 @@
 import { constResponses } from "../config/constResponse.js";
 import { print_log } from "./utils.js";
 
-export const generateConReply = (messages, quality, item) => {
+export const generateConReply = (messages, conMes) => {
     //TODO: check input
     // if (!constResponses[item]) {
     //     print_log(`generateConReply: ${item} is not in existing items`);
@@ -28,8 +28,8 @@ export const generateConReply = (messages, quality, item) => {
     // return {text:notUsed[randomI]};
     const aiMessage = messages.filter(mess => (mess.sender === 2));
     const index = aiMessage.length;
-    if (index < messages.length) {
-        return {text: messages[index]};
+    if (index < conMes.length) {
+        return {text: conMes[index]};
     } else {
         print_log(`run out of const reply, current index is ${index}`);
         return {text:''};
