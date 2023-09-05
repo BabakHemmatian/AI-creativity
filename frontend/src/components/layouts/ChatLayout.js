@@ -109,7 +109,7 @@ export default function ChatLayout() {
           {/* <SearchUsers handleSearch={handleSearch} /> */}
           {load && (
           <div id="load-mask">
-            <span id="load-alert">loading user information...</span>
+            <span id="load-alert" className="dark:text-white">loading user information...</span>
           </div>)}
           <AllUsers
             chatRooms={searchQuery !== "" ? filteredRooms : chatRooms}
