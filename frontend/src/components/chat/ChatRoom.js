@@ -193,8 +193,8 @@ export default function ChatRoom({
                   You have completed the second round of the two-player game. You have one more round to play. When ready to start the last round, please click on the ‘match’ button to the left of this chat screen.
                 </span>)}
               {(time === 0 && currentChat.index===2) && (
-                <span>The 2-player part of our study has ended. Thank you! When ready please click on the following link to answer a few more questions and finish the study:
-                  <a href="https://illinoisaces.co1.qualtrics.com/jfe/form/SV_81EIXvlwZDAncOi">Final Survey</a>
+                <span>The 2-player part of our study has ended. Thank you! When ready please click on the following link to answer a few more questions and finish the study: 
+                  <a href="https://illinois.qualtrics.com/jfe/form/SV_4VCqyy8zw3IyTeS">Final Survey</a>
                 </span>)} */}
               {/* {(time === 0 && currentChat.index < 2) && (
                 <span>
