@@ -111,15 +111,15 @@ export const parseEndInstruction = (index) => {
         );
       case 2:
         return (
-          <span>The 2-player part of our study has ended. Thank you! When ready please click on the following link to answer a few more questions and finish the study:
-            <a href="https://illinoisaces.co1.qualtrics.com/jfe/form/SV_81EIXvlwZDAncOi">Final Survey</a>
+          <span>The 2-player part of our study has ended. Thank you! When ready please click on the following link to answer a few more questions and finish the study: 
+            <a href="https://illinois.qualtrics.com/jfe/form/SV_4VCqyy8zw3IyTeS">Final Survey</a>
           </span>
         );
     }
   } else {
     return (
-      <span>The 2-player part of our study has ended. Thank you! When ready please click on the following link to answer a few more questions and finish the study:
-        <a href="https://illinoisaces.co1.qualtrics.com/jfe/form/SV_81EIXvlwZDAncOi">Final Survey</a>
+      <span>The 2-player part of our study has ended. Thank you! When ready please click on the following link to answer a few more questions and finish the study: 
+        <a href="https://illinois.qualtrics.com/jfe/form/SV_4VCqyy8zw3IyTeS">Final Survey</a>
       </span>
     );
   }
