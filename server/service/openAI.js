@@ -30,7 +30,6 @@ const httpheaders = {
     'Authorization':`Bearer ${process.env.OPENAI_API_KEY}`,
 }
 
-const delay = ms => new Promise(res => setTimeout(res, ms));
 
 // the function will filter one sentence and remove duplicate punc at the end
 // if the sentence end has no punc, it will append one.
@@ -208,53 +207,57 @@ export const generateCompletion = async (messages) => {
             setArray.push(sentenceToSet(m.text));
         }
     })
-    // if (messages.filter((m) => m.sender===2).length > 0) {
-    //     let tryTimes = 0;
-    do {
-        const restext = await httpGPTCompletion("gpt-4", prompt, 0.7);
-        const res = {text: restext};
-        // res.text = filterContent(messages, res.text);
-        // const i = checkRepeat(setArray, res.text);
-        // if ( i === -1) {
-        //     console.log(`non repeat at ${tryTimes}`);
-        //     return res;
-        // } else {
-        //     console.log(`'${res.text}' is similar to '${messages[i+1].text}'`)
-        // }
-        tryTimes += 1;
-    } while (tryTimes < TRY_TIME);
-    // } else {
-    //     // generate first idea
-    //     let tryTimes = 0;
-    //     const insForAI = `${AI_INS} ${messages[0].text}. ${prompt}`;
-    //     do {
-    //         const restext = await httpGPTCompletion("gpt-4", insForAI, 0.7);
-    //         const res = {text: restext};
-    //         res.text = filterContent(messages, res.text);
-    //         const i = checkRepeat(setArray, res.text);
-    //         if ( i === -1) {
-    //             console.log(`non repeat at ${tryTimes}`);
-    //             return res;
-    //         } else {
-    //             console.log(`'${res.text}' is similar to '${messages[i+1].text}'`)
-    //         }
-    //         tryTimes += 1;
-    //     } while (tryTimes < TRY_TIME);
-    // }
+    if (messages.filter((m) => m.sender===2).length > 0) {
+        let tryTimes = 0;
+        do {
+            const restext = await httpGPTCompletion("gpt-4", prompt, 0.7);
+            const res = {text: restext};
+            res.text = filterContent(messages, res.text);
+            const i = checkRepeat(setArray, res.text);
+            if ( i === -1) {
+                console.log(`non repeat at ${tryTimes}`);
+                return res;
+            } else {
+                console.log(`'${res.text}' is similar to '${messages[i+1].text}'`)
+            }
+            tryTimes += 1;
+        } while (tryTimes < TRY_TIME);
+    } else {
+        // generate first idea
+        let tryTimes = 0;
+        const insForAI = `${AI_INS} ${messages[0].text}. ${prompt}`;
+        do {
+            const restext = await httpGPTCompletion("gpt-4", insForAI, 0.7);
+            const res = {text: restext};
+            res.text = filterContent(messages, res.text);
+            const i = checkRepeat(setArray, res.text);
+            if ( i === -1) {
+                console.log(`non repeat at ${tryTimes}`);
+                return res;
+            } else {
+                console.log(`'${res.text}' is similar to '${messages[i+1].text}'`)
+            }
+            tryTimes += 1;
+        } while (tryTimes < TRY_TIME);
+    }
     return {text:''};
 }
+
+
+
+    
 
 export const chatgptReply = async(message, messages, lastres) => {
     console.log("ChatGPT completion");
     const prompt = generateChatGPTPrompt(messages)+' '+END_PROMPT;
-    // const setArray = [];
-    // console.log(prompt);
-    // messages.forEach((m) => {
-    //     if (m.sender !== 0) {
-    //         setArray.push(sentenceToSet(m.text));
-    //     }
-    // })
-    // console.log(`${setArray.length} sets in array`);
+    const setArray = [];
+    console.log(prompt);
+    messages.forEach((m) => {
+        if (m.sender !== 0) {
+            setArray.push(sentenceToSet(m.text));
+        }
+    })
+    console.log(`${setArray.length} sets in array`);
 
 
     if (lastres !== undefined) {
@@ -265,14 +268,14 @@ export const chatgptReply = async(message, messages, lastres) => {
                 conversationId: lastres.conversationId,
                 parentMessageId: lastres.id
             })
-            // res.text=filterContent(messages, res.text);
-            // const i = checkRepeat(setArray, res.text);
-            // if ( i === -1) {
-            //     console.log(`non repeat at ${tryTimes}`);
-            //     return res;
-            // } else {
-            //     console.log(`'${res.text}' is similar to '${messages[i+1].text}'`)
-            // }
+            res.text=filterContent(messages, res.text);
+            const i = checkRepeat(setArray, res.text);
+            if ( i === -1) {
+                console.log(`non repeat at ${tryTimes}`);
+                return res;
+            } else {
+                console.log(`'${res.text}' is similar to '${messages[i+1].text}'`)
+            }
             tryTimes += 1;
         } while (tryTimes < TRY_TIME);
     } else {
@@ -280,17 +283,15 @@ export const chatgptReply = async(message, messages, lastres) => {
         let tryTimes = 0;
         const insForAI = `${AI_INS} ${messages[0].text}.`;
         do {
-            const res = await chatgpt.sendMessage(ConvForAI+prompt);
-            await delay(5000);
-            const res = await chatgpt.sendMessage(insForAI);
-            // res.text = filterContent(messages, res.text);
-            // const i = checkRepeat(setArray, res.text);
-            // if ( i === -1) {
-            //     console.log(`non repeat at ${tryTimes}`);
-            //     return res;
-            // } else {
-            //     console.log(`'${res.text}' is similar to '${messages[i+1].text}'`)
-            // }
+            const res = await chatgpt.sendMessage(insForAI+prompt);
+            res.text = filterContent(messages, res.text);
+            const i = checkRepeat(setArray, res.text);
+            if ( i === -1) {
+                console.log(`non repeat at ${tryTimes}`);
+                return res;
+            } else {
+                console.log(`'${res.text}' is similar to '${messages[i+1].text}'`)
+            }
             tryTimes += 1;
         } while (tryTimes < TRY_TIME); 
     }
