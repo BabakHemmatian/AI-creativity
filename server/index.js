@@ -485,11 +485,14 @@ io.on("connection", (socket) => {
           }
         } 
         if (MATCH_CONDITION === 'CON') {
-          /** randomly assign user high or low quality response */
-          if (Math.random() >= 0.5) {
-            session = {...session, ...{quality: 'high'}};
+          /** randomly assign user high or low quality responses or predetermined AI responses */
+          const randonNumber = Math.random();
+          if (randonNumber <= 0.333) {
+            	session = {...session, ...{quality: 'high'}};
+          } else if (randonNumber <= 0.666) {
+	            session = {...session, ...{quality: 'ai'}};
           } else {
-            session = {...session, ...{quality: 'low'}}; 
+	            session = {...session, ...{quality: 'low'}}; 
           }
           //TODO: get shuffle messages
           const curItem = newItems[0];
