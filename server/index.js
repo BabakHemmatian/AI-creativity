@@ -55,6 +55,8 @@ global.userToList = new Map();
 global.userSession = new Map();
 global.recoverUser = new Set();
 
+
+
 const DEFAULT_SESSION = {
   ended: true,
   isMatching: false,
@@ -146,10 +148,10 @@ const getKey = (map, val) => {
   }
 };
 
-// const randSubAdd = () => {
-//   const randNum = Math.floor(Math.random() * WAIT_TIME_DIFF * 2);
-//   return randNum - WAIT_TIME;
-// }
+const randSubAdd = () => {
+  const randNum = Math.floor(Math.random() * WAIT_TIME_DIFF * 2);
+  return randNum - WAIT_TIME;
+}
 
 const getRandomOrders = () => {
   if (lastOder === -1) {
