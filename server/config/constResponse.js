@@ -102,7 +102,7 @@ export const constResponses = {
             "to spear food",
             "use a fork to test the doneness of meat",
             "Making patterns in soft foods like mashed potatoes",
-        ]
+        ],
         'ai':[
             "If you put a rubber band around the tines of a fork it becomes a mini-trampoline for ants or other small insects",
             "Keep your drink cold by freezing a few forks and adding them to your glass",
@@ -172,7 +172,7 @@ export const constResponses = {
             "as a cup",
             "as a pan with lid",
             "decorate it and use it as a gift",
-        ]
+        ],
         'ai':[
             "Using the tab of a can to make a dress/shirt",
             "Printing press",
