@@ -585,9 +585,9 @@ io.on("connection", (socket) => {
           await reply_message(userId);
           if (curType === 'CON') {
 	    setTimeout(chat, (WAIT_TIME-randSubAdd())*1000);
-	  } else (curType ==='GPT') {
+          } else {
 	    setTimeout(chat, 0);
-	  }
+          }
         } else {
           /** if it is null, then reply should end */
           if (!room) {
