@@ -282,7 +282,7 @@ export const chatgptReply = async(message, messages, lastres) => {
         do {
             const res = await chatgpt.sendMessage(ConvForAI+prompt);
             await delay(5000);
-            const res = await chatgpt.sendMessage(insForAI);
+            res = await chatgpt.sendMessage(insForAI);
             // res.text = filterContent(messages, res.text);
             // const i = checkRepeat(setArray, res.text);
             // if ( i === -1) {
