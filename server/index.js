@@ -583,7 +583,11 @@ io.on("connection", (socket) => {
         if (room && room._id.toString() === curId) {
           /** need to ensure room is not null or undefined, and current room is what we expect */
           await reply_message(userId);
-          setTimeout(chat, (WAIT_TIME-randSubAdd())*1000);
+          if (curType === 'CON') {
+	    setTimeout(chat, (WAIT_TIME-randSubAdd())*1000);
+	  } else (curType ==='GPT') {
+	    setTimeout(chat, 0);
+	  }
         } else {
           /** if it is null, then reply should end */
           if (!room) {
