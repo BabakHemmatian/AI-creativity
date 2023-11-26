@@ -8,7 +8,7 @@ import "./config/mongo.js";
 import { VerifyToken, VerifySocketToken } from "./middlewares/VerifyToken.js";
 
 import { getOneRandomInstruction } from "./service/instruction.js";
-import { generateCompletion } from "./service/openAI.js";
+import { generateCompletion, generateResponse } from "./service/openAI.js";
 import { generateConReply } from "./service/constantReply.js";
 import { createChatRoomService, endChatRoomService, createRandomChatRoomListService, appendChatRoomService, createChatRoomListService} from "./service/chatRoom.js";
 import { createChatMessageService } from "./service/chatMessage.js";
@@ -243,26 +243,28 @@ io.on("connection", (socket) => {
         print_log(`reply_message: start reply for ${userId}, current (Index,type): ${session.currentI},${curType}`, 1);
         // const curType = 
         let response = null;
-        if (curType==="CHT") {
-          const userMessage = messages.filter(m => m.sender === 1);
-          const aiMessage = messages.filter(m => m.sender === 2);
-          const res = userToRes.get(userId);
-          if (aiMessage.length === 0) {
-            // the first message of ai should always consider the idea
-            print_log(messages, 1);
-            response = await chatgptReply(messages[0], messages, res);
-            userToRes.set(userId, response);
-          } else if (userMessage.length === 0) {
-            // print_log(userMessage[userMessage.length-1]);
-            response = await chatgptReply({text: NON_REPLY_PROMPT, replied: true}, messages, res)
-            userToRes.set(userId, response);
-          } else {
-            response = await chatgptReply(userMessage[userMessage.length-1], messages,res)
-            userToRes.set(userId, response);
-          }
-          messages.push({text: response.text, sender: 2, replied: true});
-        } else if (curType === "GPT") {
-          response = await generateCompletion(messages);
+        // if (curType==="CHT") {
+        //   const userMessage = messages.filter(m => m.sender === 1);
+        //   const aiMessage = messages.filter(m => m.sender === 2);
+        //   const res = userToRes.get(userId);
+        //   if (aiMessage.length === 0) {
+        //     // the first message of ai should always consider the idea
+        //     print_log(messages, 1);
+        //     response = await chatgptReply(messages[0], messages, res);
+        //     userToRes.set(userId, response);
+        //   } else if (userMessage.length === 0) {
+        //     // print_log(userMessage[userMessage.length-1]);
+        //     response = await chatgptReply({text: NON_REPLY_PROMPT, replied: true}, messages, res)
+        //     userToRes.set(userId, response);
+        //   } else {
+        //     response = await chatgptReply(userMessage[userMessage.length-1], messages,res)
+        //     userToRes.set(userId, response);
+        //   }
+        //   messages.push({text: response.text, sender: 2, replied: true});
+        // } else 
+	if (curType === "GPT") {
+          // response = await generateCompletion(messages);
+	  response = await generateResponse(messages);
           messages.push({text: response.text, sender: 2, replied: true});
         } else {
           /** constant reply */
