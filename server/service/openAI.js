@@ -243,7 +243,69 @@ export const generateCompletion = async (messages) => {
     return {text:''};
 }
 
+//
+const httpGPTResponse = async (model, messages, temperature) => {
+    const content = {
+        'model': model,
+        'messages': messages,
+        'temperature': temperature
+    }
+    try {
+        const response = await axios.post("https://api.openai.com/v1/chat/completions", content, {headers: httpheaders});
+        if (response.status === 200) {
+            console.log(response.data);
+            return response.data.choices[0].message.content;
+        } else {
+            console.log("http gpt failed");
+            console.log(response.statusText);
+            // console.log(response);
+        }
+    } catch (error) {
+        console.log("axios error");
+        console.log(error);
+    }
+}
 
+const generateFirstInstruction = (item) => {
+    return `${AI_INS} ${item}.`;
+}
+
+// use https request to generate response
+export const generateResponse = async (messages) => {
+    console.log('GPT-reply');
+
+
+
+    const gptMessages = [];
+
+    // if ai haven't generate any response, insert instruction
+    if (messages.filter((m) => m.sender===2).length > 0) {
+        const insForAI = generateFirstInstruction(messages[0].text);
+        gptMessages.push({'role':'user', 'content': insForAI});
+    }
+
+    messages.forEach((m) => {
+        if (m.sender === 1) {
+            // user message
+            gptMessages.push({'role': 'user', 'content': m.text});
+        } else if (m.sender === 2) {
+            // AI message
+            gptMessages.push({'role':'assistant', 'content':m.text});
+        }
+    });
+
+    let tryTimes = 0;
+    do {
+        const restext = await httpGPTResponse("gpt-3.5-turbo-0301", messages, 0.7);
+        if (restext) {
+            console.log(`good text at ${tryTimes}`);
+            return {text: restext};
+        }
+        tryTimes += 1;
+    } while (tryTimes < TRY_TIME);
+
+    return {text:''};
+}
 
     
 
