@@ -12,7 +12,7 @@ export const parseInstruction = (index, chatType, change) => {
                 <span>
                   We are going to play a version of the game called the Alternative Uses Test (AUT; Guilford, 1967), 
                    where you work with a co-player to come up with creative uses for an everyday object. 
-                   Your co-player for this session is <span style={{'fontWeight':'bold'}}>an interactive human</span>. You can communicate back and forth with 
+                   Your co-player for this session is <span> style={{'fontWeight':'bold'}}>an interactive human</span>. You can communicate back and forth with 
                    your co-player in the chat window as you wish. Once the game starts, your team will 
                    have <span> style={{'fontWeight':'bold'}}>4 minutes</span> in the chat room. Afterwards,
                    you will be asked to curate and submit a set of responses as your team’s. You will be 
@@ -28,7 +28,7 @@ export const parseInstruction = (index, chatType, change) => {
                     <span>
                       We are going to play a version of the game called the Alternative Uses Test (AUT; Guilford, 1967), 
                        where you work with a co-player to come up with creative uses for an everyday object. 
-                       Your co-player for this session is <span style={{'fontWeight':'bold'}}>non-interactive</span>. 
+                       Your co-player for this session is <span> style={{'fontWeight':'bold'}}>non-interactive</span>. 
                        A non-interactive co-player simply generates their own ideas in the chat window without
                        seeing your responses and conversing with you. Once the game starts, you and the co-player will 
                        have <span> style={{'fontWeight':'bold'}}>4 minutes</span> in the chat room. Afterwards,
@@ -36,6 +36,7 @@ export const parseInstruction = (index, chatType, change) => {
                        evaluated based on the number of responses in that set, their originality, surprisingness, and practical usefulness.
                        When ready to begin, please respond in the chat with 'ready'. Once both matched players have indicated their readiness,
                        the game’s target object will be revealed underneath this instruction and the timer will begin. 
+                    </span>
                 </div>
             );
         case 'GPT':
@@ -44,7 +45,7 @@ export const parseInstruction = (index, chatType, change) => {
                   <span>
                     We are going to play a version of the game called the Alternative Uses Test (AUT; Guilford, 1967), 
                        where you work with a co-player to come up with creative uses for an everyday object. 
-                       Your co-player for this session is <span style={{'fontWeight':'bold'}}>an interactive AI</span>.
+                       Your co-player for this session is <span> style={{'fontWeight':'bold'}}>an interactive AI</span>.
                        You can communicate back and forth with your co-player in the chat window as you wish. Once the game starts, your team will 
                        have <span> style={{'fontWeight':'bold'}}>4 minutes</span> in the chat room. Afterwards,
                        you will be asked to curate and submit a set of responses as your team’s. You will be 
@@ -71,24 +72,24 @@ export const parseInstruction = (index, chatType, change) => {
                        evaluated based on the number of responses in that set, their originality, surprisingness, and practical usefulness.
                        When ready to begin, please respond in the chat with 'ready'. Once both matched players have indicated their readiness,
                        the game’s target object will be revealed underneath this instruction and the timer will begin.
-                       Your co-player for this first round is <span style={{'fontWeight':'bold'}}>an interactive AI</span>.
+                       Your co-player for this first round is <span> style={{'fontWeight':'bold'}}>an interactive AI</span>.
                   </span>
                   )}
                 {(index === 1) && (Ins2)}
                 {(index === 2) && (Ins3)}
                 {(chatType === "HUM") && (
                   <span>
-                    Your partner for this round will be <span style={{'fontWeight':'bold'}}>an interactive human</span>. You can communicate back and forth with your co-player in the chat window as you wish. 
+                    Your partner for this round will be <span> style={{'fontWeight':'bold'}}>an interactive human</span>. You can communicate back and forth with your co-player in the chat window as you wish. 
                   </span>
                 )}
                 {(chatType === "GPT") && (
                   <span>
-                    Your partner for this round will be <span style={{'fontWeight':'bold'}}>an interactive AI</span>. You can communicate back and forth with your co-player in the chat window as you wish. 
+                    Your partner for this round will be <span> style={{'fontWeight':'bold'}}>an interactive AI</span>. You can communicate back and forth with your co-player in the chat window as you wish. 
                   </span>
                   )}
                 {(chatType === "CON") && (
                   <span>
-                    Your partner for this round will be <span style={{'fontWeight':'bold'}}>non-interactive</span>. A non-interactive co-player simply generates their own ideas in the chat window without
+                    Your partner for this round will be <span> style={{'fontWeight':'bold'}}>non-interactive</span>. A non-interactive co-player simply generates their own ideas in the chat window without
                        seeing your responses and conversing with you. 
                   </span>
                   )}
