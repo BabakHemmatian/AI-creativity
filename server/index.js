@@ -362,6 +362,7 @@ io.on("connection", (socket) => {
   socket.on("sendMessage", async ({ senderId, receiverId, message }) => {
     const session = userSession.get(senderId);
     const room = session.currentChatRoom;
+    const curType = room.chatType;
     if (!room) {
       print_log(`sendMessage: room is undefined or null for ${senderId}`);
     }
@@ -389,9 +390,14 @@ io.on("connection", (socket) => {
       if (messages !== null) {
         messages.push({text: message.trim(), sender: 1, replied: false});
       }
+
+
       
     }
     createChatMessageService(roomId, senderId, message.trim());
+    if (curType === 'GPT') {
+       await reply_message(senderId);
+    }
   });
 
   socket.on("disconnect", () => {
@@ -587,9 +593,10 @@ io.on("connection", (socket) => {
           await reply_message(userId);
           if (curType === 'CON') {
 	    setTimeout(chat, (WAIT_TIME-randSubAdd())*1000);
-          } else {
-	    setTimeout(chat, 0);
-          }
+          } 
+	  //else {
+	  //  setTimeout(chat, 0);
+          //}
         } else {
           /** if it is null, then reply should end */
           if (!room) {
