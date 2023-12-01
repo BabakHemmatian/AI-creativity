@@ -252,6 +252,7 @@ const httpGPTResponse = async (model, messages, temperature) => {
     }
     try {
         const response = await axios.post("https://api.openai.com/v1/chat/completions", content, {headers: httpheaders});
+        console.log('httpresponse', response);
         if (response.status === 200) {
             console.log(response.data);
             return response.data.choices[0].message.content;
@@ -273,9 +274,6 @@ const generateFirstInstruction = (item) => {
 // use https request to generate response
 export const generateResponse = async (messages) => {
     console.log('GPT-reply');
-
-
-
     const gptMessages = [];
 
     // if ai haven't generate any response, insert instruction
@@ -294,15 +292,12 @@ export const generateResponse = async (messages) => {
         }
     });
 
-    let tryTimes = 0;
-    do {
-        const restext = await httpGPTResponse("gpt-3.5-turbo-0301", messages, 0.7);
-        if (restext) {
-            console.log(`good text at ${tryTimes}`);
-            return {text: restext};
-        }
-        tryTimes += 1;
-    } while (tryTimes < TRY_TIME);
+
+    const restext = await httpGPTResponse("gpt-3.5-turbo-0301", messages, 0.7);
+    console.log('restext', restext);
+    if (restext) {
+        return {text: restext};
+    }
 
     return {text:''};
 }
