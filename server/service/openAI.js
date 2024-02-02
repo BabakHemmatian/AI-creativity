@@ -292,7 +292,7 @@ const httpGPTResponse = async (model, messages, temperature) => { //MAIN ERROR A
 
         // const response = await axios.post("https://api.openai.com/v1/chat/completions", content, {headers: httpheaders});
         
-        console.log('httpresponse', response);
+        console.log('httpresponse', response.choices);
         if (response.status === 200) {
             console.log(response.data);
             return response.data.choices[0].message.content;
@@ -341,7 +341,7 @@ export const generateResponse = async (messages) => { //ERROR HERE, SEEMS LIKE
     });
 
 
-    const restext = await httpGPTResponse("gpt-3.5-turbo-0301", messages, 0.7); //API ERROR HERE, THIS FUNCTION!
+    const restext = await httpGPTResponse("gpt-3.5-turbo", messages, 0.7); //API ERROR HERE, THIS FUNCTION!
     console.log('restext', restext);
     if (restext) {
         return {text: restext};
