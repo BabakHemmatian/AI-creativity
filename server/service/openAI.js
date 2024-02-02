@@ -1,8 +1,13 @@
+// Might need to do this before 
+// 1. npm install --save openai
+// 2. import OpenAI from "openai";
+// 3. const openai = new OpenAI();
+
 import { Configuration, OpenAIApi } from "openai";
 import { ChatGPTAPI } from 'chatgpt'
 import axios from 'axios';
 import { response } from "express";
-// this is a change
+
 
 const chatgpt = new ChatGPTAPI({ apiKey: process.env.OPENAI_API_KEY });
 const configuration = new Configuration({
@@ -149,13 +154,27 @@ const noPuncFilter = (sentence) => {
 //         return `I already have this list for creative uses for a ${item}: ${list_idea}. This is a single creative use for a ${item} that is very different from any others in my current list:`
 //     }
 // }
-const httpGPTCompletion = async(model, message, temperature) => {
+const httpGPTCompletion = async(model, message, temperature) => { // COME TO LATER
     const content = {
-        'model':model,
         'messages':[{'role':'user', 'content':message}],
+        'model':model,
         'temperature': temperature
     }
+
+    // const content = {
+    //     'model':model,
+    //     'messages':[{'role':'user', 'content':message}]
+    // }
+
     try {
+        
+        // const response = await openai.chat.completions.create(
+        //     {
+        //         messages: [{role:"user",content:message}],
+        //         model: model,
+        //     }
+        // );
+
         const response = await axios.post("https://api.openai.com/v1/chat/completions", content, {headers: httpheaders});
         if (response.status === 200) {
             console.log(response.data);
@@ -243,14 +262,29 @@ export const generateCompletion = async (messages) => {
     return {text:''};
 }
 
-//
-const httpGPTResponse = async (model, messages, temperature) => {
+// ERROR COMES UP AFTER THIS FUNCTION IS CALLED
+// https://platform.openai.com/docs/api-reference/chat/create
+const httpGPTResponse = async (model, messages, temperature) => { //MAIN ERROR API FUNCTION AXIOS
     const content = {
         'model': model,
         'messages': messages,
         'temperature': temperature
     }
-    try {
+
+    // const content = {
+    //     'model':model,
+    //     'messages':[{'role':'user', 'content':message}]
+    // }
+    
+    try {   
+        
+        // const response = await openai.chat.completions.create(
+        //     {
+        //         messages: [{role:"assistant",content:messages}],
+        //         model: model,
+        //     }
+        // );
+
         const response = await axios.post("https://api.openai.com/v1/chat/completions", content, {headers: httpheaders});
         console.log('httpresponse', response);
         if (response.status === 200) {
@@ -272,12 +306,20 @@ const generateFirstInstruction = (item) => {
 }
 
 // use https request to generate response
-export const generateResponse = async (messages) => {
-    console.log('GPT-reply');
+export const generateResponse = async (messages) => { //ERROR HERE, SEEMS LIKE 
+    console.log('GPT-reply'); // THIS GETS PRINTED AND THEN YOU GET AXIOS ERROR RIGHT AFTER
     const gptMessages = [];
 
+    // Messages meaning
+    // const newMessage = new ChatMessage({
+    //     chatRoomId: roomId,
+    //     sender: sender,
+    //     message: message
+    // })
+
+
     // if ai haven't generate any response, insert instruction
-    if (messages.filter((m) => m.sender===2).length > 0) {
+    if (messages.filter((m) => m.sender===2).length > 0) { //filter takes in a func or expr and 
         const insForAI = generateFirstInstruction(messages[0].text);
         gptMessages.push({'role':'user', 'content': insForAI});
     }
@@ -293,7 +335,7 @@ export const generateResponse = async (messages) => {
     });
 
 
-    const restext = await httpGPTResponse("gpt-3.5-turbo-0301", messages, 0.7);
+    const restext = await httpGPTResponse("gpt-3.5-turbo-0301", messages, 0.7); //API ERROR HERE, THIS FUNCTION!
     console.log('restext', restext);
     if (restext) {
         return {text: restext};
