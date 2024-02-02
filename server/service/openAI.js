@@ -279,8 +279,6 @@ const httpGPTResponse = async (model, messages, temperature) => { //MAIN ERROR A
     // #AI_INSTANTION = "SYSTEM"
     // #AI_CHAT = "USER"
     
-
-    
     try {   
         
         // const response = await openai.chat.completions.create(
