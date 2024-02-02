@@ -14,6 +14,10 @@ const configuration = new Configuration({
     apiKey: process.env.OPENAI_API_KEY,
 });
 
+
+//const openai_ = new 'OpenAI'();
+
+
 const openai = new OpenAIApi(configuration);
 
 const MAX_TOKEN = process.env.MAX_TOKEN || 3000;
@@ -154,7 +158,7 @@ const noPuncFilter = (sentence) => {
 //         return `I already have this list for creative uses for a ${item}: ${list_idea}. This is a single creative use for a ${item} that is very different from any others in my current list:`
 //     }
 // }
-const httpGPTCompletion = async(model, message, temperature) => { // COME TO LATER
+const httpGPTCompletion = async(model, message, temperature) => { // COME TO LATER (user vs sytem confusion)
     const content = {
         'messages':[{'role':'user', 'content':message}],
         'model':model,
@@ -265,27 +269,29 @@ export const generateCompletion = async (messages) => {
 // ERROR COMES UP AFTER THIS FUNCTION IS CALLED
 // https://platform.openai.com/docs/api-reference/chat/create
 const httpGPTResponse = async (model, messages, temperature) => { //MAIN ERROR API FUNCTION AXIOS
-    const content = {
-        'model': model,
-        'messages': messages,
-        'temperature': temperature
-    }
-
+    
     // const content = {
-    //     'model':model,
-    //     'messages':[{'role':'user', 'content':message}]
+    //     'model': model,
+    //     'messages': messages,
+    //     'temperature': temperature
     // }
+
+    // #AI_INSTANTION = "SYSTEM"
+    // #AI_CHAT = "USER"
+    
+
     
     try {   
         
-        // const response = await openai.chat.completions.create(
-        //     {
-        //         messages: [{role:"assistant",content:messages}],
-        //         model: model,
-        //     }
-        // );
+        const response = await openai.chat.completions.create(
+            {
+                messages: [{role:"user",content:messages}],
+                model: model,
+            }
+        );
 
-        const response = await axios.post("https://api.openai.com/v1/chat/completions", content, {headers: httpheaders});
+        // const response = await axios.post("https://api.openai.com/v1/chat/completions", content, {headers: httpheaders});
+        
         console.log('httpresponse', response);
         if (response.status === 200) {
             console.log(response.data);
