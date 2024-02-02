@@ -270,11 +270,11 @@ export const generateCompletion = async (messages) => {
 // https://platform.openai.com/docs/api-reference/chat/create
 const httpGPTResponse = async (model, messages, temperature) => { //MAIN ERROR API FUNCTION AXIOS
     
-    // const content = {
-    //     'model': model,
-    //     'messages': messages,
-    //     'temperature': temperature
-    // }
+    const content = {
+        'model': model,
+        'messages': messages,
+        'temperature': temperature
+    }
 
     // #AI_INSTANTION = "SYSTEM"
     // #AI_CHAT = "USER"
@@ -283,14 +283,14 @@ const httpGPTResponse = async (model, messages, temperature) => { //MAIN ERROR A
     
     try {   
         
-        const response = await openai.chat.completions.create(
-            {
-                messages: [{role:"user",content:messages}],
-                model: model,
-            }
-        );
+        // const response = await openai.chat.completions.create(
+        //     {
+        //         messages: [{role:"user",content:messages}],
+        //         model: model,
+        //     }
+        // );
 
-        // const response = await axios.post("https://api.openai.com/v1/chat/completions", content, {headers: httpheaders});
+        const response = await axios.post("https://api.openai.com/v1/chat/completions", content, {headers: httpheaders});
         
         console.log('httpresponse', response.choices);
         if (response.status === 200) {
