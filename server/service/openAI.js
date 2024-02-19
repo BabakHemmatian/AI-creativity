@@ -2,6 +2,8 @@ import { Configuration, OpenAIApi } from "openai";
 import { ChatGPTAPI } from 'chatgpt'
 import axios from 'axios';
 import { response } from "express";
+import OpenAI from "openai";
+
 
 
 const chatgpt = new ChatGPTAPI({ apiKey: process.env.OPENAI_API_KEY });
@@ -171,6 +173,24 @@ const httpGPTCompletion = async(model, message, temperature) =>
     }
     
 }
+
+// import OpenAI from "openai";
+
+// const openai = new OpenAI();
+
+// async function main() {
+//   const completion = await openai.chat.completions.create({
+//     messages: [{ role: "system", content: "You are a helpful assistant." }],
+//     model: "gpt-3.5-turbo",
+//   });
+
+//   console.log(completion.choices[0]);
+// }
+
+// main();
+
+
+
 
 const apiGPTCompletion = async(model, message, temperature) => {
     const completion = await openai.createCompletion({
