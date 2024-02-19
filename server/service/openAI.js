@@ -153,31 +153,39 @@ const noPuncFilter = (sentence) => {
 // }
 
 
-const httpGPTCompletion = async(model, message, temperature) => 
-{
-    // console.log(`Messages is ${message}, ${model}`);
-    const content = {
-        'model':model,
-        'messages':[{'role':'user', 'content':message}],
-        'temperature': temperature
-    }
-    try {
-        const response = await axios.post("https://api.openai.com/v1/chat/completions", content, {headers: httpheaders});
-        if (response.status === 200) {
-            console.log(response.data);
-            return response.data.choices[0].message.content;
-        } else {
-            console.log("http gpt failed");
-            console.log(response.statusText);
-            // console.log(response);
-        }
-    } catch (error) {
-        console.log("axios error", error.message);
-    }
+// const httpGPTCompletion = async(model, message, temperature) => 
+// {
+//     // console.log(`Messages is ${message}, ${model}`);
+//     const content = {
+//         'model':model,
+//         'messages':[{'role':'user', 'content':message}],
+//         'temperature': temperature
+//     }
+//     try {
+//         const response = await axios.post("https://api.openai.com/v1/chat/completions", content, {headers: httpheaders});
+//         if (response.status === 200) {
+//             console.log(response.data);
+//             return response.data.choices[0].message.content;
+//         } else {
+//             console.log("http gpt failed");
+//             console.log(response.statusText);
+//             // console.log(response);
+//         }
+//     } catch (error) {
+//         console.log("axios error", error.message);
+//     }
     
+// }
+
+const httpGPTCompletion = async(model, message, temperature = 0.7) =>
+{
+    const openai = new OpenAI();
+    const completion = await openai.chat.completions.create({
+        messages: [{ role: "assistant", content: message }],
+        model: "gpt-3.5-turbo",
+        });
+    console.log(completion.choices[0]);
 }
-
-
 
 // import OpenAI from "openai";
 
