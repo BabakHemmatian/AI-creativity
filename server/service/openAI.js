@@ -153,6 +153,7 @@ const noPuncFilter = (sentence) => {
 // }
 const httpGPTCompletion = async(model, message, temperature) => 
 {
+    console.log(`Messages is {message[0]}`);
     const content = {
         'model':model,
         'messages':[{'role':'user', 'content':message}],
