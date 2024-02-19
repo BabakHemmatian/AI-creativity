@@ -151,9 +151,11 @@ const noPuncFilter = (sentence) => {
 //         return `I already have this list for creative uses for a ${item}: ${list_idea}. This is a single creative use for a ${item} that is very different from any others in my current list:`
 //     }
 // }
+
+
 const httpGPTCompletion = async(model, message, temperature) => 
 {
-    console.log(`Messages is ${message}, ${model}`);
+    // console.log(`Messages is ${message}, ${model}`);
     const content = {
         'model':model,
         'messages':[{'role':'user', 'content':message}],
@@ -174,6 +176,8 @@ const httpGPTCompletion = async(model, message, temperature) =>
     }
     
 }
+
+
 
 // import OpenAI from "openai";
 

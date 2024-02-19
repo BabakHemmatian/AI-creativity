@@ -262,6 +262,7 @@ io.on("connection", (socket) => {
           }
           messages.push({text: response.text, sender: 2, replied: true});
         } else if (curType === "GPT") {
+          console.log(`Reply_Message : ${messages}`);
           response = await generateCompletion(messages);
           messages.push({text: response.text, sender: 2, replied: true});
         } else {
