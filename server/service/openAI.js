@@ -149,7 +149,8 @@ const noPuncFilter = (sentence) => {
 //         return `I already have this list for creative uses for a ${item}: ${list_idea}. This is a single creative use for a ${item} that is very different from any others in my current list:`
 //     }
 // }
-const httpGPTCompletion = async(model, message, temperature) => {
+const httpGPTCompletion = async(model, message, temperature) => 
+{
     const content = {
         'model':model,
         'messages':[{'role':'user', 'content':message}],
@@ -166,7 +167,7 @@ const httpGPTCompletion = async(model, message, temperature) => {
             // console.log(response);
         }
     } catch (error) {
-        console.log("axios error");
+        console.log("axios error", error.message);
     }
     
 }
@@ -210,7 +211,7 @@ export const generateCompletion = async (messages) => {
     if (messages.filter((m) => m.sender===2).length > 0) {
         let tryTimes = 0;
         do {
-            const restext = await httpGPTCompletion("gpt-4", prompt, 0.7);
+            const restext = await httpGPTCompletion("gpt-3.5", prompt, 0.7);
             const res = {text: restext};
             res.text = filterContent(messages, res.text);
             const i = checkRepeat(setArray, res.text);
