@@ -4,24 +4,24 @@ import axios from 'axios';
 import { response } from "express";
 
 
-var npm = require('npm');
-npm.load(function(err) {
-  // handle errors
+// var npm = require('npm');
+// npm.load(function(err) {
+//   // handle errors
 
-  // install module ffi
-  npm.commands.install(['openai'], function(er, data) {
-    // log errors or data
-  });
+//   // install module ffi
+//   npm.commands.install(['openai'], function(er, data) {
+//     // log errors or data
+//   });
 
-  npm.on('log', function(message) {
-    // log installation progress
-    console.log(message);
-  });
-});
+//   npm.on('log', function(message) {
+//     // log installation progress
+//     console.log(message);
+//   });
+// });
 
 
 // import OpenAI from "openai";
-
+const OpenAIApi = require('openai');
 
 
 const chatgpt = new ChatGPTAPI({ apiKey: process.env.OPENAI_API_KEY });
