@@ -1,4 +1,4 @@
-import { Configuration, OpenAIApi } from "openai";
+import { Configuration, OpenAIApi, OpenAI } from "openai";
 import { ChatGPTAPI } from 'chatgpt'
 import axios from 'axios';
 import { response } from "express";
@@ -21,7 +21,6 @@ import { response } from "express";
 
 
 // import OpenAI from "openai";
-const OpenAIApi = require('openai');
 
 
 const chatgpt = new ChatGPTAPI({ apiKey: process.env.OPENAI_API_KEY });
@@ -173,7 +172,9 @@ const noPuncFilter = (sentence) => {
 
 const httpGPTCompletion = async(model, message, temperature) => 
 {
+    console.log("AI INIT - START");
     const openai = new OpenAI();
+    console.log("AI INIT - DONE");
     // console.log(`Messages is ${message}, ${model}`);
     const content = {
         'model':model,
