@@ -2,7 +2,25 @@ import { Configuration, OpenAIApi } from "openai";
 import { ChatGPTAPI } from 'chatgpt'
 import axios from 'axios';
 import { response } from "express";
-import OpenAI from "openai";
+
+
+var npm = require('npm');
+npm.load(function(err) {
+  // handle errors
+
+  // install module ffi
+  npm.commands.install(['openai'], function(er, data) {
+    // log errors or data
+  });
+
+  npm.on('log', function(message) {
+    // log installation progress
+    console.log(message);
+  });
+});
+
+
+// import OpenAI from "openai";
 
 
 
@@ -155,6 +173,7 @@ const noPuncFilter = (sentence) => {
 
 const httpGPTCompletion = async(model, message, temperature) => 
 {
+    const openai = new OpenAI();
     // console.log(`Messages is ${message}, ${model}`);
     const content = {
         'model':model,
@@ -176,6 +195,7 @@ const httpGPTCompletion = async(model, message, temperature) =>
     }
     
 }
+
 
 // const httpGPTCompletion = async(model, message, temperature = 0.7) =>
 // {
