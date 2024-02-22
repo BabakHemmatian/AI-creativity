@@ -1,8 +1,7 @@
-import { Configuration, OpenAIApi} from "openai";
+import { Configuration, OpenAIApi, OpenAI} from "openai";
 import { ChatGPTAPI } from 'chatgpt'
 import axios from 'axios';
 import { response } from "express";
-
 
 // var npm = require('npm');
 // npm.load(function(err) {
