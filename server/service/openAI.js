@@ -1,4 +1,4 @@
-import { Configuration, OpenAIApi, OpenAI } from "openai";
+import { Configuration, OpenAIApi} from "openai";
 import { ChatGPTAPI } from 'chatgpt'
 import axios from 'axios';
 import { response } from "express";
@@ -172,9 +172,9 @@ const noPuncFilter = (sentence) => {
 
 const httpGPTCompletion = async(model, message, temperature) => 
 {
-    console.log("AI INIT - START");
-    const openai = new OpenAI();
-    console.log("AI INIT - DONE");
+    // console.log("AI INIT - START");
+    // //const openai = new OpenAI();
+    // console.log("AI INIT - DONE");
     // console.log(`Messages is ${message}, ${model}`);
     const content = {
         'model':model,
