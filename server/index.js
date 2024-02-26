@@ -148,10 +148,12 @@ const getKey = (map, val) => {
   }
 };
 
+
 const randSubAdd = () => {
-  const randNum = Math.floor(Math.random() * WAIT_TIME_DIFF * 2);
-  return randNum - WAIT_TIME;
-}
+  const randNum = Math.floor(Math.random() * WAIT_TIME_DIFF * (-5)); // 
+  return randNum - WAIT_TIME; 
+} 
+
 
 const getRandomOrders = () => {
   if (lastOder === -1) {
@@ -262,7 +264,7 @@ io.on("connection", (socket) => {
           }
           messages.push({text: response.text, sender: 2, replied: true});
         } else if (curType === "GPT") {
-          console.log(`Reply_Message : ${messages}`);
+          // console.log(`Reply_Message : ${messages}`);
           response = await generateCompletion(messages);
           messages.push({text: response.text, sender: 2, replied: true});
         } else {

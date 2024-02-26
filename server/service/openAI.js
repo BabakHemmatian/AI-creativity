@@ -189,7 +189,7 @@ const httpGPTCompletion = async(model, message, temperature) =>
     try {
         const response = await axios.post("https://api.openai.com/v1/chat/completions", content, {headers: httpheaders});
         if (response.status === 200) {
-            console.log(response.data);
+            console.log("RESPONSE from gptcompletion:",response.data);
             return response.data.choices[0].message.content;
         } else {
             console.log("http gpt failed");
