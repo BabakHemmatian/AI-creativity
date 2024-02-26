@@ -264,7 +264,7 @@ export const generateCompletion = async (messages) => {
     if (messages.filter((m) => m.sender===2).length > 0) {
         let tryTimes = 0;
         do {
-            const restext = await httpGPTCompletion("gpt-3.5", prompt, 0.7);
+            const restext = await httpGPTCompletion("gpt-3.5-turbo", prompt, 0.7);
             const res = {text: restext};
             res.text = filterContent(messages, res.text);
             const i = checkRepeat(setArray, res.text);
@@ -281,7 +281,7 @@ export const generateCompletion = async (messages) => {
         let tryTimes = 0;
         const insForAI = `${AI_INS} ${messages[0].text}. ${prompt}`;
         do {
-            const restext = await httpGPTCompletion("gpt-3.5", insForAI, 0.7);
+            const restext = await httpGPTCompletion("gpt-3.5-turbo", insForAI, 0.7);
             const res = {text: restext};
             res.text = filterContent(messages, res.text);
             const i = checkRepeat(setArray, res.text);
