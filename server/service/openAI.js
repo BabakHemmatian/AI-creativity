@@ -71,6 +71,12 @@ const onePuncFilter = (sentence) => {
 
 // filter the AI response
 const filterContent = (messages, sentence) => {
+    
+    if (typeof sentence !== 'string') {
+        console.error('filterContent: sentence is not string', sentence);
+        return '';
+    }
+    
     let s = sentence;
     const item = messages[0].text;
     const filterArray = [
