@@ -71,7 +71,7 @@ const onePuncFilter = (sentence) => {
 
 // filter the AI response
 const filterContent = (messages, sentence) => {
-    
+
     if (typeof sentence !== 'string') {
         console.error('filterContent: sentence is not string', sentence);
         return '';
@@ -272,6 +272,7 @@ export const generateCompletion = async (messages) => {
         do {
             const restext = await httpGPTCompletion("gpt-3.5-turbo", prompt, 0.7);
             const res = {text: restext};
+            console.log("Generate Completion function IF:", res.text);
             res.text = filterContent(messages, res.text);
             const i = checkRepeat(setArray, res.text);
             if ( i === -1) {
@@ -289,6 +290,7 @@ export const generateCompletion = async (messages) => {
         do {
             const restext = await httpGPTCompletion("gpt-3.5-turbo", insForAI, 0.7);
             const res = {text: restext};
+            console.log("Generate Completion function: ELSE", res.text);
             res.text = filterContent(messages, res.text);
             const i = checkRepeat(setArray, res.text);
             if ( i === -1) {
@@ -328,6 +330,7 @@ export const chatgptReply = async(message, messages, lastres) => {
                 conversationId: lastres.conversationId,
                 parentMessageId: lastres.id
             })
+            console.log("CHATGPT REPLY function: IF", res.text);
             res.text=filterContent(messages, res.text);
             const i = checkRepeat(setArray, res.text);
             if ( i === -1) {
@@ -344,6 +347,7 @@ export const chatgptReply = async(message, messages, lastres) => {
         const insForAI = `${AI_INS} ${messages[0].text}.`;
         do {
             const res = await chatgpt.sendMessage(insForAI+prompt);
+            console.log("CHATGPT REPLY function: ELSE", res.text);
             res.text = filterContent(messages, res.text);
             const i = checkRepeat(setArray, res.text);
             if ( i === -1) {
