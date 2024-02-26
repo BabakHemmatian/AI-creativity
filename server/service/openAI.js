@@ -261,7 +261,7 @@ export const generateCompletion = async (messages) => {
     console.log('GPT-3.5 completion');
     const prompt = generateChatGPTPrompt(messages)+' '+END_PROMPT;
     const setArray = [];
-    // console.log(prompt);
+    console.log("generateCompletion function initial prompt:",prompt);
     messages.forEach((m) => {
         if (m.sender !== 0) {
             setArray.push(sentenceToSet(m.text));
