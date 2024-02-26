@@ -1,4 +1,4 @@
-import { Configuration, OpenAIApi, OpenAI} from "openai";
+import { Configuration, OpenAIApi} from "openai";
 import { ChatGPTAPI } from 'chatgpt'
 import axios from 'axios';
 import { response } from "express";
