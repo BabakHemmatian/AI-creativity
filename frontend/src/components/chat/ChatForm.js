@@ -8,6 +8,7 @@ export default function ChatForm(props) {
   const handleKeyUp = async (e) => {
     if (e.keyCode === 13) {
       // enter should send the message
+      console.log("In ChatRoom.js, message is: ", message);
       handleFormSubmit()
     }
   }
@@ -16,7 +17,8 @@ export default function ChatForm(props) {
     e.preventDefault();
 
     props.handleFormSubmit(message);
-    setMessage("");
+    
+    setMessage(""); //sets it back to empty
   };
 
   return (
