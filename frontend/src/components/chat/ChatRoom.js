@@ -125,7 +125,7 @@ export default function ChatRoom({
 
   const handleFormSubmit = async (message) => {
     console.log(`HandleforSubmit : ${message}`);
-
+    
     if (message === "ready" && ready !== 3) {
       setReady(prevready => prevready | 2);
       setMessages([...messages, {roomId: currentId.current, sender: currentUser.uid, message: "ready"}]); //set but will not write to mongodb
