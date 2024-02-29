@@ -69,6 +69,17 @@ const onePuncFilter = (sentence) => {
     }
 }
 
+const filterContent2 = (messages, sentence) => {
+    if (typeof sentence !== 'string') {
+        console.error('filterContent2: sentence is not string', sentence);
+        return '';
+    }
+    let s = sentence;
+    s = s.replace(/\s{2,}/g," ");
+    return s;
+}
+
+
 // filter the AI response
 const filterContent = (messages, sentence) => {
 
@@ -76,7 +87,6 @@ const filterContent = (messages, sentence) => {
         console.error('filterContent: sentence is not string', sentence);
         return '';
     }
-    
     let s = sentence;
     const item = messages[0].text;
     const filterArray = [
@@ -92,7 +102,7 @@ const filterContent = (messages, sentence) => {
         `Use a ${item}`,
         `Use ${item}`,
         `One creative use for a ${item} could be`,
-        `The ${item} can be userd`,
+        `The ${item} can be used`,
     ]
     filterArray.forEach((prefix) => {
         s = s.replace(prefix, ' ');
@@ -242,6 +252,12 @@ const apiGPTCompletion = async(model, message, temperature) => {
 }
 
 
+//formatted chat history for prompts
+//SO HAVE CHATGPT TRUE RESPONSES IN THE CHAT WITHOUT ANY MODIFICATION
+// WAIT_TIME REMOVE AND MAKE IT DEPENDENT ON USER INPUT
+
+
+
 const generateChatGPTPrompt = (messages) => {
     const item = messages[0].text
     const messages2 = messages.filter((message) => (message.sender===2));
@@ -273,7 +289,7 @@ export const generateCompletion = async (messages) => {
             const restext = await httpGPTCompletion("gpt-3.5-turbo", prompt, 0.7);
             const res = {text: restext};
             console.log("Generate Completion function IF:", res.text);
-            res.text = filterContent(messages, res.text);
+            res.text = filterContent2(messages, res.text);
             const i = checkRepeat(setArray, res.text);
             if ( i === -1) {
                 console.log(`non repeat at ${tryTimes}`);
@@ -291,7 +307,7 @@ export const generateCompletion = async (messages) => {
             const restext = await httpGPTCompletion("gpt-3.5-turbo", insForAI, 0.7);
             const res = {text: restext};
             console.log("Generate Completion function: ELSE", res.text);
-            res.text = filterContent(messages, res.text);
+            res.text = filterContent2(messages, res.text);
             const i = checkRepeat(setArray, res.text);
             if ( i === -1) {
                 console.log(`non repeat at ${tryTimes}`);
@@ -331,7 +347,7 @@ export const chatgptReply = async(message, messages, lastres) => {
                 parentMessageId: lastres.id
             })
             console.log("CHATGPT REPLY function: IF", res.text);
-            res.text=filterContent(messages, res.text);
+            res.text=filterContent2(messages, res.text);
             const i = checkRepeat(setArray, res.text);
             if ( i === -1) {
                 console.log(`non repeat at ${tryTimes}`);
@@ -348,7 +364,7 @@ export const chatgptReply = async(message, messages, lastres) => {
         do {
             const res = await chatgpt.sendMessage(insForAI+prompt);
             console.log("CHATGPT REPLY function: ELSE", res.text);
-            res.text = filterContent(messages, res.text);
+            res.text = filterContent2(messages, res.text);
             const i = checkRepeat(setArray, res.text);
             if ( i === -1) {
                 console.log(`non repeat at ${tryTimes}`);
