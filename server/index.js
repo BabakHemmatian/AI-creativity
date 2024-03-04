@@ -265,12 +265,8 @@ io.on("connection", (socket) => {
           messages.push({text: response.text, sender: 2, replied: true});
         } else if (curType === "GPT") {
 
-          for (let i = 0 ; i < messages.length; i++) {
-            for (let j = 0 ;j < messages[i].length; j++) {
-              print_log("reply_message GPT index: " + i + " " + j + " " + messages[i][j].text, 1);
-            }
-          }
-
+          print_log(`reply_message: messages[0] ${messages[0].text}, messages[1] ${messages[1].text}`, 1);
+          
           response = await generateCompletion(messages);
           messages.push({text: response.text, sender: 2, replied: true});
         } else {
