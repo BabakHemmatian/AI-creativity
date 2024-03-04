@@ -264,7 +264,7 @@ io.on("connection", (socket) => {
           }
           messages.push({text: response.text, sender: 2, replied: true});
         } else if (curType === "GPT") {
-          // console.log(`Reply_Message : ${messages}`);
+          print_log(`io.on("connection") - Messages : ${messages}`,3);
           response = await generateCompletion(messages);
           messages.push({text: response.text, sender: 2, replied: true});
         } else {
@@ -363,7 +363,7 @@ io.on("connection", (socket) => {
   socket.on("sendMessage", async ({ senderId, receiverId, message }) => {
 
     print_log(`socket_sendMessage: ${message}`, 3);
-    
+
     const session = userSession.get(senderId);
     const room = session.currentChatRoom;
     if (!room) {
