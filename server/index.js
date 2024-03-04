@@ -361,6 +361,9 @@ io.on("connection", (socket) => {
   });
 
   socket.on("sendMessage", async ({ senderId, receiverId, message }) => {
+
+    print_log(`socket_sendMessage: ${message}`, 3);
+    
     const session = userSession.get(senderId);
     const room = session.currentChatRoom;
     if (!room) {
