@@ -262,7 +262,7 @@ io.on("connection", (socket) => {
             userToRes.set(userId, response);
           }
           messages.push({text: response.text, sender: 2, replied: true});
-        } else if (curType === "GPT" && userMessage.length > 0) { //CHANGED THIS
+        } else if (curType === "GPT" && (messages.filter(m => m.sender === 1)).length > 0) { //CHANGED THIS
           response = await generateCompletion(messages);
           messages.push({text: response.text, sender: 2, replied: true});
         } else {
