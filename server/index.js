@@ -217,6 +217,7 @@ const getOneRandomItem = () => {
 
 }
 
+let ai_replied_first = false;
 
 io.on("connection", (socket) => {
 
@@ -262,9 +263,22 @@ io.on("connection", (socket) => {
             userToRes.set(userId, response);
           }
           messages.push({text: response.text, sender: 2, replied: true});
-        } else if (curType === "GPT" && (messages.filter(m => m.sender === 1)).length > 0) { //CHANGED THIS
-          response = await generateCompletion(messages);
+        } else if (curType === "GPT") { //CHANGED THIS
+          if (!ai_replied_first) //if first response is from AI
+          {
+            response = await generateCompletion(messages); //generate first time
+          }
+
+          if (messages)
+          {
+            if ((messages.filter(m => m.sender === 1)).length > 0)
+            {
+              response = await generateCompletion(messages);
+            }
+          }
+
           messages.push({text: response.text, sender: 2, replied: true});
+          ai_replied_first = true;
         } else {
           /** constant reply */
           response = await generateConReply(messages, session.conMes);
