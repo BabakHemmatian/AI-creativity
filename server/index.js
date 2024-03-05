@@ -221,14 +221,14 @@ const getOneRandomItem = () => {
 io.on("connection", (socket) => {
 
   const reply_message = async (userId) => {
-    const session = userSession.get(userId);
-    const room = session.currentChatRoom;
-    if (session && room) {
+    const session = userSession.get(userId); //usersession is a map
+    const room = session.currentChatRoom; //room is a chatroom object
+    if (session && room) { //if session and room are not null or undefined
       try {
-        const roomId = room._id.toString();
-        let messages = chatMessage.get(userId);
-        const types = session.types;
-        const items = session.items;
+        const roomId = room._id.toString(); //room id is a string
+        let messages = chatMessage.get(userId); //messages is an array
+        const types = session.types; //types is an array
+        const items = session.items;  //items is an array
         if (!types) {
           print_log(`reply message: no types for user ${userId}`, -1)
         } else if (types.length === 0) {
@@ -243,17 +243,16 @@ io.on("connection", (socket) => {
         const curType = types[curI];
         const curItem = items[curI];
         print_log(`reply_message: start reply for ${userId}, current (Index,type): ${session.currentI},${curType}`, 1);
-        // const curType = 
         let response = null;
-        if (curType==="CHT") {
-          const userMessage = messages.filter(m => m.sender === 1);
-          const aiMessage = messages.filter(m => m.sender === 2);
-          const res = userToRes.get(userId);
+        if (curType==="CHT") { //if current type is chat
+          const userMessage = messages.filter(m => m.sender === 1); //usermessage is an array
+          const aiMessage = messages.filter(m => m.sender === 2); //aimessage is an array
+          const res = userToRes.get(userId); //res is a string
           if (aiMessage.length === 0) {
             // the first message of ai should always consider the idea
             print_log(messages, 1);
-            response = await chatgptReply(messages[0], messages, res);
-            userToRes.set(userId, response);
+            response = await chatgptReply(messages[0], messages, res); 
+            userToRes.set(userId, response); 
           } else if (userMessage.length === 0) {
             // print_log(userMessage[userMessage.length-1]);
             response = await chatgptReply({text: NON_REPLY_PROMPT, replied: true}, messages, res)
@@ -264,11 +263,11 @@ io.on("connection", (socket) => {
           }
           messages.push({text: response.text, sender: 2, replied: true});
         } else if (curType === "GPT") {
-
-          print_log(`reply_message: messages[0] ${messages[0].text}, messages[1] ${messages[1].text}`, 1);
-          
-          response = await generateCompletion(messages);
-          messages.push({text: response.text, sender: 2, replied: true});
+          if (messages.length > 0 && messages[messages.length - 1].text.trim() !== '')
+          {
+            response = await generateCompletion(messages);
+            messages.push({text: response.text, sender: 2, replied: true});
+          }
         } else {
           /** constant reply */
           response = await generateConReply(messages, session.conMes);
