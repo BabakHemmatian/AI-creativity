@@ -274,9 +274,10 @@ io.on("connection", (socket) => {
           
           else //not first response from AI
           {
-            if (messages)
+            if (messages && messages.length > 0)
             {
-              if ((messages.filter(m => m.sender === 1)).length > 0) //if user sent sth
+              const recent_message = messages[messages.length - 1]
+              if (recent_message.sender === 1) //if user sent sth
               {
                 response = await generateCompletion(messages); //then only generate
                 messages.push({text: response.text, sender: 2, replied: true});
