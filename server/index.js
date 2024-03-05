@@ -220,7 +220,7 @@ const getOneRandomItem = () => {
 
 io.on("connection", (socket) => {
 
-  const reply_message = async (userId) => {
+  const reply_message = async (userId,message) => { //CHANGED THIS
     const session = userSession.get(userId); //usersession is a map
     const room = session.currentChatRoom; //room is a chatroom object
     if (session && room) { //if session and room are not null or undefined
@@ -262,12 +262,9 @@ io.on("connection", (socket) => {
             userToRes.set(userId, response);
           }
           messages.push({text: response.text, sender: 2, replied: true});
-        } else if (curType === "GPT") {
-          if (messages.length > 0 && messages[messages.length - 1].text.trim() !== '')
-          {
-            response = await generateCompletion(messages);
-            messages.push({text: response.text, sender: 2, replied: true});
-          }
+        } else if (curType === "GPT" && message.sender === 1) { //CHANGED THIS
+          response = await generateCompletion(messages);
+          messages.push({text: response.text, sender: 2, replied: true});
         } else {
           /** constant reply */
           response = await generateConReply(messages, session.conMes);
