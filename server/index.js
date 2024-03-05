@@ -293,21 +293,24 @@ io.on("connection", (socket) => {
         }
         // print_log(response.text);
         // print_log(response);
-        if (response.text.length > 0) {
-          await createChatMessageService(roomId, AI_UID, response.text);
-          const sendUserSocket = onlineUsers.get(userId);
-          if ( sendUserSocket ) {
-            print_log(`reply_message: send response to socket`, 1)
-            socket.emit("getMessage", {
-              senderId: AI_UID,
-              message: response.text,
-              roomId: roomId
-            })
+        if (response) // if response exists
+        {
+          if (response.text.length > 0) {
+            await createChatMessageService(roomId, AI_UID, response.text);
+            const sendUserSocket = onlineUsers.get(userId);
+            if ( sendUserSocket ) {
+              print_log(`reply_message: send response to socket`, 1)
+              socket.emit("getMessage", {
+                senderId: AI_UID,
+                message: response.text,
+                roomId: roomId
+              })
+            } else {
+              print_log(`reply_message: sendUserSocket is null or undefined, user ${userId}`, -1);
+            }
           } else {
-            print_log(`reply_message: sendUserSocket is null or undefined, user ${userId}`, -1);
+            print_log(`reply_message: response is empty`, -1)
           }
-        } else {
-          print_log(`reply_message: response is empty`, -1)
         }
         return true;
         
