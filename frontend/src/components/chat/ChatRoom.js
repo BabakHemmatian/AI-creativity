@@ -22,7 +22,7 @@ export default function ChatRoom({
   // console.log(currentChat);
   const [messages, setMessages] = useState([]);
   const [incomingMessage, setIncomingMessage] = useState(null);
-  const [ready, setReady] = useState(0);
+  const [ready, setReady] = useState(0); //ready initially holds 0 then 
   const [prevAI, setPrevAI] = useState(false);
   const [change, setChange] = useState(false);
   // const [currentId, setCurrentId] = useState(currentChat._id);
@@ -56,23 +56,24 @@ export default function ChatRoom({
   //   // if ()
     
   // }, [currentSession])
-  useEffect(() => {
-    if (ready === 3) {
+
+  useEffect(() => { // calls when ready changes
+    if (ready === 3) { // when ready is 3, start timer
       start();
     }
   }, [ready])
 
-  useEffect(() => {
-    // console.log(`changed id ${currentChat._id}`);
-    // setCurrentId(currentChat._id);
-    currentId.current = currentChat._id;
-    setReady(0);
-    reset();
-    setMessages([]);
-    if (prevAI) {
+
+  useEffect(() => {  // calls when currentChat_id changes
+    currentId.current = currentChat._id; // update currentId
+    setReady(0); // set ready back to 0
+    reset(); // reset timer
+    setMessages([]); // reset messages array
+    if (prevAI) { 
       setChange(true);
     }
   }, [currentChat._id]);
+
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({
@@ -83,6 +84,7 @@ export default function ChatRoom({
     // console.log("filtered")
     // console.log(messages.filter(mess => mess.roomId === currentId.current))
   }, [messages]);
+
 
   useEffect(() => {
     socket.current?.on("getMessage", (data) => {
@@ -119,10 +121,14 @@ export default function ChatRoom({
     })
   }, [socket]);
 
+
+
   useEffect(() => {
     incomingMessage && setMessages((prev) => [...prev, incomingMessage]);
   }, [incomingMessage]);
 
+
+  
   const handleFormSubmit = async (message) => {
     console.log(`HandleforSubmit : ${message}`);
     

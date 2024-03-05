@@ -273,7 +273,7 @@ const generateChatGPTPrompt = (messages) => {
  * generate one response for one sentence
  * @returns string
  */
-export const generateCompletion = async (messages) => {
+export const generateCompletion = async (messages,not_ai_first) => {
     console.log('GPT-3.5 completion');
     const prompt = generateChatGPTPrompt(messages)+' '+END_PROMPT;
     const setArray = [];

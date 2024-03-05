@@ -268,7 +268,7 @@ io.on("connection", (socket) => {
           
           if (!ai_replied_first) //if first response is from AI
           {
-            response = await generateCompletion(messages); 
+            response = await generateCompletion(messages,ai_replied_first); 
             messages.push({text: response.text, sender: 2, replied: true});
           }
           
@@ -279,7 +279,7 @@ io.on("connection", (socket) => {
               const recent_message = messages[messages.length - 1]
               if (recent_message.sender === 1) //if user sent sth
               {
-                response = await generateCompletion(messages); //then only generate
+                response = await generateCompletion(messages,ai_replied_first); //then only generate
                 messages.push({text: response.text, sender: 2, replied: true});
               }
             }
@@ -617,7 +617,7 @@ io.on("connection", (socket) => {
           }
           print_log(`AI reply for ${userId} has ended`, 1);
         }
-      }, (WAIT_TIME-randSubAdd())*1000);
+      }, (WAIT_TIME-randSubAdd())*1000); //CHANGE THIS LATER 
     } else {
       // print_log("ready: human")
       let otherUser = chatRoom.members[0];
