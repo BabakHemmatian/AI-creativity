@@ -185,40 +185,29 @@ const noPuncFilter = (sentence) => {
 // }
 
 
-const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, msgs) => 
-{
+const httpGPTCompletion = async (model, message, temperature, ins_for_ai_hard, msgs) => {
     let messages = [{"role": "system", "content": ins_for_ai_hard}];
-    if (msgs.length === 0)
-    {
-        const content = {
-            'model':model,
-            'messages':messages, //user: message_user[-1] //system: ins_for_ai // assistant: message_ai  
-            'temperature': temperature
+    let content = {
+        'model': model,
+        'messages': messages,
+        'temperature': temperature
+    };
+
+    if (msgs.length !== 0) {
+        let ai_messages = msgs.filter((m) => m.sender === 2);
+        let user_messages = msgs.filter((m) => m.sender === 1);
+        messages.push({"role": "assistant", "content": ai_messages[0]});
+        for (let i = 0; i < user_messages.length - 1; i++) {
+            messages.push({"role": "user", "content": user_messages[i]});
+            messages.push({"role": "assistant", "content": ai_messages[i + 1]});
         }
+        messages.push({"role": "user", "content": user_messages[user_messages.length - 1]});
     }
-    else
-    {
-        let ai_messages = msgs.filter((m) => m.sender===2);
-        let user_messages = msgs.filter((m) => m.sender===1);
-        messages.push({"role": "assistant", "content": ai_messages[0]})
-        for (let i = 0 ; i < user_messages.length - 1 ; i++)
-        {
-            messages.push({"role": "user", "content": user_messages[i]})
-            messages.push({"role": "assistant", "content": ai_messages[i+1]})
-        }
-        messages.push({"role": "user", "content": user_messages[user_messages.length - 1]})
-        const content = {
-            'model':model,
-            'messages':messages, //user: message_user[-1] //system: ins_for_ai // assistant: message_ai  
-            'temperature': temperature
-        }  
-    }
-}
 
     try {
         const response = await axios.post("https://api.openai.com/v1/chat/completions", content, {headers: httpheaders});
         if (response.status === 200) {
-            console.log("RESPONSE from gptcompletion:",response.data);
+            console.log("RESPONSE from gptcompletion:", response.data);
             return response.data.choices[0].message.content;
         } else {
             console.log("http gpt failed");
@@ -228,7 +217,10 @@ const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, ms
     } catch (error) {
         console.log("axios error", error.message);
     }
-}
+};
+
+
+
 
 
 // const httpGPTCompletion = async(model, message, temperature = 0.7) =>
