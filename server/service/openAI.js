@@ -185,17 +185,37 @@ const noPuncFilter = (sentence) => {
 // }
 
 
-const httpGPTCompletion = async(model, message, temperature) => 
+const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, msgs) => 
 {
-    // console.log("AI INIT - START");
-    // //const openai = new OpenAI();
-    // console.log("AI INIT - DONE");
-    // console.log(`Messages is ${message}, ${model}`);
-    const content = {
-        'model':model,
-        'messages':[{'role':'user', 'content':message}],
-        'temperature': temperature
+    let ai_messages = msgs.filter((m) => m.sender===2); //
+    let user_messages = msgs.filter((m) => m.sender===1);
+
+    let messages = [{"role": "system", "content": ins_for_ai_hard}];
+
+    if (ai_messages.length === 0)
+    {
+        const content = {
+            'model':model,
+            'messages':messages, //user: message_user[-1] //system: ins_for_ai // assistant: message_ai  
+            'temperature': temperature
+        }
     }
+    else
+    {
+        messages.push({"role": "assistant", "content": ai_messages[0]})
+        for (let i = 0 ; i < user_messages.length - 1 ; i++)
+        {
+            messages.push({"role": "user", "content": user_messages[i]})
+            messages.push({"role": "assistant", "content": ai_messages[i+1]})
+        }
+        messages.push({"role": "user", "content": user_messages[user_messages.length - 1]})
+        const content = {
+            'model':model,
+            'messages':messages, //user: message_user[-1] //system: ins_for_ai // assistant: message_ai  
+            'temperature': temperature
+        }  
+    }
+
     try {
         const response = await axios.post("https://api.openai.com/v1/chat/completions", content, {headers: httpheaders});
         if (response.status === 200) {
@@ -209,7 +229,6 @@ const httpGPTCompletion = async(model, message, temperature) =>
     } catch (error) {
         console.log("axios error", error.message);
     }
-    
 }
 
 
@@ -283,10 +302,12 @@ export const generateCompletion = async (messages,not_ai_first) => {
             setArray.push(sentenceToSet(m.text));
         }
     })
+
+    const insForAI = `${AI_INS} ${messages[0].text}. ${prompt}`;
     if (messages.filter((m) => m.sender===2).length > 0) {
         let tryTimes = 0;
         do {
-            const restext = await httpGPTCompletion("gpt-3.5-turbo", prompt, 0.7);
+            const restext = await httpGPTCompletion("gpt-3.5-turbo", prompt, 0.7,insForAI, messages);
             const res = {text: restext};
             console.log("Generate Completion function IF:", res.text);
             res.text = filterContent2(messages, res.text);
@@ -302,9 +323,9 @@ export const generateCompletion = async (messages,not_ai_first) => {
     } else {
         // generate first idea
         let tryTimes = 0;
-        const insForAI = `${AI_INS} ${messages[0].text}. ${prompt}`;
+        
         do {
-            const restext = await httpGPTCompletion("gpt-3.5-turbo", insForAI, 0.7);
+            const restext = await httpGPTCompletion("gpt-3.5-turbo", insForAI, 0.7,insForAI, messages);
             const res = {text: restext};
             console.log("Generate Completion function: ELSE", res.text);
             res.text = filterContent2(messages, res.text);
