@@ -260,7 +260,7 @@ const apiGPTCompletion = async(model, message, temperature) => {
 
 const generateChatGPTPrompt = (messages) => {
     const item = messages[0].text
-    const messages2 = messages.filter((message) => (message.sender===2));
+    const messages2 = messages.filter((message) => (message.sender===2)); //AI returns
     const list_idea = messages2.map((message) => (noPuncFilter(message.text.trim()))).join(',');
     if (list_idea.length > 0) {
         return `We already have this list of creative uses for a ${item}: ${list_idea}. Can you tell me a creative use that is very different from all the uses in this list?`
