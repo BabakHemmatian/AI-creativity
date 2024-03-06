@@ -190,6 +190,7 @@ const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, ms
     let content;
     if (msgs.length === 0)
     {
+        console.log("msgs.length === 0");
         const content_data = {
             'model':model,
             'messages':messages, //user: message_user[-1] //system: ins_for_ai // assistant: message_ai  
@@ -204,6 +205,8 @@ const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, ms
         messages.push({"role": "assistant", "content": ai_messages[0]})
         for (let i = 0 ; i < user_messages.length - 1 ; i++)
         {
+            console.log("user_messages[i]",user_messages[i]);
+            console.log("ai_messages[i+1]",ai_messages[i+1]);
             messages.push({"role": "user", "content": user_messages[i]})
             messages.push({"role": "assistant", "content": ai_messages[i+1]})
         }
@@ -230,8 +233,6 @@ const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, ms
         console.log("axios error", error.message);
     }
 }
-
-
 
 
 // const httpGPTCompletion = async(model, message, temperature = 0.7) =>
