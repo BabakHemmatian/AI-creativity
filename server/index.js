@@ -617,7 +617,7 @@ io.on("connection", (socket) => {
           }
           print_log(`AI reply for ${userId} has ended`, 1);
         }
-      }, 1*1000); //CHANGE THIS LATER 
+      }, 1); //CHANGE THIS LATER 
     } else {
       // print_log("ready: human")
       let otherUser = chatRoom.members[0];
