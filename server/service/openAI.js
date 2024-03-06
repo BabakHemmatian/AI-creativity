@@ -195,7 +195,7 @@ const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, ms
 
     if (ai_messages.length === 0)
     {
-        print_log('AI messages are empty');
+        print_log('AI messages are empty',1);
         const content = {
             'model':model,
             'messages':messages, //user: message_user[-1] //system: ins_for_ai // assistant: message_ai  
@@ -204,7 +204,7 @@ const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, ms
     }
     else
     {
-        print_log('AI messages are not empty');
+        print_log('AI messages are not empty',1);
         messages.push({"role": "assistant", "content": ai_messages[0]})
         for (let i = 0 ; i < user_messages.length - 1 ; i++)
         {
