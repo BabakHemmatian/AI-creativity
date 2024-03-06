@@ -2,6 +2,7 @@ import { Configuration, OpenAIApi} from "openai";
 import { ChatGPTAPI } from 'chatgpt'
 import axios from 'axios';
 import { response } from "express";
+import { print_log } from "./utils";
 
 // var npm = require('npm');
 // npm.load(function(err) {
@@ -194,6 +195,7 @@ const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, ms
 
     if (ai_messages.length === 0)
     {
+        print_log('AI messages are empty');
         const content = {
             'model':model,
             'messages':messages, //user: message_user[-1] //system: ins_for_ai // assistant: message_ai  
@@ -202,6 +204,7 @@ const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, ms
     }
     else
     {
+        print_log('AI messages are not empty');
         messages.push({"role": "assistant", "content": ai_messages[0]})
         for (let i = 0 ; i < user_messages.length - 1 ; i++)
         {
@@ -307,7 +310,7 @@ export const generateCompletion = async (messages,not_ai_first) => {
     if (messages.filter((m) => m.sender===2).length > 0) {
         let tryTimes = 0;
         do {
-            const restext = await httpGPTCompletion("gpt-3.5-turbo", prompt, 0.7,insForAI, messages);
+            const restext = await httpGPTCompletion("gpt-3.5-turbo", prompt, 0.7, insForAI, messages);
             const res = {text: restext};
             console.log("Generate Completion function IF:", res.text);
             res.text = filterContent2(messages, res.text);
