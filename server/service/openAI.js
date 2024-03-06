@@ -2,7 +2,6 @@ import { Configuration, OpenAIApi} from "openai";
 import { ChatGPTAPI } from 'chatgpt'
 import axios from 'axios';
 import { response } from "express";
-import { print_log } from "./utils";
 
 // var npm = require('npm');
 // npm.load(function(err) {
@@ -188,14 +187,9 @@ const noPuncFilter = (sentence) => {
 
 const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, msgs) => 
 {
-    let ai_messages = msgs.filter((m) => m.sender===2); //
-    let user_messages = msgs.filter((m) => m.sender===1);
-
     let messages = [{"role": "system", "content": ins_for_ai_hard}];
-
-    if (ai_messages.length === 0)
+    if (msgs.length === 0)
     {
-        console.log('AI messages are empty');
         const content = {
             'model':model,
             'messages':messages, //user: message_user[-1] //system: ins_for_ai // assistant: message_ai  
@@ -204,7 +198,8 @@ const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, ms
     }
     else
     {
-        console.log('AI messages are not empty');
+        let ai_messages = msgs.filter((m) => m.sender===2);
+        let user_messages = msgs.filter((m) => m.sender===1);
         messages.push({"role": "assistant", "content": ai_messages[0]})
         for (let i = 0 ; i < user_messages.length - 1 ; i++)
         {
@@ -218,6 +213,7 @@ const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, ms
             'temperature': temperature
         }  
     }
+}
 
     try {
         const response = await axios.post("https://api.openai.com/v1/chat/completions", content, {headers: httpheaders});
