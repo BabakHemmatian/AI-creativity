@@ -185,7 +185,39 @@ const noPuncFilter = (sentence) => {
 // }
 
 
+
+// const httpGPTCompletion = async(model, message, temperature) => 
+// {
+//     // console.log("AI INIT - START");
+//     // //const openai = new OpenAI();
+//     // console.log("AI INIT - DONE");
+//     // console.log(`Messages is ${message}, ${model}`);
+//     const content = {
+//         'model':model,
+//         'messages':[{'role':'user', 'content':message}],
+//         'temperature': temperature
+//     }
+//     try {
+//         const response = await axios.post("https://api.openai.com/v1/chat/completions", content, {headers: httpheaders});
+//         if (response.status === 200) {
+//             console.log("RESPONSE from gptcompletion:",response.data);
+//             return response.data.choices[0].message.content;
+//         } else {
+//             console.log("http gpt failed");
+//             console.log(response.statusText);
+//             // console.log(response);
+//         }
+//     } catch (error) {
+//         console.log("axios error", error.message);
+//     }
+    
+// }
+
+
 const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, msgs) => {
+    console.log("INSIDE GPTCOMPLETION");
+    console.log("message (GPTCOMPLETION): ",message);
+    console.log("msgs (GPTCOMPLETION): ",msgs);
     let messages = [{"role": "system", "content": ins_for_ai_hard}];
     let content;
     if (msgs.length === 0)
@@ -295,7 +327,7 @@ const generateChatGPTPrompt = (messages) => {
  * generate one response for one sentence
  * @returns string
  */
-export const generateCompletion = async (messages,not_ai_first) => {
+export const generateCompletion = async (messages,not_ai_first) => {    
     console.log('GPT-3.5 completion');
     const prompt = generateChatGPTPrompt(messages)+' '+END_PROMPT;
     const setArray = [];
@@ -306,7 +338,7 @@ export const generateCompletion = async (messages,not_ai_first) => {
         }
     })
 
-    const insForAI = `${AI_INS} ${messages[0].text}. ${prompt}`;
+    const insForAI = `${AI_INS} ${messages[0].text}. ${prompt}`; // TRY CHANGING THIS
     if (messages.filter((m) => m.sender===2).length > 0) {
         let tryTimes = 0;
         do {
