@@ -219,10 +219,8 @@ const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, ms
     let content;
     if (msgs.length === 1)
     {
-        console.log("msgs.length === 1");
-        console.log("msgs",msgs);
-        console.log("message",message);
-        const content_data = {
+        const content_data = 
+        {
             'model':model,
             'messages':messages, //user: message_user[-1] //system: ins_for_ai // assistant: message_ai  
             'temperature': temperature
@@ -234,9 +232,22 @@ const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, ms
         console.log("msgs.length > 1");
         console.log("msgs",msgs);
         console.log("message",message);
-        let ai_messages = msgs.filter((m) => m.sender===2);
-        //messages.filter((message) => (message.sender===2)); 
-        let user_messages = msgs.filter((m) => m.sender===1);
+
+        let ai_messages = [];
+        let user_messages = [];
+
+        for (let i = 0 ; i < msgs.length ; i++)
+        {
+            if (msgs[i].sender === 2)//ai
+            {
+                ai_messages.push(msgs[i].text);
+            }
+            else
+            {
+                user_messages.push(msgs[i].text);
+            }
+        }
+        
         messages.push({"role": "assistant", "content": ai_messages[0]})
         for (let i = 0 ; i < user_messages.length - 1 ; i++)
         {
@@ -316,10 +327,10 @@ const apiGPTCompletion = async(model, message, temperature) => {
 
 
 const generateChatGPTPrompt = (messages) => {
-    console.log("prompt generation messages: ",messages);
+    //console.log("prompt generation messages: ",messages);
     const item = messages[0].text
     const messages2 = messages.filter((message) => (message.sender===2)); //AI returns
-    console.log("prompt generation messages2: ",messages2);
+    //console.log("prompt generation messages2: ",messages2);
     const list_idea = messages2.map((message) => (noPuncFilter(message.text.trim()))).join(',');
     if (list_idea.length > 0) {
         return `We already have this list of creative uses for a ${item}: ${list_idea}. Can you tell me a creative use that is very different from all the uses in this list?`
