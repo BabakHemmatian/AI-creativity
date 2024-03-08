@@ -242,12 +242,12 @@ const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, ms
             {
                 ai_messages.push(msgs[i].text);
             }
-            else
+            else if (msgs[i].sender === 1)//user
             {
                 user_messages.push(msgs[i].text);
             }
         }
-        
+
         messages.push({"role": "assistant", "content": ai_messages[0]})
         for (let i = 0 ; i < user_messages.length - 1 ; i++)
         {
