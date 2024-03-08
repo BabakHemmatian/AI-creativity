@@ -596,7 +596,12 @@ io.on("connection", (socket) => {
     const curType = chatRoom.chatType;
     // print_log(`ready: ${curType}`);
     const curId = chatRoom._id.toString();
-    if (curType !=='HUM') {
+    if (curType !=='HUM') { //const or gpt
+      let multiply = 1000;
+      if (curType === 'GPT') 
+      {
+        multiply = 100;
+      }
       // print_log("ready: AI");
       // await new Promise(r => setTimeout(r, 2000));
       socket.emit("userReady", {senderId: AI_UID});
@@ -606,7 +611,7 @@ io.on("connection", (socket) => {
         if (room && room._id.toString() === curId) {
           /** need to ensure room is not null or undefined, and current room is what we expect */
           await reply_message(userId);
-          setTimeout(chat, (WAIT_TIME-randSubAdd())*1000); 
+          setTimeout(chat, (WAIT_TIME-randSubAdd())*multiply); 
         } else {
           /** if it is null, then reply should end */
           if (!room) {
@@ -617,7 +622,7 @@ io.on("connection", (socket) => {
           }
           print_log(`AI reply for ${userId} has ended`, 1);
         }
-      }, (WAIT_TIME-randSubAdd())*1000); //CHANGE THIS LATER 
+      }, (WAIT_TIME-randSubAdd())*multiply); //CHANGE THIS LATER 
     } else {
       // print_log("ready: human")
       let otherUser = chatRoom.members[0];

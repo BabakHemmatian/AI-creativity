@@ -215,14 +215,13 @@ const noPuncFilter = (sentence) => {
 
 
 const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, msgs) => {
-    console.log("INSIDE GPTCOMPLETION");
-    console.log("message (GPTCOMPLETION): ",message);
-    console.log("msgs (GPTCOMPLETION): ",msgs);
     let messages = [{"role": "system", "content": ins_for_ai_hard}];
     let content;
-    if (msgs.length === 0)
+    if (msgs.length === 1)
     {
-        console.log("msgs.length === 0");
+        console.log("msgs.length === 1");
+        console.log("msgs",msgs);
+        console.log("messae",message);
         const content_data = {
             'model':model,
             'messages':messages, //user: message_user[-1] //system: ins_for_ai // assistant: message_ai  
@@ -232,6 +231,9 @@ const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, ms
     }
     else
     {
+        console.log("msgs.length > 1");
+        console.log("msgs",msgs);
+        console.log("messae",message);
         let ai_messages = msgs.filter((m) => m.sender===2);
         let user_messages = msgs.filter((m) => m.sender===1);
         messages.push({"role": "assistant", "content": ai_messages[0]})
