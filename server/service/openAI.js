@@ -219,6 +219,10 @@ const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, ms
     let content;
     if (msgs.length === 1)
     {
+        console.log("msgs.length = 1");
+        console.log("msgs",msgs);
+        console.log("message",message);
+        
         const content_data = 
         {
             'model':model,
@@ -229,9 +233,9 @@ const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, ms
     }
     else
     {
-        // console.log("msgs.length > 1");
-        // console.log("msgs",msgs);
-        // console.log("message",message);
+        console.log("msgs.length > 1");
+        console.log("msgs",msgs);
+        console.log("message",message);
 
         let ai_messages = [];
         let user_messages = [];
