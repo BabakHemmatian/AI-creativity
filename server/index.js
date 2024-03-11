@@ -512,10 +512,12 @@ io.on("connection", (socket) => {
         } 
         if (MATCH_CONDITION === 'CON') {
           /** randomly assign user high or low quality response */
-          if (Math.random() >= 0.5) {
-            session = {...session, ...{quality: 'high'}};
+          if (Math.random() >= 0.66) {
+              session = {...session, ...{quality: 'high'}};
+          } else if (Math.random() >= 0.33) {
+              session = {...session, ...{quality: 'gpt'}};
           } else {
-            session = {...session, ...{quality: 'low'}}; 
+              session = {...session, ...{quality: 'low'}};
           }
           //TODO: get shuffle messages
           const curItem = newItems[0];
