@@ -119,13 +119,15 @@ export const parseEndInstruction = (index) => {
         );
       case 2:
         return (
-          <span>The 2-player part of our study has ended. Thank you! When ready, please go back to the first tab to answer a few final questions and finish the study.</a>
+          <span>
+            The 2-player part of our study has ended. Thank you! When ready, please go back to the first tab to answer a few final questions and finish the study.
           </span>
         );
     }
   } else {
     return (
-      <span>The 2-player part of our study has ended. Thank you! When ready, please go back to the first tab to answer a few final questions and finish the study.</a>
+      <span>
+        The 2-player part of our study has ended. Thank you! When ready, please go back to the first tab to answer a few final questions and finish the study.
       </span>
     );
   }
