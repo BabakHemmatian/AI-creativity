@@ -289,7 +289,9 @@ io.on("connection", (socket) => {
 
         } else {
           /** constant reply */
-          print("generateConReply:  messages, conMes", messages, session.conMes);
+          
+          console.log("generateConReply:  messages", messages, "conMes", session.conMes, 1);
+          
           response = await generateConReply(messages, session.conMes);
           messages.push({text: response, sender: 2, replied: true});
         }
