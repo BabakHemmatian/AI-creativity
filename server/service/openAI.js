@@ -222,7 +222,6 @@ const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, ms
         console.log("msgs.length = 1");
         console.log("msgs",msgs);
         console.log("message",message);
-        
         const content_data = 
         {
             'model':model,
@@ -362,9 +361,10 @@ export const generateCompletion = async (messages,not_ai_first) => {
     if (messages.filter((m) => m.sender===2).length > 0) {
         let tryTimes = 0;
         do {
+            console.log("GENERATE COMPLETION (not first) prompt",prompt);
             const restext = await httpGPTCompletion("gpt-3.5-turbo", prompt, 0.7, insForAI, messages);
             const res = {text: restext};
-            console.log("Generate Completion function IF:", res.text);
+            console.log("Generate Completion function result:", res.text);
             res.text = filterContent2(messages, res.text);
             const i = checkRepeat(setArray, res.text);
             if ( i === -1) {
@@ -380,9 +380,10 @@ export const generateCompletion = async (messages,not_ai_first) => {
         let tryTimes = 0;
         
         do {
+            console.log("GENERATE COMPLETION first prompt",insForAI);
             const restext = await httpGPTCompletion("gpt-3.5-turbo", insForAI, 0.7,insForAI, messages);
             const res = {text: restext};
-            console.log("Generate Completion function: ELSE", res.text);
+            console.log("Generate Completion function result:", res.text);
             res.text = filterContent2(messages, res.text);
             const i = checkRepeat(setArray, res.text);
             if ( i === -1) {
