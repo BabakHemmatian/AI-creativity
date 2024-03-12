@@ -289,6 +289,7 @@ io.on("connection", (socket) => {
 
         } else {
           /** constant reply */
+          print("generateConReply:  messages, conMes", messages, session.conMes);
           response = await generateConReply(messages, session.conMes);
           messages.push({text: response, sender: 2, replied: true});
         }
