@@ -214,14 +214,14 @@ const noPuncFilter = (sentence) => {
 // }
 
 
-const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, msgs) => {
-    let messages = [{"role": "system", "content": ins_for_ai_hard}];
+const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, msgs) => { //model, prompt, temp, ins_for_ai, msgs
+    let messages = [{"role": "system", "content": ins_for_ai_hard}]; 
     let content;
     if (msgs.length === 1)
     {
         console.log("msgs.length = 1");
         console.log("msgs",msgs);
-        console.log("message",message);
+        //console.log("message",message);
         const content_data = 
         {
             'model':model,
@@ -234,7 +234,7 @@ const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, ms
     {
         console.log("msgs.length > 1");
         console.log("msgs",msgs);
-        console.log("message",message);
+        //console.log("message",message);
 
         let ai_messages = [];
         let user_messages = [];

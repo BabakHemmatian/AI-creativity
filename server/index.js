@@ -149,9 +149,9 @@ const getKey = (map, val) => {
 };
 
 
-const randSubAdd = () => {
+const randSubAdd = () => { //wait_time_diff = 1
   const randNum = Math.floor(Math.random() * WAIT_TIME_DIFF * (-5)); // 
-  return randNum - WAIT_TIME; 
+  return randNum - WAIT_TIME; //wait_time = 5 ==> -10,-5
 } 
 
 
@@ -602,6 +602,8 @@ io.on("connection", (socket) => {
       let multiply = 1000;
       if (curType === 'GPT') 
       {
+        WAIT_TIME_DIFF = 1;
+        WAIT_TIME = 12;
         multiply = 100;
       }
       // print_log("ready: AI");
