@@ -525,8 +525,7 @@ io.on("connection", (socket) => {
           }
           //TODO: get shuffle messages
           const curItem = newItems[0];
-          console.log(`matchUser: curItem ${curItem}`);
-          console.log('matchUser: quality', session.quality);
+          print_log(`matchUser: curItem: ${curItem}, quality: ${session.quality}`);
           const curResponse = constResponses[curItem][session.quality];
           const toShuffle = [...curResponse].sort(() => Math.random() - 0.5);
           session = {...session, ...{conMes: toShuffle}};
