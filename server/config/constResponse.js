@@ -1,5 +1,5 @@
 export const constResponses = {
-    'book': {
+    'a book or books': {
         'high':[
             "build a children's house",
             "ruler",
@@ -55,7 +55,7 @@ export const constResponses = {
             "as a stool or chair height booster",
         ]
     },
-    'fork':{
+    'a fork or forks':{
         'high':[
             "If you put a rubber band around the tines of a fork it becomes a mini-trampoline for ants or other small insects",
             "Keep your drink cold by freezing a few forks and adding them to your glass",
@@ -111,7 +111,7 @@ export const constResponses = {
             "as a tea bag squeezer",
         ]
     },
-    'tin can':{
+    'a tin can or tin cans':{
         'high':[
             "Using the tab of a can to make a dress/shirt",
             "Printing press",
