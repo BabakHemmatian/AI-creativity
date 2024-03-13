@@ -495,7 +495,7 @@ io.on("connection", (socket) => {
         const typeList = await createChatRoomListService(userId, newOrder);
         session = {...session, ...{ended: false,  types: newOrder, items: newItems, currentI: 0, currentList: typeList._id}};
 
-        print_log(`matchUser: session.types ${session.types}  session.currentI ${session.currentI}`, 5);
+        print_log(`matchUser: currentchatroom.types ${currentChatRoom.chatType}`, 5);
 
         if (session.types[session.currentI] === 'CON') 
         {
