@@ -477,6 +477,9 @@ io.on("connection", (socket) => {
         print_log("matchUser: previous session is ended, create new one", 5);
         print_log(newOrder, 5);
         print_log(newItems, 5);
+        
+        print_log(`matchUser: session.types ${session.types}  session.currentI ${session.currentI}`, 5);
+        
         if (lastUser !== '' && lastUser !== userId) {
           /** matched user */
           const lastsession = userSession.get(lastUser);
@@ -500,11 +503,8 @@ io.on("connection", (socket) => {
         print_log(newOrder, 5);
         print_log(newItems, 5);
 
-        print_log(session.types,5);
-        print_log(session.currentI,5);
-        print_log(session,5);
-        
-        if (MATCH_CONDITION === 'HUM' || session.types[session.currentI] === 'HUM') {
+
+        if (MATCH_CONDITION === 'HUM' ) {
           // TODO: match users together
           if (lastUser !== '' && lastUser !== userId) {
             /** matched user */
@@ -519,7 +519,7 @@ io.on("connection", (socket) => {
           }
         } 
 
-        if (MATCH_CONDITION === 'CON' || session.types[session.currentI] === 'CON') {
+        if (MATCH_CONDITION === 'CON' ) {
           /** randomly assign user high or low quality response */
           if (Math.random() >= 0.66) {
               session = {...session, ...{quality: 'high'}};
