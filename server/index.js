@@ -491,16 +491,41 @@ io.on("connection", (socket) => {
         } else {
           lastUser = userId;
         }
-        
+
+        const typeList = await createChatRoomListService(userId, newOrder);
+        session = {...session, ...{ended: false,  types: newOrder, items: newItems, currentI: 0, currentList: typeList._id}};
+
         print_log(`matchUser: session.types ${session.types}  session.currentI ${session.currentI}`, 5);
 
         if (session.types[session.currentI] === 'CON') 
         {
-          print_log("we are in CONst reply matchuser:",5);
-        } 
-
-        const typeList = await createChatRoomListService(userId, newOrder);
-        session = {...session, ...{ended: false,  types: newOrder, items: newItems, currentI: 0, currentList: typeList._id}};
+          print_log("we are in CON matchuser:",5);
+          /** randomly assign user high or low quality response */
+          if (Math.random() >= 0.66) 
+          {
+            session = {...session, ...{quality: 'high'}};
+          } 
+          else if (Math.random() >= 0.33) 
+          {
+            session = {...session, ...{quality: 'gpt'}};
+          } 
+          else 
+          {
+            session = {...session, ...{quality: 'low'}};
+          }
+        //TODO: get shuffle messages
+        const curItem = newItems[0];
+        //print_log(`matchUser: curItem: ${curItem}, quality: ${session.quality}`);
+        const curResponse = constResponses[curItem][session.quality];
+        const toShuffle = [...curResponse].sort(() => Math.random() - 0.5);
+        session = {...session, ...{conMes: toShuffle}};
+        if (!toShuffle) 
+        {
+          print_log(`toshuffle is empty, curItem: ${curItem}, quality: ${session.quality}`);
+          print_log(toShuffle,-1);
+        }
+        
+      } 
         userSession.set(userId, session);
       } else {
         /** match with HUM or CON or GPT */
@@ -527,7 +552,8 @@ io.on("connection", (socket) => {
           }
         } 
 
-        if (MATCH_CONDITION === 'CON' ) {
+        if (MATCH_CONDITION === 'CON' ) 
+        {
           /** randomly assign user high or low quality response */
           if (Math.random() >= 0.66) {
               session = {...session, ...{quality: 'high'}};
