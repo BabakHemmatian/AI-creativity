@@ -499,7 +499,7 @@ io.on("connection", (socket) => {
         print_log("matchUser: previous session is ended, create new one", 5);
         print_log(newOrder, 5);
         print_log(newItems, 5);
-        if (MATCH_CONDITION === 'HUM' || curType === 'HUM') {
+        if (MATCH_CONDITION === 'HUM' || chatRoom.chatType === 'HUM') {
           // TODO: match users together
           if (lastUser !== '' && lastUser !== userId) {
             /** matched user */
@@ -514,7 +514,7 @@ io.on("connection", (socket) => {
           }
         } 
 
-        if (MATCH_CONDITION === 'CON' || curType === 'CON') {
+        if (MATCH_CONDITION === 'CON' || chatRoom.chatType === 'CON') {
           /** randomly assign user high or low quality response */
           if (Math.random() >= 0.66) {
               session = {...session, ...{quality: 'high'}};
@@ -525,7 +525,7 @@ io.on("connection", (socket) => {
           }
           //TODO: get shuffle messages
           const curItem = newItems[0];
-          print_log(`matchUser: curItem: ${curItem}, quality: ${session.quality}`);
+          //print_log(`matchUser: curItem: ${curItem}, quality: ${session.quality}`);
           const curResponse = constResponses[curItem][session.quality];
           const toShuffle = [...curResponse].sort(() => Math.random() - 0.5);
           session = {...session, ...{conMes: toShuffle}};
