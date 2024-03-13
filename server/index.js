@@ -499,7 +499,8 @@ io.on("connection", (socket) => {
         print_log("matchUser: previous session is ended, create new one", 5);
         print_log(newOrder, 5);
         print_log(newItems, 5);
-        if (MATCH_CONDITION === 'HUM' || currentChatRoom.chatType === 'HUM') {
+        
+        if (MATCH_CONDITION === 'HUM' || session.types[session.currentI] === 'HUM') {
           // TODO: match users together
           if (lastUser !== '' && lastUser !== userId) {
             /** matched user */
@@ -514,7 +515,7 @@ io.on("connection", (socket) => {
           }
         } 
 
-        if (MATCH_CONDITION === 'CON' || currentChatRoom.chatType === 'CON') {
+        if (MATCH_CONDITION === 'CON' || session.types[session.currentI] === 'CON') {
           /** randomly assign user high or low quality response */
           if (Math.random() >= 0.66) {
               session = {...session, ...{quality: 'high'}};
