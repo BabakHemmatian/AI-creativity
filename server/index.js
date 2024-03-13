@@ -478,8 +478,8 @@ io.on("connection", (socket) => {
         print_log(newOrder, 5);
         print_log(newItems, 5);
         
-        print_log(`matchUser: session.types ${session.types}  session.currentI ${session.currentI}`, 5);
         
+        //SET FOR HUMAN
         if (lastUser !== '' && lastUser !== userId) {
           /** matched user */
           const lastsession = userSession.get(lastUser);
@@ -491,6 +491,14 @@ io.on("connection", (socket) => {
         } else {
           lastUser = userId;
         }
+        
+        print_log(`matchUser: session.types ${session.types}  session.currentI ${session.currentI}`, 5);
+
+        if (session.types[session.currentI] === 'CON') 
+        {
+          print_log("we are in CONst reply matchuser:",5);
+        } 
+
         const typeList = await createChatRoomListService(userId, newOrder);
         session = {...session, ...{ended: false,  types: newOrder, items: newItems, currentI: 0, currentList: typeList._id}};
         userSession.set(userId, session);
