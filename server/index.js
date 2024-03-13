@@ -495,11 +495,12 @@ io.on("connection", (socket) => {
         const typeList = await createChatRoomListService(userId, newOrder);
         session = {...session, ...{ended: false,  types: newOrder, items: newItems, currentI: 0, currentList: typeList._id}};
 
-        print_log(`matchUser: currentchatroom.types ${currentChatRoom.chatType}`, 5);
+        //print_log(`matchUser: currentchatroom.types ${chatRoom.chatType}`, 5);
+
 
         if (session.types[session.currentI] === 'CON') 
         {
-          print_log("we are in CON matchuser:",5);
+          
           /** randomly assign user high or low quality response */
           if (Math.random() >= 0.66) 
           {
@@ -628,6 +629,7 @@ io.on("connection", (socket) => {
       await appendChatRoomService(newChatRoom._id, curList);
       userSession.set(userId, {...session, ...{isMatching:false, currentChatRoom: newChatRoom}});
       print_log(userSession.get(userId));
+      print_log("ABOUT TO ENTER NEWCHATROOM != NULL",5);
       if (newChatRoom !== null) {
         socket.emit("matchedUser", {data:newChatRoom, index:curI});
         chatMessage.set(userId, [{text: curItem, sender: 0, replied: true}]);
