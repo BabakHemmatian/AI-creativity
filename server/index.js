@@ -499,7 +499,9 @@ io.on("connection", (socket) => {
         print_log("matchUser: previous session is ended, create new one", 5);
         print_log(newOrder, 5);
         print_log(newItems, 5);
-        
+
+        print_log("Session: ${session.types}");
+        print_log("Session: ${session.currentI}");
         if (MATCH_CONDITION === 'HUM' || session.types[session.currentI] === 'HUM') {
           // TODO: match users together
           if (lastUser !== '' && lastUser !== userId) {
