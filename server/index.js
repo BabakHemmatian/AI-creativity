@@ -31,11 +31,11 @@ app.use(VerifyToken);
 /** load neccessary const variablle */ 
 const PORT = process.env.PORT || 8080;
 const AI_UID = process.env.AI_UID || '';
-const WAIT_TIME = process.env.WAIT_TIME || 5;
+let WAIT_TIME = process.env.WAIT_TIME || 5;
 // const WAIT_TIME = 5;
 const ITEMS = process.env.ITEMS.split(',');
 const CONS_LIST = process.env.CONS_LIST;
-const WAIT_TIME_DIFF = process.env.WAIT_TIME_DIFF || 2;
+let WAIT_TIME_DIFF = process.env.WAIT_TIME_DIFF || 2;
 const reply_list = CONS_LIST.split(",")
 const NON_REPLY_PROMPT = process.env.NON_REPLY_PROMPT;
 const SESSION_TIME = process.env.SESSION_TIME || 120;
@@ -151,7 +151,7 @@ const getKey = (map, val) => {
 
 const randSubAdd = () => { //wait_time_diff = 1
   const randNum = Math.floor(Math.random() * WAIT_TIME_DIFF * (-5)); // 
-  return randNum - WAIT_TIME; //wait_time = 5 ==> -10,-5
+  return randNum - WAIT_TIME; //wait_time = 10 --> -15,-10
 } 
 
 
