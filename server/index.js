@@ -636,7 +636,7 @@ io.on("connection", (socket) => {
       await appendChatRoomService(newChatRoom._id, curList);
       userSession.set(userId, {...session, ...{isMatching:false, currentChatRoom: newChatRoom}});
 
-      print_log(`newchatroom types: ${newChatRoom.chatType}`);
+      //print_log(`newchatroom types: ${newChatRoom.chatType}`);
       
       if (newChatRoom.chatType === 'CON')
       {
@@ -656,7 +656,7 @@ io.on("connection", (socket) => {
           }
         //TODO: get shuffle messages
         
-        print_log(`matchUser: curItem: ${curItem}, quality: ${session.quality}`);
+        //print_log(`matchUser: curItem: ${curItem}, quality: ${session.quality}`);
         
         const curResponse = constResponses[curItem][session.quality];
         const toShuffle = [...curResponse].sort(() => Math.random() - 0.5);
@@ -668,14 +668,13 @@ io.on("connection", (socket) => {
         }
         
       }
-
       userSession.set(userId, {...session, ...{isMatching:false, currentChatRoom: newChatRoom}});
 
-      
+
       print_log(userSession.get(userId),5);
 
 
-      print_log("ABOUT TO ENTER NEWCHATROOM != NULL",5);
+      //print_log("ABOUT TO ENTER NEWCHATROOM != NULL",5);
       if (newChatRoom !== null) {
         socket.emit("matchedUser", {data:newChatRoom, index:curI});
         chatMessage.set(userId, [{text: curItem, sender: 0, replied: true}]);
