@@ -55,6 +55,7 @@ global.userToList = new Map();
 global.userSession = new Map();
 global.recoverUser = new Set();
 
+global.not_ai_replied_first_map = new Map();
 
 
 const DEFAULT_SESSION = {
@@ -217,7 +218,7 @@ const getOneRandomItem = () => {
 
 }
 
-let not_ai_replied_first = false;
+
 
 io.on("connection", (socket) => {
 
@@ -226,6 +227,10 @@ io.on("connection", (socket) => {
     const room = session.currentChatRoom; //room is a chatroom object
     if (session && room) { //if session and room are not null or undefined
       try {
+        if (!not_ai_replied_first_map.has(userId)) 
+        {
+          not_ai_replied_first_map.set(userId, false);
+        }
         const roomId = room._id.toString(); //room id is a string
         let messages = chatMessage.get(userId); //messages is an array
         const types = session.types; //types is an array
@@ -267,10 +272,9 @@ io.on("connection", (socket) => {
           messages.push({text: response.text, sender: 2, replied: true});
         } else if (curType === "GPT") { 
           //CHANGED THIS
-          print_log(`userID: ${userId} flag before: ${not_ai_replied_first}`, 1);
-          if (!not_ai_replied_first) //if first response is from AI
+          if (!(not_ai_replied_first_map.get(userId))) 
           {
-            response = await generateCompletion(messages,not_ai_replied_first); 
+            response = await generateCompletion(messages,not_ai_replied_first_map.get(userId)); 
             messages.push({text: response.text, sender: 2, replied: true});
           }
           
@@ -287,8 +291,7 @@ io.on("connection", (socket) => {
             }
           }
 
-          not_ai_replied_first = true;
-          print_log(`userID: ${userId} flag after: ${not_ai_replied_first}`, 1);
+          not_ai_replied_first_map.set(userId, true);
 
         } else {
           /** constant reply */
@@ -716,7 +719,7 @@ io.on("connection", (socket) => {
           } else {
             print_log(`ready: room id ${curId} different to ${room._id}`, 1);
           }
-          not_ai_replied_first = false;
+          not_ai_replied_first_map.set(userId, false);
           print_log(`AI reply for ${userId} has ended`, 1);
         }
       }, (WAIT_TIME-randSubAdd())*multiply); //CHANGE THIS LATER 
