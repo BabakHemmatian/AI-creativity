@@ -27,8 +27,9 @@ export const generateConReply = (messages, conMes) => {
     // const randomI = Math.floor(Math.random() * notUsed.length);
     // return {text:notUsed[randomI]};
     const aiMessage = messages.filter(mess => (mess.sender === 2));
-    const index = aiMessage.length;
+    const index = aiMessage.length; 
     if (index < conMes.length) {
+        print_log(`generateConReply: aiMessage is ${aiMessage}, messages is ${messages}, conMes is ${conMes}, index is ${index}`);
         return {text: conMes[index]};
     } else {
         print_log(`run out of const reply, current index is ${index}`);
