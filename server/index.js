@@ -285,7 +285,7 @@ io.on("connection", (socket) => {
               const recent_message = messages[messages.length - 1]
               if (recent_message.sender === 1) //if user sent sth
               {
-                response = await generateCompletion(messages,not_ai_replied_first); //then only generate
+                response = await generateCompletion(messages,not_ai_replied_first_map.get(userId)); //then only generate
                 messages.push({text: response.text, sender: 2, replied: true});
               }
             }
