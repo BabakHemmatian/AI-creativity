@@ -151,7 +151,7 @@ const getKey = (map, val) => {
 
 const randSubAdd = () => { //wait_time_diff = 1
   const randNum = Math.floor(Math.random() * WAIT_TIME_DIFF * (-5)); // 
-  return randNum - WAIT_TIME; //wait_time = 10 --> -15,-10
+  return randNum - WAIT_TIME; //wait_time = 10 --> -9,-4
 } 
 
 
@@ -267,7 +267,7 @@ io.on("connection", (socket) => {
           messages.push({text: response.text, sender: 2, replied: true});
         } else if (curType === "GPT") { 
           //CHANGED THIS
-          
+          print_log(`userID: ${userId} flag before: ${not_ai_replied_first}`, 1);
           if (!not_ai_replied_first) //if first response is from AI
           {
             response = await generateCompletion(messages,not_ai_replied_first); 
@@ -288,6 +288,7 @@ io.on("connection", (socket) => {
           }
 
           not_ai_replied_first = true;
+          print_log(`userID: ${userId} flag after: ${not_ai_replied_first}`, 1);
 
         } else {
           /** constant reply */
