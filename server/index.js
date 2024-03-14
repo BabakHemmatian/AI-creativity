@@ -669,8 +669,9 @@ io.on("connection", (socket) => {
         
       }
 
-      userSession.set(userId, session);
+      userSession.set(userId, {...session, ...{isMatching:false, currentChatRoom: newChatRoom}});
 
+      
       print_log(userSession.get(userId),5);
 
 
