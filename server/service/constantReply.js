@@ -29,7 +29,9 @@ export const generateConReply = (messages, conMes) => {
     const aiMessage = messages.filter(mess => (mess.sender === 2));
     const index = aiMessage.length; 
     if (index < conMes.length) {
-        print_log(`generateConReply: aiMessage is ${aiMessage}, messages is ${messages}, conMes is ${conMes}, index is ${index}`);
+        console.log('aimessage', aiMessage);
+        console.log('messages', messages);
+        print_log(`generateConReply: conMes[index] is ${conMes[index]}`);
         return {text: conMes[index]};
     } else {
         print_log(`run out of const reply, current index is ${index}`);
