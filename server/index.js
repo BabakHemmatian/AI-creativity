@@ -479,8 +479,9 @@ io.on("connection", (socket) => {
         print_log(newItems, 5);
         
         
-        //SET FOR HUMAN
-        if (lastUser !== '' && lastUser !== userId) {
+        //SET FOR HUMAN - NEED TO MOVE THIS
+        if (lastUser !== '' && lastUser !== userId) 
+        {
           /** matched user */
           const lastsession = userSession.get(lastUser);
           session = {...session, ...{matchedUser: lastUser}};
@@ -496,39 +497,43 @@ io.on("connection", (socket) => {
         session = {...session, ...{ended: false,  types: newOrder, items: newItems, currentI: 0, currentList: typeList._id}};
 
         //print_log(`matchUser: currentchatroom.types ${chatRoom.chatType}`, 5);
-
-
-        if (session.types[session.currentI] === 'CON') 
-        {
           
-          /** randomly assign user high or low quality response */
-          if (Math.random() >= 0.66) 
-          {
-            session = {...session, ...{quality: 'high'}};
-          } 
-          else if (Math.random() >= 0.33) 
-          {
-            session = {...session, ...{quality: 'gpt'}};
-          } 
-          else 
-          {
-            session = {...session, ...{quality: 'low'}};
-          }
-        //TODO: get shuffle messages
-        const curItem = newItems[0];
-        //print_log(`matchUser: curItem: ${curItem}, quality: ${session.quality}`);
-        const curResponse = constResponses[curItem][session.quality];
-        const toShuffle = [...curResponse].sort(() => Math.random() - 0.5);
-        session = {...session, ...{conMes: toShuffle}};
-        if (!toShuffle) 
-        {
-          print_log(`toshuffle is empty, curItem: ${curItem}, quality: ${session.quality}`);
-          print_log(toShuffle,-1);
-        }
+
+      //   if (session.types[session.currentI] === 'CON') 
+      //   {
+          
+      //     /** randomly assign user high or low quality response */
+      //     if (Math.random() >= 0.66) 
+      //     {
+      //       session = {...session, ...{quality: 'high'}};
+      //     } 
+      //     else if (Math.random() >= 0.33) 
+      //     {
+      //       session = {...session, ...{quality: 'gpt'}};
+      //     } 
+      //     else 
+      //     {
+      //       session = {...session, ...{quality: 'low'}};
+      //     }
+      //   //TODO: get shuffle messages
+      //   const curItem = newItems[0];
+      //   //print_log(`matchUser: curItem: ${curItem}, quality: ${session.quality}`);
+      //   const curResponse = constResponses[curItem][session.quality];
+      //   const toShuffle = [...curResponse].sort(() => Math.random() - 0.5);
+      //   session = {...session, ...{conMes: toShuffle}};
+      //   if (!toShuffle) 
+      //   {
+      //     print_log(`toshuffle is empty, curItem: ${curItem}, quality: ${session.quality}`);
+      //     print_log(toShuffle,-1);
+      //   }
         
-      } 
+      // } 
+
         userSession.set(userId, session);
-      } else {
+      
+      } 
+      
+      else {
         /** match with HUM or CON or GPT */
         const newOrder = [MATCH_CONDITION];
         const newItems = getOneRandomItem();
@@ -537,8 +542,8 @@ io.on("connection", (socket) => {
         print_log(newOrder, 5);
         print_log(newItems, 5);
 
-
-        if (MATCH_CONDITION === 'HUM' ) {
+        if (MATCH_CONDITION === 'HUM' ) 
+        {
           // TODO: match users together
           if (lastUser !== '' && lastUser !== userId) {
             /** matched user */
@@ -575,6 +580,7 @@ io.on("connection", (socket) => {
           }
           
         }
+
         const typeList = await createChatRoomListService(userId, newOrder);
         session = {...session, ...{ended: false,  types: newOrder, items: newItems, currentI: 0, currentList: typeList._id}};
         userSession.set(userId, session);
@@ -628,7 +634,42 @@ io.on("connection", (socket) => {
       const newChatRoom = await createChatRoomService([userId, AI_UID], curItem, curType, curList);
       await appendChatRoomService(newChatRoom._id, curList);
       userSession.set(userId, {...session, ...{isMatching:false, currentChatRoom: newChatRoom}});
-      print_log(userSession.get(userId));
+
+      print_log("newchatroom types: ${newChatRoom.chatType}",5);
+      
+      if (newChatRoom.chatType === 'CON')
+      {
+          
+          /** randomly assign user high or low quality response */
+          if (Math.random() >= 0.66) 
+          {
+            session = {...session, ...{quality: 'high'}};
+          } 
+          else if (Math.random() >= 0.33) 
+          {
+            session = {...session, ...{quality: 'gpt'}};
+          } 
+          else 
+          {
+            session = {...session, ...{quality: 'low'}};
+          }
+        //TODO: get shuffle messages
+        const curItem = newItems[0];
+        //print_log(`matchUser: curItem: ${curItem}, quality: ${session.quality}`);
+        const curResponse = constResponses[curItem][session.quality];
+        const toShuffle = [...curResponse].sort(() => Math.random() - 0.5);
+        session = {...session, ...{conMes: toShuffle}};
+        if (!toShuffle) 
+        {
+          print_log(`toshuffle is empty, curItem: ${curItem}, quality: ${session.quality}`);
+          print_log(toShuffle,-1);
+        }
+        
+      }
+
+      print_log("USER SESSION.GET(USERID): ${userSession.get(userId)}",5);
+
+
       print_log("ABOUT TO ENTER NEWCHATROOM != NULL",5);
       if (newChatRoom !== null) {
         socket.emit("matchedUser", {data:newChatRoom, index:curI});
