@@ -668,6 +668,8 @@ io.on("connection", (socket) => {
         
       }
 
+      userSession.set(userId, session);
+      
       print_log(userSession.get(userId),5);
 
 
