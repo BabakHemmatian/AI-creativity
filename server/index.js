@@ -223,6 +223,7 @@ io.on("connection", (socket) => {
 
   const reply_message = async (userId) => { //CHANGED THIS
     const session = userSession.get(userId); //usersession is a map
+    print_log(`reply_message : session.conMes: ${session.conMes}`);
     const room = session.currentChatRoom; //room is a chatroom object
     if (session && room) { //if session and room are not null or undefined
       try {
@@ -669,7 +670,7 @@ io.on("connection", (socket) => {
       }
 
       userSession.set(userId, session);
-      
+
       print_log(userSession.get(userId),5);
 
 
