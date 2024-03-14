@@ -351,56 +351,29 @@ export const generateCompletion = async (messages,not_ai_first) => {
     const prompt = generateChatGPTPrompt(messages)+' '+END_PROMPT;
     const setArray = [];
     //console.log("generateCompletion function initial prompt:",prompt);
-    messages.forEach((m) => {
+    messages.forEach((m) => 
+    {
         if (m.sender !== 0) {
             setArray.push(sentenceToSet(m.text));
         }
     })
 
     const insForAI = `${AI_INS} ${messages[0].text}. ${prompt}`; // TRY CHANGING THIS
-    if (messages.filter((m) => m.sender===2).length > 0) {
-        let tryTimes = 0;
-        do {
-            //console.log("GENERATE COMPLETION (not first) prompt",prompt);
-            const restext = await httpGPTCompletion("gpt-3.5-turbo", prompt, 0.7, insForAI, messages);
-            const res = {text: restext};
-            //console.log("Generate Completion function result:", res.text);
-            res.text = filterContent2(messages, res.text);
-            const i = checkRepeat(setArray, res.text);
-            if ( i === -1) {
-                console.log(`non repeat at ${tryTimes}`);
-                return res;
-            } else {
-                console.log(`'${res.text}' is similar to '${messages[i+1].text}'`)
-            }
-            tryTimes += 1;
-        } while (tryTimes < TRY_TIME);
-    } else {
-        // generate first idea
-        let tryTimes = 0;
-        
-        do {
-            //console.log("GENERATE COMPLETION first prompt",insForAI);
-            const restext = await httpGPTCompletion("gpt-3.5-turbo", insForAI, 0.7,insForAI, messages);
-            const res = {text: restext};
-            //console.log("Generate Completion function result:", res.text);
-            res.text = filterContent2(messages, res.text);
-            const i = checkRepeat(setArray, res.text);
-            if ( i === -1) {
-                console.log(`non repeat at ${tryTimes}`);
-                return res;
-            } else {
-                console.log(`'${res.text}' is similar to '${messages[i+1].text}'`)
-            }
-            tryTimes += 1;
-        } while (tryTimes < TRY_TIME);
+    if (messages.filter((m) => m.sender===2).length > 0) 
+    {
+        const restext = await httpGPTCompletion("gpt-3.5-turbo", prompt, 0.7, insForAI, messages);
+        const res = {text: restext};
+        return res;
+    } 
+    else 
+    {
+        const restext = await httpGPTCompletion("gpt-3.5-turbo", insForAI, 0.7,insForAI, messages);
+        const res = {text: restext};
+        return res;
     }
-    return {text:''};
+
 }
 
-
-
-    
 
 export const chatgptReply = async(message, messages, lastres) => {
     //console.log("ChatGPT completion");

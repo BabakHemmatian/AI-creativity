@@ -250,7 +250,7 @@ io.on("connection", (socket) => {
         const curItem = items[curI];
         //print_log(`reply_message : session.conMes: ${session.conMes}`);
         print_log(`reply_message: start reply for ${userId}, current (Index,type): ${session.currentI},${curType}`, 1);
-        print_log(`current_message is ${messages}`, 1);
+        //print_log(`current_message is ${messages}`, 1);
         let response = null;
         if (curType==="CHT") { //if current type is chat
           const userMessage = messages.filter(m => m.sender === 1); //usermessage is an array
