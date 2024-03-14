@@ -330,7 +330,7 @@ const apiGPTCompletion = async(model, message, temperature) => {
 
 
 const generateChatGPTPrompt = (messages) => {
-    //console.log("prompt generation messages: ",messages);
+    console.log("generatechatgptprompt: ",messages);
     const item = messages[0].text
     const messages2 = messages.filter((message) => (message.sender===2)); //AI returns
     //console.log("prompt generation messages2: ",messages2);
@@ -380,7 +380,7 @@ export const generateCompletion = async (messages,not_ai_first) => {
         let tryTimes = 0;
         
         do {
-            console.log("GENERATE COMPLETION first prompt",insForAI);
+            //console.log("GENERATE COMPLETION first prompt",insForAI);
             const restext = await httpGPTCompletion("gpt-3.5-turbo", insForAI, 0.7,insForAI, messages);
             const res = {text: restext};
             console.log("Generate Completion function result:", res.text);
