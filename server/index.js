@@ -223,7 +223,6 @@ io.on("connection", (socket) => {
 
   const reply_message = async (userId) => { //CHANGED THIS
     const session = userSession.get(userId); //usersession is a map
-    print_log(`reply_message : session.conMes: ${session.conMes}`);
     const room = session.currentChatRoom; //room is a chatroom object
     if (session && room) { //if session and room are not null or undefined
       try {
@@ -244,6 +243,7 @@ io.on("connection", (socket) => {
         const curI = session.currentI;
         const curType = types[curI];
         const curItem = items[curI];
+        print_log(`reply_message : session.conMes: ${session.conMes}`);
         print_log(`reply_message: start reply for ${userId}, current (Index,type): ${session.currentI},${curType}`, 1);
         let response = null;
         if (curType==="CHT") { //if current type is chat
