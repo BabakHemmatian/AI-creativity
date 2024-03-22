@@ -126,9 +126,9 @@ export const constResponses = {
             "as ice cream mold",
             "use the aluminum to make trays",
             "Put four cans on their sides, board on them and skateboard",
-            "take off the label and make",
             "take off the label and make an earring out of it",
             "cut in half and used as salt and pepper shakers",
+            "a phone case",
         ],
         'low':[
             "paperweight",
