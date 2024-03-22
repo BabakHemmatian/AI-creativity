@@ -83,16 +83,16 @@ export const parseInstruction = (index, chatType, change) => {
                 )}
                 {(chatType === "CON") && (
                   <span>
-                    This round will be <span style={{'fontWeight':'bold'}}>non-interactive</span>. Note that non-interactive partners
-                    cannot see your chat responses and will simply generate their own independent ideas. <span style={{'fontWeight':'bold'}}>When ready to start this part of the study, please respond in the chat with 'ready'</span>. Once both matched players have 
+                    This round will be <span style={{'fontWeight':'bold'}}>non-interactive. Note that non-interactive partners
+                    cannot see your chat responses and will simply generate their own independent ideas.</span> <span style={{'fontWeight':'bold'}}>When ready to start this part of the study, please respond in the chat with 'ready'</span>. Once both matched players have 
                     indicated their readiness, the game’s target object will appear underneath this instruction and the timer will begin.
                   </span>
                   )}
                 {(chatType === "GPT") && (
                   <span>
                     Your co-player for this round will be <span style={{'fontWeight':'bold'}}>an interactive AI</span>. <span style={{'fontWeight':'bold'}}>. </span> When ready to start this part of the study, please respond in the 
-                    chat with 'ready'. Once both matched players have indicated their readiness, the game’s target object will be revealed underneath this instruction and the timer will begin. Please wait for the AI's first message after "ready" to start the conversation. 
-                    After posting a message in the chat, please wait a second for the AI to respond before sending another message.
+                    chat with 'ready'. Once both matched players have indicated their readiness, the game’s target object will be revealed underneath this instruction and the timer will begin. <span style={{'fontWeight':'bold'}}>Please wait for the AI's first message after "ready" to start the conversation. 
+                    After posting a message in the chat, please wait a second for the AI to respond before sending another message.</span>
                   </span>
                   )}
               </div>
