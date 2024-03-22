@@ -361,13 +361,13 @@ export const generateCompletion = async (messages,not_ai_first) => {
     const insForAI = `${AI_INS} ${messages[0].text}. ${prompt}`; // TRY CHANGING THIS
     if (messages.filter((m) => m.sender===2).length > 0) 
     {
-        const restext = await httpGPTCompletion("gpt-3.5-turbo", prompt, 0.7, insForAI, messages);
+        const restext = await httpGPTCompletion("gpt-4", prompt, 0.7, insForAI, messages);
         const res = {text: restext};
         return res;
     } 
     else 
     {
-        const restext = await httpGPTCompletion("gpt-3.5-turbo", insForAI, 0.7,insForAI, messages);
+        const restext = await httpGPTCompletion("gpt-4", insForAI, 0.7,insForAI, messages);
         const res = {text: restext};
         return res;
     }
