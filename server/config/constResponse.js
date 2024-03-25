@@ -37,7 +37,7 @@ export const constResponses = {
             "to resell",
         ],
         'gpt':[
-            "Use as a place holder in a bookshelf to reserve space for other books".,
+            "Use as a place holder in a bookshelf to reserve space for other books.",
             "A flower press for DIY botanical art.",
             "Used as an elevated platform for laptop to prevent overheating.",
             "Can be hollowed out to create a hidden storage box.",
