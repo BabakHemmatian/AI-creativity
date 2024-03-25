@@ -159,8 +159,8 @@ const randSubAdd = () => { //wait_time_diff = 1
 const getRandomOrders = () => {
   if (lastOder === -1) {
     /** switch from test to online */
-    const index = 8 // uncomment for testing
-    // const index = Math.floor(Math.random() * 12);
+    // const index = 8 // uncomment for testing
+    const index = Math.floor(Math.random() * 12);
 
     lastOder = index;
     return ORDERS[index][0]
