@@ -72,18 +72,12 @@ const DEFAULT_SESSION = {
 
 const ORDERS = [
   [['HUM','CON','GPT'],['HUM','GPT','CON']],
-  [['HUM','CON','GPT'],['HUM','CON','GPT']],
-  [['HUM','GPT','CON'],['HUM','GPT','CON']],
   [['HUM','GPT','CON'],['HUM','CON','GPT']],
 
   [['CON','HUM','GPT'],['GPT','HUM','CON']],
-  [['CON','HUM','GPT'],['CON','HUM','GPT']],
-  [['GPT','HUM','CON'],['GPT','HUM','CON']],
   [['GPT','HUM','CON'],['CON','HUM','GPT']],
   
   [['CON','GPT','HUM'],['GPT','CON','HUM']],
-  [['CON','GPT','HUM'],['CON','GPT','HUM']],
-  [['GPT','CON','HUM'],['GPT','CON','HUM']],
   [['GPT','CON','HUM'],['CON','GPT','HUM']]
 ]
 
@@ -160,7 +154,7 @@ const getRandomOrders = () => {
   if (lastOder === -1) {
     /** switch from test to online */
     // const index = 8 // uncomment for testing
-    const index = Math.floor(Math.random() * 12);
+    const index = Math.floor(Math.random() * 6);
 
     lastOder = index;
     return ORDERS[index][0]
