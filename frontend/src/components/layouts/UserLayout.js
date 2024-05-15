@@ -18,9 +18,9 @@ export default function UserLayout({ user }) {
     // console.log(f);
     
     if (REACT_APP_AVATAR_OPTION === "human") {
-      avatarUrl = `https://avatars.dicebear.com/api/avataaars/${f}.svg`;
+      avatarUrl = `https://api.dicebear.com/8.x/avataaars/svg?seed=${f}`;
     } else if (REACT_APP_AVATAR_OPTION === "bot") {
-      avatarUrl = `https://avatars.dicebear.com/api/bottts/${f}.svg`;
+      avatarUrl = `https://api.dicebear.com/8.x/bottts/svg?seed=${f}`;
     }
   }
   
