@@ -2,6 +2,11 @@
  * this file is used for firebase authentication
  */
 
+
+//You can double check your credential and maybe database url in the serviceAccountKey.json file, 
+//the one that had the compromised data and did changes. And maybe check if that new account key 
+//has the necessary permissions in the Firebase project.
+
 import auth from "../config/firebase-config.js";
 
 export const VerifyToken = async (req, res, next) => {
@@ -28,6 +33,7 @@ export const VerifyToken = async (req, res, next) => {
   else 
   {
     console.log("No Authorization Header - VerifyToken function");
+    console.log("Request Headers: ", req.headers);
     return res.status(401).json({ message: "No Authorization Header!" });
   }
 };
