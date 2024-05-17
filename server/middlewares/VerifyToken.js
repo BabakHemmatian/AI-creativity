@@ -33,7 +33,10 @@ export const VerifyToken = async (req, res, next) => {
   else 
   {
     console.log("No Authorization Header - VerifyToken function");
-    console.log("Request Headers: ", req.headers);
+    console.log("Request", req) 
+    // console.log("Request Method: ", req.method)
+    // console.log("Request URL: ", req.url);
+    // console.log("Request Headers: ", req.headers);
     return res.status(401).json({ message: "No Authorization Header!" });
   }
 };
