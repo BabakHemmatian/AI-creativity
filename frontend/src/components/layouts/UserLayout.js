@@ -1,4 +1,4 @@
-const REACT_APP_AVATAR_OPTION = process.env.REACT_APP_AVATAR_OPTION || "default";
+const REACT_APP_AVATAR_OPTION = process.env.REACT_APP_AVATAR_OPTION;
 
 export default function UserLayout({ user }) {
   const url = user?.photoURL;
