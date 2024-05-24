@@ -1,6 +1,6 @@
-# 🌟 **Human AI Creativity Project** 🌟
+# **Human AI Creativity Project**
 
-*An awesome project that does amazing things!*
+*Yijun Li, Babak Hemmatian & Naman Raina*
 
 ---
 
