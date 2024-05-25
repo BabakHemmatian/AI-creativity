@@ -1,6 +1,6 @@
 # An Experimental Testbed for Evaluating Co-Creativity in Human-Human and Human-AI Teams
 
-*Developed by Yijun Lin, Babak Hemmatian & Naman Raina*
+*Developed by Yijun Lin, Babak Hemmatian & Naman Raina.*
 
 ---
 
@@ -8,8 +8,9 @@
 
 - [Introduction](#introduction)
 - [Motivation](#motivation)
-- [Structure & Features](#structure--features)
 - [How-to Instructions](#how-to-instructions)
+  - [Two Computer Interaction](#two-computer-interaction)
+  - [Single Computer Interaction](#single-computer-interaction)
 - [FAQs](#faqs)
 
 ---
@@ -21,7 +22,11 @@ We present a new experiment platform to address this gap by allowing controlled 
 An emerging consensus in the cognitive sciences states that flexible, adaptive behavior (i.e., intelligence) does not come from individuals alone, but rather often reflects the competent incorporation of knowledge and skills from one’s community (Sloman & Fernbach, 2018). For instance, research identifies the ability to successfully coordinate with one’s team members, called their collective intelligence (CI), as a much better predictor of group outcomes than individual IQs (Riedl et al., 2022). Although creativity is an increasingly important manifestation of intelligence in the information economy, creativity research has not kept up with this collective shift in the cognitive sciences.
 
 ## How-to Instructions
-- [Two Computer Interaction] (#two-computer-interaction)
-- [Single Computer Interaction] (#single-computer-interaction)
+### Two Computer Interaction
+1. Open a browser - Google Chrome, Microsoft Edge or Mozilla Firefox.
+2. Take the Qualtrics survey in a separate tab. Please make sure that paired participants take the same survey to avoid timing mismatches.
+Links: [Pre-Test](https://illinois.qualtrics.com/jfe/form/SV_eFeqLBEoz6mqcaq) and [Post-Test](https://illinois.qualtrics.com/jfe/form/SV_cNfEeh6SoG0OnnU)
+
+
 ## FAQs
 (TODO: Add content here)
