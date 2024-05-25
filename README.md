@@ -25,7 +25,10 @@ An emerging consensus in the cognitive sciences states that flexible, adaptive b
 ### Two Computer Interaction
 1. Open a browser - Google Chrome, Microsoft Edge or Mozilla Firefox.
 2. Take the Qualtrics survey in a separate tab. Please make sure that paired participants take the same survey to avoid timing mismatches.
-Links: [Pre-Test](https://illinois.qualtrics.com/jfe/form/SV_eFeqLBEoz6mqcaq) and [Post-Test](https://illinois.qualtrics.com/jfe/form/SV_cNfEeh6SoG0OnnU)
+**Links:** <a href="https://illinois.qualtrics.com/jfe/form/SV_eFeqLBEoz6mqcaq" target="_blank">Pre-Test</a>
+and <a href="https://illinois.qualtrics.com/jfe/form/SV_cNfEeh6SoG0OnnU" target="_blank">Post-Test</a>
+
+
 
 
 ## FAQs
