@@ -20,11 +20,8 @@ We present a new experiment platform to address this gap by allowing controlled 
 ## Motivation
 An emerging consensus in the cognitive sciences states that flexible, adaptive behavior (i.e., intelligence) does not come from individuals alone, but rather often reflects the competent incorporation of knowledge and skills from one’s community (Sloman & Fernbach, 2018). For instance, research identifies the ability to successfully coordinate with one’s team members, called their collective intelligence (CI), as a much better predictor of group outcomes than individual IQs (Riedl et al., 2022). Although creativity is an increasingly important manifestation of intelligence in the information economy, creativity research has not kept up with this collective shift in the cognitive sciences.
 
-## Structure & Features
-(TODO: Add content here)
-
 ## How-to Instructions
-(TODO: Add content here)
-
+- [Two Computer Interaction] (#two-computer-interaction)
+- [Single Computer Interaction] (#single-computer-interaction)
 ## FAQs
 (TODO: Add content here)
