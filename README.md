@@ -29,12 +29,12 @@ An emerging consensus in the cognitive sciences states that flexible, adaptive b
 2. Take the Qualtrics survey in a separate tab. Please make sure that paired participants take the same survey to avoid timing mismatches.
    - **Links:** [Pre-Test](https://illinois.qualtrics.com/jfe/form/SV_eFeqLBEoz6mqcaq) and [Post-Test](https://illinois.qualtrics.com/jfe/form/SV_cNfEeh6SoG0OnnU)
 3. Once you reach the second page of the survey, please take at least **1 minute** to read the instructions as the right arrow will not appear until one minute has passed.
-   <figure>
-     <img src="content/third_qualtrics_one_minute.png" alt="second_page" style="width: 50%;">
-     <figcaption><b>Figure 2:</b> Instructions Page of Qualtrics Survey</figcaption>
-   </figure>
-4. More instructions here...
-
+<p align="center">
+  <img src="content/third_qualtrics_one_minute.png" alt="Instructions Page of Qualtrics Survey" width="600">
+  <br>
+  <em>Instructions Page of Qualtrics Survey</em>
+</p>
+4. 
 
 ## FAQs
 (TODO: Add content here)
