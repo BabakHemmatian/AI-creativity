@@ -40,7 +40,7 @@ An emerging consensus in the cognitive sciences states that flexible, adaptive b
 
 4. Depending on the survey (pre or post) there will be different next **pages:**
 
-   **i. Pre-Test**
+   **i. Pre-Test** <p></p>
    a. Spend two minutes to write up the creative uses of the assigned item (in this case it is a safety pin).
 
    <p align="center">
@@ -77,17 +77,48 @@ An emerging consensus in the cognitive sciences states that flexible, adaptive b
 
    f. The pages afterwards have instructions that are straightforward and easy to follow. Please complete them to the best of your abilities and take your time 😄
 
-   **ii. Post-Test**
-   a. Part 1 is the same as Pre-Test (b) Part 2.
+   **ii. Post-Test** <p></p>
+   a. This is the same as Pre-Test bullet point (b).
+   <p></p>
+   b. This is the same as Pre-Test bullet point (c).
+   <p></p>
+   c. This is the same as Pre-Test bullet point (d).
 
 ## FAQs
 ### Where can I find the constant responses ?
-The link is [here](https://github.com/foogeeks/AI-creativity/blob/3condition/server/config/constResponse.js)
+The link is [here.](https://github.com/foogeeks/AI-creativity/blob/3condition/server/config/constResponse.js)
 ### How do I match and chat ?
 1. Head over to the [chat app](https://aicreativity-frontend.onrender.com/).
 2. You will be prompted to the following page:
-![image](https://github.com/foogeeks/AI-creativity/assets/86483914/7fca11db-25f1-4dcf-9f35-a18568938bb6)
+
+   <p align="center">
+     <img src="content/faq1.png" alt="Pre-Test Part 2 Page" width="600">
+     <br>
+     <em>Login Page for Chat App</em>
+   </p>
+
 3. Enter your information (note that registration requires a password confirmation).
 4. Choose an avatar and type in your name as shown below:
-![image](https://github.com/foogeeks/AI-creativity/assets/86483914/ae91b98d-fca4-419d-bd64-7adaba458387)
-5. 
+
+   <p align="center">
+     <img src="content/faq2.png" alt="Pre-Test Part 2 Page" width="600">
+     <br>
+     <em>Enter Name & Choose Avatar</em>
+   </p>
+
+5. You will see this screen (do refresh so that you can see the avatar on the top right). Click on "match".
+
+   <p align="center">
+     <img src="content/faq3.png" alt="Pre-Test Part 2 Page" width="600">
+     <br>
+     <em>Match Page</em>
+   </p>
+   
+7. You will be directed to the chat screen. Type "ready" to get started.
+
+    <p align="center">
+     <img src="content/faq4.png" alt="Pre-Test Part 2 Page" width="600">
+     <br>
+     <em>Chat Page</em>
+   </p>
+   
