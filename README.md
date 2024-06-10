@@ -85,9 +85,9 @@ An emerging consensus in the cognitive sciences states that flexible, adaptive b
    c. This is the same as Pre-Test bullet point (d).
 
 ## FAQs
-### Where can I find the constant responses ?
+### Where can I find the constant responses?
 The link is [here.](https://github.com/foogeeks/AI-creativity/blob/3condition/server/config/constResponse.js)
-### How do I match and chat ?
+### How do I match and chat?
 1. Head over to the [chat app](https://aicreativity-frontend.onrender.com/).
 2. You will be prompted to the following page:
 
@@ -109,7 +109,7 @@ The link is [here.](https://github.com/foogeeks/AI-creativity/blob/3condition/se
 5. You will see this screen (do refresh so that you can see the avatar on the top right). Click on "match".
 
    <p align="center">
-     <img src="content/faq3.png" alt="Pre-Test Part 2 Page" width="600">
+     <img src="content/faq3.png" alt="Pre-Test Part 2 Page" width="1000">
      <br>
      <em>Match Page</em>
    </p>
@@ -117,7 +117,7 @@ The link is [here.](https://github.com/foogeeks/AI-creativity/blob/3condition/se
 7. You will be directed to the chat screen. Type "ready" to get started.
 
     <p align="center">
-     <img src="content/faq4.png" alt="Pre-Test Part 2 Page" width="600">
+     <img src="content/faq4.png" alt="Pre-Test Part 2 Page" width="1000">
      <br>
      <em>Chat Page</em>
    </p>
