@@ -49,28 +49,45 @@ An emerging consensus in the cognitive sciences states that flexible, adaptive b
      <em>Pre-Test Creative Use Page</em>
    </p>
 
-   b. Follow the instructions **carefully** on the next page to start part 2. The link to use for step 1 is [this](https://aicreativity-frontend.onrender.com).
+   b. Follow the instructions **carefully** on the next page to start part 2. The link to use for step 1 is [here](https://aicreativity-frontend.onrender.com).
 
    <p align="center">
      <img src="content/fifth_qualtrics_pre.png" alt="Pre-Test Part 2 Page" width="600">
      <br>
      <em>Pre-Test Part 2 Page</em>
    </p>
-  c. After round 1 of the chat, please write **in detail** about the creative uses:
- <p align="center">
+
+   c. After round 1 of the chat, please write **in detail** about the creative uses:
+
+   <p align="center">
      <img src="content/sixth_qualtrics_pre.png" alt="Pre-Test Part 2 Page" width="600">
      <br>
      <em>Pre-Test Part 2 Page</em>
    </p>
-  d. Follow the instructions on the next page to match again.
+
+   d. Follow the instructions on the next page to match again.
+
    <p align="center">
      <img src="content/seventh_qualtrics_pre.png" alt="Pre-Test Part 2 Page" width="600">
      <br>
      <em>Pre-Test Part 2 Page</em>
    </p>
-  e. Repeat steps c and d until the human condition.
-  <p></p>
-  f. The pages afterwards have instructions that are straightforward and easy to follow. Please complete them to the best of your abilities and take your time 😄
+
+   e. Repeat steps c and d until the human condition.
+
+   f. The pages afterwards have instructions that are straightforward and easy to follow. Please complete them to the best of your abilities and take your time 😄
+
+   **ii. Post-Test**
+   a. Part 1 is the same as Pre-Test (b) Part 2.
 
 ## FAQs
-(TODO: Add content here)
+### Where can I find the constant responses ?
+The link is [here](https://github.com/foogeeks/AI-creativity/blob/3condition/server/config/constResponse.js)
+### How do I match and chat ?
+1. Head over to the [chat app](https://aicreativity-frontend.onrender.com/).
+2. You will be prompted to the following page:
+![image](https://github.com/foogeeks/AI-creativity/assets/86483914/7fca11db-25f1-4dcf-9f35-a18568938bb6)
+3. Enter your information (note that registration requires a password confirmation).
+4. Choose an avatar and type in your name as shown below:
+![image](https://github.com/foogeeks/AI-creativity/assets/86483914/ae91b98d-fca4-419d-bd64-7adaba458387)
+5. 
