@@ -78,12 +78,18 @@ An emerging consensus in the cognitive sciences states that flexible, adaptive b
    f. The pages afterwards have instructions that are straightforward and easy to follow. Please complete them to the best of your abilities and take your time 😄
 
    **ii. Post-Test** <p></p>
-   a. This is the same as Pre-Test bullet point (b).
+   a. This is the same as the Pre-Test bullet point (b).
    <p></p>
-   b. This is the same as Pre-Test bullet point (c).
+   b. This is the same as the Pre-Test bullet point (c).
    <p></p>
-   c. This is the same as Pre-Test bullet point (d).
+   c. This is the same as the Pre-Test bullet point (d).<p></p>
+   d. This is the same as the Pre-Test Bullet point (e).<p></p>
+   e. This is the same as the Pre-Test Bullet point (f).
 
+### Single-Computer Interaction
+1. Create two new tabs.
+2. In both, head over to the [chat app](https://aicreativity-frontend.onrender.com/).
+3. 
 ## FAQs
 ### Where can I find the constant responses?
 The link is [here.](https://github.com/foogeeks/AI-creativity/blob/3condition/server/config/constResponse.js)
@@ -92,7 +98,7 @@ The link is [here.](https://github.com/foogeeks/AI-creativity/blob/3condition/se
 2. You will be prompted to the following page:
 
    <p align="center">
-     <img src="content/faq1.png" alt="Pre-Test Part 2 Page" width="600">
+     <img src="content/faq1.png" alt="Pre-Test Part 2 Page" width="800">
      <br>
      <em>Login Page for Chat App</em>
    </p>
@@ -101,7 +107,7 @@ The link is [here.](https://github.com/foogeeks/AI-creativity/blob/3condition/se
 4. Choose an avatar and type in your name as shown below:
 
    <p align="center">
-     <img src="content/faq2.png" alt="Pre-Test Part 2 Page" width="600">
+     <img src="content/faq2.png" alt="Pre-Test Part 2 Page" width="400">
      <br>
      <em>Enter Name & Choose Avatar</em>
    </p>
