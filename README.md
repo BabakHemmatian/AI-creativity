@@ -32,62 +32,58 @@ An emerging consensus in the cognitive sciences states that flexible, adaptive b
    - **Links:** [Pre-Test](https://illinois.qualtrics.com/jfe/form/SV_eFeqLBEoz6mqcaq) and [Post-Test](https://illinois.qualtrics.com/jfe/form/SV_cNfEeh6SoG0OnnU)
 3. Once you reach the second page of the survey, please take at least **1 minute** to read the instructions as the right arrow will not appear until one minute has passed.
 
-   <p align="center">
-     <img src="content/third_qualtrics_one_minute.png" alt="Instructions Page of Qualtrics Survey" width="600">
-     <br>
-     <em>Instructions Page of Qualtrics Survey</em>
-   </p>
+<p align="center">
+  <img src="content/third_qualtrics_one_minute.png" alt="P Page of Qualtrics Survey" width="35%" style="margin-right: 5%;">
+</p>
 
 4. For the Pre-Test the next page will require you to spend two minutes writing up the creative uses of the assigned item (in this case it is a safety pin).
-   For the Post-Test the page you will see is described in step 5.
+   For the Post-Test the next page you will see is the instructions page that you should read before you head over to the [chat app.](https://aicreativity-frontend.onrender.com)
+
+    <p align="center">
+    <img src="content/fourth_qualtrics_pre.png" alt="P Page of Qualtrics Survey" width="40%" style="margin-right: 5%;">
+    <img src="content/fifth_qualtrics_pre.png" alt="Pre-Test Creative Use Page" width="40%">
+  </p>
+  <p align="center">
+    <em>Pre Test</em> &nbsp;&nbsp;&nbsp;&nbsp; <em>Post Test</em>
+  </p>
+
+
+5. For the Pre-Test you will see the following page. Please read the instructions **carefully** and use this link for the [chat app.](https://aicreativity-frontend.onrender.com)
+For the Post-Test, after you are done with Round 1, please spend 5 minutes writing in detail to answer the prompt below.
 
    <p align="center">
-     <img src="content/fourth_qualtrics_pre.png" alt="Pre-Test Creative Use Page" width="600">
-     <br>
-     <em>Pre-Test Creative Use Page</em>
-   </p>
+    <img src="content/fifth_qualtrics_pre.png" alt="P Page of Qualtrics Survey" width="40%" style="margin-right: 5%;">
+    <img src="content/sixth_qualtrics_pre.png" alt="Pre-Test Creative Use Page" width="40%">
+  </p>
+  <p align="center">
+    <em>Pre Test</em> &nbsp;&nbsp;&nbsp;&nbsp; <em>Post Test</em>
+  </p>
 
-5. For the Pre-Test you will see the following page. Please read the instructions **carefully** and use this link for the [chat app](https://aicreativity-frontend.onrender.com). For the Post-Test, the page you will see is described in step 6.
+6. For the Pre-Test, once you are done with Round 1, please spend 5 minutes writing in detail to answer the prompt below. For the Post-Test, please follow the instructions below and begin matching again for the next round. 
+    <p align="center">
+    <img src="content/sixth_qualtrics_pre.png" alt="P Page of Qualtrics Survey" width="40%" style="margin-right: 5%;">
+    <img src="content/seventh_qualtrics_pre.png" alt="Pre-Test Creative Use Page" width="40%">
+  </p>
+  <p align="center">
+    <em>Pre Test</em> &nbsp;&nbsp;&nbsp;&nbsp; <em>Post Test</em>
+  </p>
 
-   <p align="center">
-     <img src="content/fifth_qualtrics_pre.png" alt="Pre-Test Part 2 Page" width="600">
-     <br>
-     <em>Pre-Test Part 2 Page</em>
-   </p>
-
-6. After round 1 of the chat, please write **in detail** about the creative uses:
-
-   <p align="center">
-     <img src="content/sixth_qualtrics_pre.png" alt="Pre-Test Part 2 Page" width="600">
-     <br>
-     <em>Pre-Test Part 2 Page</em>
-   </p>
-
-   d. Follow the instructions on the next page to match again.
+7. For the Pre-Test, please follow the instructions below and begin matching again for the next round. The above steps need to be repeated for both Pre/Post-Test until the end of the third round.
 
    <p align="center">
-     <img src="content/seventh_qualtrics_pre.png" alt="Pre-Test Part 2 Page" width="600">
+     <img src="content/seventh_qualtrics_pre.png" alt="Pre Test 2 Page" width="40%">
      <br>
-     <em>Pre-Test Part 2 Page</em>
+     <em>Pre Test</em>
    </p>
 
-   e. Repeat steps c and d until the human condition.
-
-   f. The pages afterwards have instructions that are straightforward and easy to follow. Please complete them to the best of your abilities and take your time 😄
-
-   **ii. Post-Test** <p></p>
-   a. This is the same as the Pre-Test bullet point (b).
-   <p></p>
-   b. This is the same as the Pre-Test bullet point (c).
-   <p></p>
-   c. This is the same as the Pre-Test bullet point (d).<p></p>
-   d. This is the same as the Pre-Test Bullet point (e).<p></p>
-   e. This is the same as the Pre-Test Bullet point (f).
+8. The rest of the survey has very clear instructions and is easy to follow - if there are any questions please see the FAQs section.
 
 ### Single-Computer Interaction
 1. Create two new tabs.
 2. In both, head over to the [chat app](https://aicreativity-frontend.onrender.com/).
-3. 
+3. Please login or register with **two different** profiles when the login page appears. Also, make sure the usernames and avatars chosen are easy to identify.
+4. Once the chat app page shows up, select 'match' in the top-left corner in both tabs.
+5. Either use
 ## FAQs
 ### Where can I find the constant responses?
 The link is [here.](https://github.com/foogeeks/AI-creativity/blob/3condition/server/config/constResponse.js)
