@@ -38,10 +38,8 @@ An emerging consensus in the cognitive sciences states that flexible, adaptive b
      <em>Instructions Page of Qualtrics Survey</em>
    </p>
 
-4. Depending on the survey (pre or post) there will be different next **pages:**
-
-   **i. Pre-Test** <p></p>
-   a. Spend two minutes to write up the creative uses of the assigned item (in this case it is a safety pin).
+4. For the Pre-Test the next page will require you to spend two minutes writing up the creative uses of the assigned item (in this case it is a safety pin).
+   For the Post-Test the page you will see is described in step 5.
 
    <p align="center">
      <img src="content/fourth_qualtrics_pre.png" alt="Pre-Test Creative Use Page" width="600">
@@ -49,7 +47,7 @@ An emerging consensus in the cognitive sciences states that flexible, adaptive b
      <em>Pre-Test Creative Use Page</em>
    </p>
 
-   b. Follow the instructions **carefully** on the next page to start part 2. The link to use for step 1 is [here](https://aicreativity-frontend.onrender.com).
+5. For the Pre-Test you will see the following page. Please read the instructions **carefully** and use this link for the [chat app](https://aicreativity-frontend.onrender.com). For the Post-Test, the page you will see is described in step 6.
 
    <p align="center">
      <img src="content/fifth_qualtrics_pre.png" alt="Pre-Test Part 2 Page" width="600">
@@ -57,7 +55,7 @@ An emerging consensus in the cognitive sciences states that flexible, adaptive b
      <em>Pre-Test Part 2 Page</em>
    </p>
 
-   c. After round 1 of the chat, please write **in detail** about the creative uses:
+6. After round 1 of the chat, please write **in detail** about the creative uses:
 
    <p align="center">
      <img src="content/sixth_qualtrics_pre.png" alt="Pre-Test Part 2 Page" width="600">
@@ -128,3 +126,8 @@ The link is [here.](https://github.com/foogeeks/AI-creativity/blob/3condition/se
      <em>Chat Page</em>
    </p>
    
+### The chat app is unresponsive. What do I do?
+Please refresh the page and the chat app will restart from the round (Human, Interactive AI, or Constant) you were currently in. If the problem persists, please log out and then log in again. 
+
+### I want to provide feedback on the chat app. Who should I contact?
+Please contact babak2@illinois.edu.
