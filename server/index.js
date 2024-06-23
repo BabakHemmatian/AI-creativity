@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { Server } from "socket.io";
 
+import auth from "../config/firebase-config.js";
 import "./config/mongo.js";
 
 import { VerifyToken, VerifySocketToken } from "./middlewares/VerifyToken.js";
@@ -346,7 +347,7 @@ io.on("connection", (socket) => {
 
   socket.on("addUser", async (userId) => {
     //TODO: check whether current user has unfinished session
-
+    console.log(auth.getUser(userId));
     
     if (!userSession.has(userId)) {
       /** current user is the first time visiting */
