@@ -3,7 +3,7 @@ import { getAuth } from "firebase-admin/auth";
 
 import { readFileSync } from "fs";
 const serviceAccountKey = JSON.parse(readFileSync("./serviceAccountKey.json"));
-console.log('serviceAccountKey:', serviceAccountKey);
+// console.log('serviceAccountKey:', serviceAccountKey);
 // import serviceAccountKey from "./serviceAccountKey.json" assert { type: "json" };
 
 const app = initializeApp({

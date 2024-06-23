@@ -8,6 +8,8 @@ import {
 
 import auth from "../config/firebase";
 
+import User from "../models/User"; 
+
 const AuthContext = createContext();
 
 export function useAuth() {
@@ -20,7 +22,22 @@ export function AuthProvider({ children }) {
   const [error, setError] = useState("");
 
   function register(email, password) {
-    return createUserWithEmailAndPassword(auth, email, password);
+    return createUserWithEmailAndPassword(auth, email, password).
+    then(async (userCredential) => {
+      const user = userCredential.user;
+      // Create a new user instance for MongoDB
+      const newUser = new User({
+        email: user.email,
+        firebaseUID: user.uid,
+      });
+
+      // Save the new user to MongoDB
+      await newUser.save();
+    })
+    .catch((error) => {
+      console.error("Error registering user:", error);
+      throw error;
+    });
   }
 
   function login(email, password) {

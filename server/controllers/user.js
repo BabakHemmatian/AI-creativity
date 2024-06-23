@@ -25,6 +25,8 @@ export const getAllUsers = async (req, res) => {
 export const getUser = async (req, res) => {
   try {
     const userRecord = await auth.getUser(req.params.userId);
+    console.log('testinggggggggggggggggggggggggggggggggggggg');
+    console.log(userRecord);
 
     const { uid, email, displayName, photoURL } = userRecord;
 
