@@ -347,8 +347,12 @@ io.on("connection", (socket) => {
 
   socket.on("addUser", async (userId) => {
     //TODO: check whether current user has unfinished session
-    console.log(auth.getUser(userId));
-    
+    console.log('testinggggggggggggggggggggggggggggggggggggg');
+    console.log(userId);
+    const userRecord = auth.getUser(userId);
+    const { uid, email, displayName, photoURL } = userRecord;
+    res.status(200).json({ uid, email, displayName, photoURL });
+
     if (!userSession.has(userId)) {
       /** current user is the first time visiting */
       print_log(`userId ${userId} not in userSession`);
