@@ -3,6 +3,25 @@
  */
 import auth from "../config/firebase-config.js";
 
+
+export const createUser = async (req, res) => {
+  try {
+    const newUser = await createUserService(req.body.uid, req.body.email);
+    if (newUser !== null) {
+      res.status(201).json(newUser);
+    } else {
+      res.status(500).json({
+        message: "service error"
+      });
+    }
+    
+  } catch (error) {
+    res.status(409).json({
+      message: error.message,
+    });
+  }
+};
+
 //get all the users 
 export const getAllUsers = async (req, res) => {
   const maxResults = 10;

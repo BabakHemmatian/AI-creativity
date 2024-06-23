@@ -2,7 +2,8 @@ import mongoose from "mongoose";
 
 const UserSchema = mongoose.Schema(
   {
-    email: String,
+    uid: String,
+    email: String
   },
   { timestamps: true }
 );
