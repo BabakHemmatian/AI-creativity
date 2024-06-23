@@ -3,7 +3,6 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { Server } from "socket.io";
 
-import getUser from "./controllers/user.js"
 import "./config/mongo.js";
 
 import { VerifyToken, VerifySocketToken } from "./middlewares/VerifyToken.js";
@@ -349,11 +348,11 @@ io.on("connection", (socket) => {
     //TODO: check whether current user has unfinished session
 
     print_log(`userId: ${userId} `);
-    const userRecord = getUser(userId);
-    const { uid, email, displayName, photoURL } = userRecord;
-    print_log(`userId: ${uid} `);
-    print_log(`email: ${email} `);
-    print_log(`displayName: ${displayName} `);
+    // const userRecord = getUser(userId);
+    // const { uid, email, displayName, photoURL } = userRecord;
+    // print_log(`userId: ${uid} `);
+    // print_log(`email: ${email} `);
+    // print_log(`displayName: ${displayName} `);
 
     if (!userSession.has(userId)) {
       /** current user is the first time visiting */
