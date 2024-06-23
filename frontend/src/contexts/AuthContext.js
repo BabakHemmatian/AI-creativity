@@ -56,6 +56,17 @@ export function AuthProvider({ children }) {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setCurrentUser(user);
       setLoading(false);
+
+      if (user) {
+        console.log("User Information:");
+        console.log("User ID:", user.uid);
+        console.log("Email:", user.email);
+        console.log("Display Name:", user.displayName);
+        console.log("Photo URL:", user.photoURL);
+
+      } else {
+        console.log("No user is currently signed in.");
+      }
     });
 
     return unsubscribe;
