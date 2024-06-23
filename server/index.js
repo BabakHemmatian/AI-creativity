@@ -352,6 +352,12 @@ io.on("connection", (socket) => {
     // const userRecord = auth.getUser(userId);
     // const { uid, email, displayName, photoURL } = userRecord;
     // res.status(200).json({ uid, email, displayName, photoURL });
+    print_log(`userId: ${userId} `);
+    const userRecord = auth.getUser(userId);
+    const { uid, email, displayName, photoURL } = userRecord;
+    print_log(`userId: ${uid} `);
+    print_log(`email: ${email} `);
+    print_log(`displayName: ${displayName} `);
 
     if (!userSession.has(userId)) {
       /** current user is the first time visiting */
