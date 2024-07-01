@@ -4,11 +4,11 @@ import {
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
+  onAuthStateChanged
 } from "firebase/auth";
 
 import auth from "../config/firebase";
-
-import User from "../models/User"; 
+import User from "../../../server/models/User"; 
 
 const AuthContext = createContext();
 
@@ -21,24 +21,27 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  function register(email, password) {
-    return createUserWithEmailAndPassword(auth, email, password).
-    then(async (userCredential) => {
+  async function register(email, password) {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      // Create a new user instance for MongoDB
+
+      // Create a new user in MongoDB
       const newUser = new User({
-        email: user.email,
-        firebaseUID: user.uid,
+        uid: user.uid,
+        email: user.email
       });
 
-      // Save the new user to MongoDB
-      await newUser.save();
-    })
-    .catch((error) => {
-      console.error("Error registering user:", error);
+      await newUser.save();  // Save the user data in MongoDB
+
+      return user;
+    } catch (error) {
+      setError("Failed to create an account");
+      console.error("Error creating user in Firebase and MongoDB:", error);
       throw error;
-    });
+    }
   }
+
 
   function login(email, password) {
     return signInWithEmailAndPassword(auth, email, password);
@@ -58,12 +61,7 @@ export function AuthProvider({ children }) {
       setLoading(false);
 
       if (user) {
-        console.log("User Information:");
-        console.log("User ID:", user.uid);
-        console.log("Email:", user.email);
-        console.log("Display Name:", user.displayName);
-        console.log("Photo URL:", user.photoURL);
-
+        console.log("Firebase Auth Changed: User is signed in", user);
       } else {
         console.log("No user is currently signed in.");
       }
