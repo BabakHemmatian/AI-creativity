@@ -4,11 +4,9 @@ import {
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
-  onAuthStateChanged
 } from "firebase/auth";
 
 import auth from "../config/firebase";
-import User from "../../../server/models/User"; 
 
 const AuthContext = createContext();
 
@@ -21,25 +19,8 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  async function register(email, password) {
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // Create a new user in MongoDB
-      const newUser = new User({
-        uid: user.uid,
-        email: user.email
-      });
-
-      await newUser.save();  // Save the user data in MongoDB
-
-      return user;
-    } catch (error) {
-      setError("Failed to create an account");
-      console.error("Error creating user in Firebase and MongoDB:", error);
-      throw error;
-    }
+  function register(email, password) {
+    return createUserWithEmailAndPassword(auth, email, password);
   }
 
 
