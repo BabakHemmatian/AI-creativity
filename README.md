@@ -1,6 +1,7 @@
+render test
 # An Experimental Testbed for Evaluating Co-Creativity in Human-Human and Human-AI Teams
 
-*Developed by Yijun Lin, Babak Hemmatian & Naman Raina.*
+*Developed by Yijun Lin, Babak Hemmatian, Haotian Wang, and Naman Raina.*
 
 ---
 
