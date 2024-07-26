@@ -2,7 +2,9 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 
-const apiUrl = process.env.REACT_APP_URL || 'http://localhost:8080';
+const URL = process.env.REACT_APP_URL;
+
+console.log('URL: ', URL)
 
 export default function Register() {
   const navigate = useNavigate();
@@ -34,7 +36,7 @@ export default function Register() {
       const user = userCredential.user;
       //console.log(user)
       // Updated API call
-      const response = await fetch(`${apiUrl}/api/user/register`, {
+      const response = await fetch(`${URL}/api/user/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
