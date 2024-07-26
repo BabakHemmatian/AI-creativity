@@ -13,7 +13,9 @@ export default function ChatForm(props) {
   }
 
   const handleFormSubmit = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
 
     props.handleFormSubmit(message);
     

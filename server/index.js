@@ -25,7 +25,9 @@ dotenv.config();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
+app.use("/api/room", chatRoomRoutes);
+app.use("/api/message", chatMessageRoutes);
+app.use("/api/user", userRoutes);
 app.use(VerifyToken);
 
 /** load neccessary const variablle */ 
@@ -96,9 +98,6 @@ var lastUser = '';
 
 
 // print_log(MATCH_AI);
-app.use("/api/room", chatRoomRoutes);
-app.use("/api/message", chatMessageRoutes);
-app.use("/api/user", userRoutes);
 
 const server = app.listen(PORT, () => {
   print_log(`Server listening on port ${PORT}`);

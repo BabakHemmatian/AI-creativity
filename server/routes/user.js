@@ -4,7 +4,7 @@ import {createUser, getAllUsers, getUser } from "../controllers/user.js";
 
 const router = express.Router();
 
-router.post("/", createUser);
+router.post("/register", createUser);
 router.get("/", getAllUsers);
 router.get("/:userId", getUser);
 

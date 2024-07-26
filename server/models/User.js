@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const UserSchema = mongoose.Schema(
   {
-    uid: String,
+    _id: String,
     email: String
   },
   { timestamps: true }

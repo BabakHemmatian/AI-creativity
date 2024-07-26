@@ -2,20 +2,20 @@
  * the file is used to get the use object from firebase
  */
 import auth from "../config/firebase-config.js";
+import User from "../models/User.js";
 
 
 export const createUser = async (req, res) => {
   try {
-    const newUser = await createUserService(req.body.uid, req.body.email);
-    if (newUser !== null) {
-      res.status(201).json(newUser);
-    } else {
-      res.status(500).json({
-        message: "service error"
-      });
-    }
-    
+    console.log('Attempting to create user:', req.body);
+    const newUser = new User({
+      _id: req.body._id,
+      email: req.body.email
+    });
+    const savedUser = await newUser.save();
+    res.status(201).json(savedUser);
   } catch (error) {
+    console.log('error');
     res.status(409).json({
       message: error.message,
     });

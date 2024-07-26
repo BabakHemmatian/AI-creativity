@@ -29,7 +29,22 @@ export default function Register() {
     try {
       setError("");
       setLoading(true);
-      await register(email, password);
+      const userCredential = await register(email, password);
+      const user = userCredential.user;
+      //console.log(user)
+      // Updated API call
+      const response = await fetch('/api/user/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ _id: user.uid, email: user.email }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to register user in database');
+      }
+
       navigate("/profile");
     } catch (e) {
       console.log(e)
