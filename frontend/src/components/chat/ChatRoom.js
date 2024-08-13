@@ -28,6 +28,7 @@ export default function ChatRoom({
   // const [currentId, setCurrentId] = useState(currentChat._id);
   const currentId = useRef(currentChat._id);
   // const [end, setEnd] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // const latestCount = useRef(count);
   const { time, start, pause, reset, status } = useTimer({
@@ -91,6 +92,10 @@ export default function ChatRoom({
       // console.log("message data");
       // console.log(data)
       console.log("getMessage: recieved");
+      if (currentChat.chatType === "GPT") {
+        setIsProcessing(false);  // Re-enable input only in GPT mode
+      }
+
       if (data.roomId === currentId.current) {
         // console.log("equal room id")
         setIncomingMessage({
@@ -127,10 +132,17 @@ export default function ChatRoom({
     incomingMessage && setMessages((prev) => [...prev, incomingMessage]);
   }, [incomingMessage]);
 
-
   
   const handleFormSubmit = async (message) => {
     console.log(`HandleforSubmit : ${message}`);
+
+    if (currentChat.chatType === "GPT" && isProcessing) {
+      return; // Prevent sending another message in GPT mode
+    }
+
+    if (currentChat.chatType === "GPT") {
+      setIsProcessing(true);  // Disable input only in GPT mode
+    }
     
     if (message === "ready" && ready !== 3) {
       setReady(prevready => prevready | 2);
@@ -214,7 +226,7 @@ export default function ChatRoom({
           </ul>
         </div>
 
-        <ChatForm handleFormSubmit={handleFormSubmit} />
+        <ChatForm handleFormSubmit={handleFormSubmit} isProcessing={isProcessing} />
       </div>
     </div>
   );

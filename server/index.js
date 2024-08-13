@@ -471,7 +471,7 @@ io.on("connection", (socket) => {
   socket.on("matchUser", async ({userId}) => {
     let session = userSession.get(userId);
     print_log(`matchUser: for ${userId}`, 5);
-    if (session.ended) {
+    if (session && session.ended) {
       /** we need a new session */
       if (MATCH_CONDITION === 'ALL') {
         /** three chatroom in one session */

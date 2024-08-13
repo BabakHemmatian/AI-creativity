@@ -1,30 +1,31 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { PaperAirplaneIcon } from "@heroicons/react/solid";
 
-export default function ChatForm(props) {
+export default function ChatForm({ handleFormSubmit, isProcessing }) {
   const [message, setMessage] = useState("");
 
   const scrollRef = useRef();
-  const handleKeyUp = async (e) => {
-    if (e.keyCode === 13) {
-      // enter should send the message
-      handleFormSubmit()
-    }
-  }
 
-  const handleFormSubmit = async (e) => {
+  const handleKeyUp = async (e) => {
+    if (e.keyCode === 13 && !isProcessing) {  // Prevent submission if processing
+      handleFormSubmitInternal(e);
+    }
+  };
+
+  const handleFormSubmitInternal = async (e) => {
     if (e && e.preventDefault) {
       e.preventDefault();
     }
 
-    props.handleFormSubmit(message);
-    
-    setMessage(""); //sets it back to empty
+    if (!isProcessing) {  // Prevent submission if processing
+      handleFormSubmit(message);
+      setMessage("");  // Clear the input field
+    }
   };
 
   return (
     <div ref={scrollRef}>
-      <form onSubmit={handleFormSubmit}>
+      <form onSubmit={handleFormSubmitInternal}>
         <div className="flex items-center justify-between w-full p-3 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
           <input
             type="text"
@@ -35,10 +36,11 @@ export default function ChatForm(props) {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyUp={handleKeyUp}
+            disabled={isProcessing}  // Disable input when processing
           />
-          <button type="submit">
+          <button type="submit" disabled={isProcessing}>
             <PaperAirplaneIcon
-              className="h-6 w-6 text-blue-600 dark:text-blue-500 rotate-[90deg]"
+              className={`h-6 w-6 ${isProcessing ? 'text-gray-400' : 'text-blue-600 dark:text-blue-500'} rotate-[90deg]`}
               aria-hidden="true"
             />
           </button>
