@@ -7,7 +7,8 @@ export default function ChatForm({ handleFormSubmit, isProcessing }) {
   const scrollRef = useRef();
 
   const handleKeyUp = async (e) => {
-    if (e.keyCode === 13 && !isProcessing) {  // Prevent submission if processing
+    if (e.key === "Enter" && !isProcessing) {
+      e.preventDefault(); // Prevent default form submission
       handleFormSubmitInternal(e);
     }
   };
@@ -17,7 +18,7 @@ export default function ChatForm({ handleFormSubmit, isProcessing }) {
       e.preventDefault();
     }
 
-    if (!isProcessing) {  // Prevent submission if processing
+    if (!isProcessing && message.trim() !== "") {  // Prevent submission if processing
       handleFormSubmit(message);
       setMessage("");  // Clear the input field
     }
