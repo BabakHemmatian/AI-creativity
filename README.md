@@ -126,4 +126,4 @@ The link is [here.](https://github.com/foogeeks/AI-creativity/blob/3condition/se
 Please refresh the page and the chat app will restart from the round (Human, Interactive AI, or Constant) you were currently in. If the problem persists, please log out and then log in again. 
 
 ### I want to provide feedback on the chat app. Who should I contact?
-Please contact babak2@illinois.edu.
+Please contact babak.hemmatian@gmail.com.
