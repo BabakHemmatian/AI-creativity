@@ -33,13 +33,22 @@ export default function ChatLayout() {
 
   useEffect(() => {
     const getSocket = async () => {
+      console.log("[Socket:Setup] Starting socket event listener setup")
       const res = await initiateSocketConnection()
       socket.current = res
+      res.on("connect", () => {
+        console.log("[Socket:Connection] Connected with ID:", res.id)
+        console.log("[Socket:Connection] User ID:", currentUser.uid)
+      })
       socket.current.emit("addUser", currentUser.uid)
       setLoad(true) /** disable operation */
       socket.current.on("getSession", ({ isRecover, session }) => {
         console.log(`getSession: recieved`)
         // console.log(session);
+        console.log(
+          "[Socket:Session] Initializing session for user:",
+          currentUser.uid
+        )
         if (isRecover) {
           /** TODO: recover session */
 

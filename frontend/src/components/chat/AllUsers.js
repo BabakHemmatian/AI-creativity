@@ -48,22 +48,40 @@ export default function AllUsers({
   }, [chatRooms])
 
   useEffect(() => {
-    socket.current?.on("matchedUser", ({ data, index }) => {
-      // console.log("recieved matching");
-      // console.log(`match: ${matching}`);
-      console.log("matchedUser: recieved")
+    const sock = socket.current
+    if (!sock) return
 
-      if (matching) {
-        // console.log(`socket ${socket.current.id} recieve data`);
-        // console.log(`not back data: ${data}`);
+    const handler = ({ data, index }) => {
+      console.log("matchedUser received", data, index)
+      data.index = index
+      setCurrentChat(data)
+      setHasRoom(true)
+      setMatching(false)
+    }
 
-        data.index = index
-        setCurrentChat(data)
-        setHasRoom(true)
-        setMatching(false)
-      }
-    })
-  })
+    sock.on("matchedUser", handler)
+    return () => {
+      sock.off("matchedUser", handler)
+    }
+  }, [socket.current])
+
+  // useEffect(() => {
+  //   socket.current?.on("matchedUser", ({ data, index }) => {
+  //     // console.log("recieved matching");
+  //     // console.log(`match: ${matching}`);
+  //     console.log("matchedUser: recieved")
+
+  //     if (matching) {
+  //       // console.log(`socket ${socket.current.id} recieve data`);
+  //       // console.log(`not back data: ${data}`);
+
+  //       data.index = index
+  //       setCurrentChat(data)
+  //       setHasRoom(true)
+  //       setMatching(false)
+  //     }
+  //   })
+  // })
 
   const changeCurrentChat = (index, chat) => {
     setSelectedChat(index)

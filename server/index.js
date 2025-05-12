@@ -55,5 +55,4 @@ global.not_ai_replied_first_map = new Map()
 
 /** Start Socket Event Binding */
 
-console.log("!!!HERE")
 setupSocket(io)
