@@ -49,9 +49,7 @@ let lastOrder = -1
 
 const getRandomOrders = () => {
   if (lastOrder === -1) {
-    const humFirstIndexes = [0, 1]
-    const idx =
-      humFirstIndexes[Math.floor(Math.random() * humFirstIndexes.length)]
+    const idx = [0, 1][Math.floor(Math.random() * 2)]
     lastOrder = idx
     return ORDERS[idx][0]
   } else {
@@ -63,32 +61,9 @@ const getRandomOrders = () => {
 
 const getRandomItems = () => {
   const items = []
-  if (lastItem === -1) {
-    const idx = Math.floor(Math.random() * 6)
-    lastItem = idx
-    ITEMINDEX[idx].forEach((i) => items.push(ITEMS[i]))
-  } else {
-    ITEMINDEX[lastItem].forEach((i) => items.push(ITEMS[i]))
-    lastItem = -1
-  }
-  return items
-}
-
-const getOneRandomItem = () => {
-  const items = []
-  if (MATCH_CONDITION === "HUM") {
-    if (lastItem === -1) {
-      const idx = Math.floor(Math.random() * 3)
-      lastItem = idx
-      items.push(ITEMS[idx])
-    } else {
-      items.push(ITEMS[lastItem])
-      lastItem = -1
-    }
-  } else {
-    const idx = Math.floor(Math.random() * 3)
-    items.push(ITEMS[idx])
-  }
+  const idx = lastItem === -1 ? Math.floor(Math.random() * 6) : lastItem
+  lastItem = lastItem === -1 ? idx : -1
+  ITEMINDEX[idx].forEach((i) => items.push(ITEMS[i]))
   return items
 }
 
@@ -98,18 +73,14 @@ export default async function handleMatchUser(socket, { userId }) {
     session = { ...DEFAULT_SESSION }
     userSession.set(userId, session)
   }
-  print_log(`matchUser: for ${userId}`, 5)
 
   if (session.ended) {
-    let newOrder = [],
-      newItems = []
-    if (MATCH_CONDITION === "ALL") {
-      newOrder = getRandomOrders()
-      newItems = getRandomItems()
-    } else {
-      newOrder = [MATCH_CONDITION]
-      newItems = getOneRandomItem()
-    }
+    const newOrder =
+      MATCH_CONDITION === "ALL" ? getRandomOrders() : [MATCH_CONDITION]
+    const newItems =
+      MATCH_CONDITION === "ALL"
+        ? getRandomItems()
+        : [ITEMS[Math.floor(Math.random() * 3)]]
     const typeList = await createChatRoomListService(userId, newOrder)
     session = {
       ...session,
@@ -122,79 +93,65 @@ export default async function handleMatchUser(socket, { userId }) {
     userSession.set(userId, session)
   }
 
-  session.isMatching = true
-  userSession.set(userId, session)
-
   const curI = session.currentI
   const curType = session.types[curI]
   const curItem = session.items[curI]
   const curList = session.currentList
 
+  session.isMatching = true
+  userSession.set(userId, session)
+
+  const io = socket.server
+
+  // HUMAN TYPE HANDLING
   if (curType === "HUM") {
-    if (!waitingHumans.includes(userId)) {
-      waitingHumans.push(userId)
-      print_log(`[Server:Match] Added ${userId} to waiting list`, 5)
-    }
-    console.log(
-      `[Server] ${userId} is waiting for a human partner, current list: ${waitingHumans}`
-    )
-    if (waitingHumans.length >= 2) {
-      await matchTwo()
-      return
-    }
-    // wait up to 10s for a partner
+    if (!waitingHumans.includes(userId)) waitingHumans.push(userId)
+    print_log(`[Server:Match] ${userId} added to waitingHumans`, 5)
+
+    await attemptHumanPairing(io, curItem, curType, curList)
+
+    // fallback logic (only if still unmatched after 10s)
     setTimeout(async () => {
       if (waitingHumans.includes(userId)) {
+        print_log(
+          `[Server:Match] ${userId} fallback triggered after timeout`,
+          5
+        )
         waitingHumans = waitingHumans.filter((u) => u !== userId)
-        print_log(`[Server] No partner in 10s for ${userId}, falling back`, 5)
-        session.currentI = curI + 1
-        userSession.set(userId, session)
-        await handleMatchUser(socket, { userId })
+        // Retry same round, fallback to AI
+        await handleFallback(
+          userId,
+          session,
+          socket,
+          curItem,
+          curType,
+          curList,
+          curI
+        )
       }
     }, 10000)
   } else {
-    // CON or GPT: immediate AI pairing
-    const newRoom = await createChatRoomService(
-      [userId, AI_UID],
+    // AI round (CON/GPT)
+    await handleAIRound(
+      userId,
+      session,
+      socket,
       curItem,
       curType,
-      curList
+      curList,
+      curI
     )
-    await appendChatRoomService(newRoom._id, curList)
-
-    if (curType === "CON") {
-      const quality =
-        Math.random() >= 0.66 ? "high" : Math.random() >= 0.5 ? "gpt" : "low"
-      session.quality = quality
-      const curResponse = constResponses[curItem][quality]
-      session.conMes = [...curResponse].sort(() => Math.random() - 0.5)
-    }
-
-    userSession.set(userId, {
-      ...session,
-      isMatching: false,
-      currentChatRoom: newRoom,
-    })
-
-    socket.emit("matchedUser", { data: newRoom, index: curI })
-    chatMessage.set(userId, [{ text: curItem, sender: 0, replied: true }])
   }
+}
 
-  // helper: pair two humans and notify
-  async function matchTwo() {
-    const [userA, userB] = waitingHumans.splice(0, 2)
-    const io = socket.server
+async function attemptHumanPairing(io, curItem, curType, curList) {
+  const validUsers = waitingHumans.filter(
+    (uid) => onlineUsers.has(uid) && userSession.get(uid)?.isMatching
+  )
+  while (validUsers.length >= 2) {
+    const [userA, userB] = [validUsers.shift(), validUsers.shift()]
     const sessionA = userSession.get(userA)
     const sessionB = userSession.get(userB)
-    if (!onlineUsers.has(userA) || !onlineUsers.has(userB)) {
-      print_log(`[Server] One of the users not online: ${userA}, ${userB}`, 5)
-      return
-    }
-    sessionA.matchedUser = userB
-    sessionB.matchedUser = userA
-    userSession.set(userA, sessionA)
-    userSession.set(userB, sessionB)
-
     const newRoom = await createChatRoomService(
       [userA, userB],
       curItem,
@@ -214,15 +171,88 @@ export default async function handleMatchUser(socket, { userId }) {
       isMatching: false,
     })
 
-    io.to(onlineUsers.get(userB)).emit("matchedUser", {
-      data: newRoom,
-      index: curI,
-    })
     io.to(onlineUsers.get(userA)).emit("matchedUser", {
       data: newRoom,
-      index: curI,
+      index: sessionA.currentI,
+    })
+    io.to(onlineUsers.get(userB)).emit("matchedUser", {
+      data: newRoom,
+      index: sessionB.currentI,
     })
 
-    print_log(`[Server:Match] Successfully matched ${userA} and ${userB}`, 5)
+    waitingHumans = waitingHumans.filter((id) => id !== userA && id !== userB)
+    print_log(`[Server:Match] ${userA} + ${userB} matched`, 5)
   }
+}
+
+async function handleFallback(
+  userId,
+  session,
+  socket,
+  curItem,
+  curType,
+  curList,
+  curI
+) {
+  const fallbackType = Math.random() < 0.5 ? "CON" : "GPT"
+
+  const fallbackRoom = await createChatRoomService(
+    [userId, AI_UID],
+    curItem,
+    fallbackType,
+    curList
+  )
+  await appendChatRoomService(fallbackRoom._id, curList)
+
+  if (fallbackType === "CON") {
+    const quality =
+      Math.random() >= 0.66 ? "high" : Math.random() >= 0.5 ? "gpt" : "low"
+    session.quality = quality
+    const curResponse = constResponses[curItem][quality]
+    session.conMes = [...curResponse].sort(() => Math.random() - 0.5)
+  }
+
+  userSession.set(userId, {
+    ...session,
+    isMatching: false,
+    currentChatRoom: fallbackRoom,
+  })
+
+  socket.emit("matchedUser", { data: fallbackRoom, index: curI })
+  chatMessage.set(userId, [{ text: curItem, sender: 0, replied: true }])
+}
+
+async function handleAIRound(
+  userId,
+  session,
+  socket,
+  curItem,
+  curType,
+  curList,
+  curI
+) {
+  const newRoom = await createChatRoomService(
+    [userId, AI_UID],
+    curItem,
+    curType,
+    curList
+  )
+  await appendChatRoomService(newRoom._id, curList)
+
+  if (curType === "CON") {
+    const quality =
+      Math.random() >= 0.66 ? "high" : Math.random() >= 0.5 ? "gpt" : "low"
+    session.quality = quality
+    const curResponse = constResponses[curItem][quality]
+    session.conMes = [...curResponse].sort(() => Math.random() - 0.5)
+  }
+
+  userSession.set(userId, {
+    ...session,
+    isMatching: false,
+    currentChatRoom: newRoom,
+  })
+
+  socket.emit("matchedUser", { data: newRoom, index: curI })
+  chatMessage.set(userId, [{ text: curItem, sender: 0, replied: true }])
 }
