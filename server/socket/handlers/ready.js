@@ -36,8 +36,26 @@ export default function handleReady(socket, { chatRoom, userId }) {
       }
     }, (WAIT_TIME - randSubAdd(WAIT_TIME, WAIT_TIME_DIFF)) * multiplier)
   } else {
-    let otherUser = chatRoom.members.find((m) => m !== userId)
+    const roomId = chatRoom._id.toString()
+    if (!global.readyMap) global.readyMap = new Map()
+    if (!global.readyMap.has(roomId)) {
+      global.readyMap.set(roomId, new Set())
+    }
+
+    const readySet = global.readyMap.get(roomId)
+    readySet.add(userId)
+
+    const otherUser = chatRoom.members.find((m) => m !== userId)
     const otherSocket = onlineUsers.get(otherUser)
     socket.to(otherSocket).emit("userReady", { senderId: userId })
+
+    if (readySet.size === 2) {
+      const now = Date.now()
+      socket.emit("startChatSession", { startTime: now })
+      socket.to(otherSocket).emit("startChatSession", { startTime: now })
+
+      print_log(`[Server:Ready] Both users ready. Session started at ${now}`, 5)
+      global.readyMap.delete(roomId)
+    }
   }
 }
