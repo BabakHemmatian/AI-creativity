@@ -7,6 +7,8 @@ import {
 import { print_log } from "../../service/utils.js"
 import { AI_UID } from "../constants.js"
 
+const readyForRound = new Map()
+
 export default async function handleStartRound(socket, { userId }) {
   print_log(`[StartRound] Received request from ${userId}`, 5)
   const session = userSession.get(userId)
@@ -34,28 +36,77 @@ export default async function handleStartRound(socket, { userId }) {
     5
   )
   if (isHumanRound) {
-    print_log(`[StartRound] HUM round - no new room needed`, 5)
+    print_log(`[StartRound] HUM round`, 5)
 
-    const existingRoom = session.currentChatRoom
-    if (!existingRoom) {
-      print_log(`[StartRound] ERROR: No existing room found for HUM round`, 1)
+    const otherUserId = session.matchedUser
+    if (!otherUserId) {
+      print_log(`[StartRound] ERROR: No matched user for HUM round`, 1)
       return
     }
 
-    existingRoom.chatType = curType
-    existingRoom.index = curI
+    // Mark this user as ready
+    readyForRound.set(userId, curI)
+    const otherReady = readyForRound.get(otherUserId) === curI
 
-    userSession.set(userId, session)
+    if (!otherReady) {
+      print_log(`[StartRound] Waiting for other user ${otherUserId}`, 4)
+      return
+    }
+
+    let chatRoom = session.currentChatRoom
+    const isNewRoomNeeded =
+      !chatRoom || chatRoom.isEnd || chatRoom.index !== curI
+
+    if (isNewRoomNeeded) {
+      chatRoom = await createChatRoomService(
+        [userId, otherUserId],
+        curItem,
+        curType,
+        curList
+      )
+      await appendChatRoomService(chatRoom._id, curList)
+
+      session.currentChatRoom = chatRoom
+      const otherSession = userSession.get(otherUserId)
+      otherSession.currentChatRoom = chatRoom
+
+      userSession.set(userId, session)
+      userSession.set(otherUserId, otherSession)
+
+      print_log(
+        `[StartRound] New HUM room created for ${userId} & ${otherUserId}`,
+        5
+      )
+    } else {
+      print_log(`[StartRound] Reusing existing HUM room for ${userId}`, 5)
+    }
+
+    const chatRoomPayload = {
+      ...chatRoom.toObject(),
+      chatType: curType,
+      index: curI,
+      instruction: curItem,
+      isEnd: false,
+    }
 
     io.to(onlineUsers.get(userId)).emit("matchedUser", {
-      data: existingRoom,
+      data: chatRoomPayload,
       index: curI,
       session,
     })
+
+    io.to(onlineUsers.get(otherUserId)).emit("matchedUser", {
+      data: chatRoomPayload,
+      index: curI,
+      session: userSession.get(otherUserId),
+    })
+
+    readyForRound.delete(userId)
+    readyForRound.delete(otherUserId)
+
     return
   }
 
-  // ✅ AI round: create room with dummy AI partner
   const members = curType === "GPT" ? [userId, AI_UID] : [userId]
 
   const newRoom = await createChatRoomService(

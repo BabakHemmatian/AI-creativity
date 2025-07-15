@@ -21,22 +21,22 @@ const ITEMINDEX = [
   [0, 2, 1],
 ]
 const ORDERS = [
-  // [
-  //   ["HUM", "CON", "GPT"],
-  //   ["HUM", "GPT", "CON"],
-  // ],
-  // [
-  //   ["HUM", "GPT", "CON"],
-  //   ["HUM", "CON", "GPT"],
-  // ],
-  // [
-  //   ["CON", "HUM", "GPT"],
-  //   ["GPT", "HUM", "CON"],
-  // ],
-  // [
-  //   ["GPT", "HUM", "CON"],
-  //   ["CON", "HUM", "GPT"],
-  // ],
+  [
+    ["HUM", "CON", "GPT"],
+    ["HUM", "GPT", "CON"],
+  ],
+  [
+    ["HUM", "GPT", "CON"],
+    ["HUM", "CON", "GPT"],
+  ],
+  [
+    ["CON", "HUM", "GPT"],
+    ["GPT", "HUM", "CON"],
+  ],
+  [
+    ["GPT", "HUM", "CON"],
+    ["CON", "HUM", "GPT"],
+  ],
   [
     ["CON", "GPT", "HUM"],
     ["GPT", "CON", "HUM"],
@@ -159,12 +159,14 @@ export default async function handleMatchUser(socket, { userId }) {
       ...session,
       isMatching: false,
       currentChatRoom: newRoom,
+      matchedUser: waitingUserId,
     }
 
     const updatedSessionB = {
       ...waitingSession,
       isMatching: false,
       currentChatRoom: newRoom,
+      matchedUser: userId,
     }
 
     userSession.set(userId, updatedSessionA)

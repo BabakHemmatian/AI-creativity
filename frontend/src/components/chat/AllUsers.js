@@ -127,8 +127,8 @@ export default function AllUsers({
       currentSession?.currentI > -1 &&
       currentSession.currentI < 3
     ) {
-      socket.current.emit("startRound", { userId: currentUser.uid }) // 👈 ALWAYS emit
-      setLoadingStart(true) // 👈 start spinner
+      socket.current.emit("startRound", { userId: currentUser.uid })
+      setLoadingStart(true)
 
       if (pendingChat) {
         setCurrentChat(pendingChat)
@@ -161,7 +161,7 @@ export default function AllUsers({
         <li>
           {currentSession &&
             currentSession.currentI > -1 &&
-            currentSession.currentI < 3 &&
+            currentSession.currentI < 2 &&
             currentChat?.isEnd && (
               <button
                 className="mt-2 mb-2 ml-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
