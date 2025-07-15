@@ -130,6 +130,7 @@ export default function ChatLayout() {
           <AllUsers
             chatRooms={searchQuery !== "" ? filteredRooms : chatRooms}
             currentSession={cursession}
+            currentChat={currentChat}
             setCurrentSession={setCursession}
             setCurrentChat={setCurrentChat}
             currentUser={currentUser}

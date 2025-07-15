@@ -1,4 +1,5 @@
 // handlers/startRound.js
+
 import {
   createChatRoomService,
   appendChatRoomService,
@@ -7,6 +8,7 @@ import { print_log } from "../../service/utils.js"
 import { AI_UID } from "../constants.js"
 
 export default async function handleStartRound(socket, { userId }) {
+  print_log(`[StartRound] Received request from ${userId}`, 5)
   const session = userSession.get(userId)
   const io = socket.server
 
@@ -31,11 +33,14 @@ export default async function handleStartRound(socket, { userId }) {
     `[StartRound] User ${userId} starting round ${curI} (${curType})`,
     5
   )
-
   if (isHumanRound) {
     print_log(`[StartRound] HUM round - no new room needed`, 5)
 
     const existingRoom = session.currentChatRoom
+    if (!existingRoom) {
+      print_log(`[StartRound] ERROR: No existing room found for HUM round`, 1)
+      return
+    }
 
     existingRoom.chatType = curType
     existingRoom.index = curI
@@ -75,6 +80,7 @@ export default async function handleStartRound(socket, { userId }) {
     chatType: curType,
     index: curI,
     instruction: curItem,
+    isEnd: false,
   }
 
   io.to(onlineUsers.get(userId)).emit("matchedUser", {

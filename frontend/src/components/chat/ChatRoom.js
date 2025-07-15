@@ -27,20 +27,26 @@ export default function ChatRoom({
   const [change, setChange] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
 
-  const [countdown, setCountdown] = useState(15)
+  const [countdown, setCountdown] = useState(5)
   const intervalRef = useRef(null)
   const currentId = useRef(currentChat._id)
   const currentChatRef = useRef(currentChat)
   const scrollRef = useRef()
 
   useEffect(() => {
+    console.log("[ChatRoom] currentChat updated:", currentChat)
+
     currentChatRef.current = currentChat
+    currentId.current = currentChat._id
 
-    if (!currentChat.chatType && currentUser) {
-      console.log("[ChatRoom] chatType missing — fetching session")
-      socket.current.emit("getSession", { userId: currentUser.uid })
-    }
+    setReady(0)
+    setMessages([])
+    setCountdown(15)
+    clearInterval(intervalRef.current)
+    setIsProcessing(false)
+    if (prevAI) setChange(true)
 
+    // Only auto-start for round 0
     if (
       currentSession &&
       currentSession.currentI === 0 &&
@@ -51,7 +57,7 @@ export default function ChatRoom({
       console.log("[AutoStart] Emitting startRound for first round")
       socket.current.emit("startRound", { userId: currentUser.uid })
     }
-  }, [currentChat, currentSession])
+  }, [currentChat._id])
 
   useEffect(() => {
     currentId.current = currentChat._id
