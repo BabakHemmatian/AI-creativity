@@ -1,5 +1,3 @@
-// handlers/startRound.js
-
 import {
   createChatRoomService,
   appendChatRoomService,
