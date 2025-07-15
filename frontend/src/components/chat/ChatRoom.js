@@ -91,10 +91,10 @@ export default function ChatRoom({
         }
       }
     })
-
     sock.on("userReady", (data) => {
-      console.log("userReady: received")
-      setReady((prev) => prev | 1)
+      console.log("userReady: received from", data.senderId)
+
+      setReady((prev) => prev | (data.senderId === currentUser.uid ? 2 : 1))
       setIncomingMessage({
         senderId: data.senderId,
         message: "ready",
@@ -225,12 +225,11 @@ export default function ChatRoom({
     <div className="lg:col-span-2 lg:block">
       <div className="w-full">
         <div className="p-3 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
-          {currentChat.members.includes("AI") ||
-          currentChat.members.length === 1 ? (
+          {currentChat.chatType != "HUM" || currentChat.members.length === 1 ? (
             <div className="text-gray-800 dark:text-white font-semibold">
               {currentChat.chatType === "GPT"
-                ? "Chat with GPT"
-                : "CONSTANT Response"}
+                ? "Interactive AI Round"
+                : "Non Interactive Round"}
             </div>
           ) : (
             <Contact chatRoom={currentChat} currentUser={currentUser} />

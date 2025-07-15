@@ -82,6 +82,7 @@ export default async function handleStartRound(socket, { userId }) {
 
     const chatRoomPayload = {
       ...chatRoom.toObject(),
+      members: [userId, otherUserId],
       chatType: curType,
       index: curI,
       instruction: curItem,

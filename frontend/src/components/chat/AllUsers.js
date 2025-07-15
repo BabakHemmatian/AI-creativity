@@ -150,25 +150,42 @@ export default function AllUsers({
         <li>
           {(!currentSession || currentSession.currentI === -1) && !hasRoom && (
             <button
-              className="dark:text-white transition duration-150 ease-in-out cursor-pointer bg-white border-b border-gray-200 hover:bg-gray-100 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-gray-700 flex items-center px-3 py-2 text-sm "
+              className={`transition duration-150 ease-in-out flex items-center px-3 py-2 text-sm border-b
+        ${
+          matching
+            ? "bg-gray-200 text-gray-500 cursor-not-allowed dark:bg-gray-800 dark:text-gray-400"
+            : "cursor-pointer bg-white hover:bg-gray-100 dark:text-white dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-gray-700"
+        }`}
               onClick={handleMatchNewUser}
+              disabled={matching}
             >
-              {matching ? "matching" : "match"}
+              {matching ? "Matching..." : "Match"}
             </button>
           )}
         </li>
-
         <li>
           {currentSession &&
             currentSession.currentI > -1 &&
             currentSession.currentI < 2 &&
             currentChat?.isEnd && (
               <button
-                className="mt-2 mb-2 ml-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+                className="dark:text-white transition duration-150 ease-in-out cursor-pointer bg-white border-b border-gray-200 hover:bg-gray-100 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-gray-700 flex items-center px-3 py-2 text-sm gap-2"
                 onClick={handleStartClick}
                 disabled={loadingStart}
               >
-                {loadingStart ? <span className="spinner"></span> : "Start"}
+                {loadingStart ? (
+                  currentSession.types[currentSession.currentI + 1] ===
+                  "HUM" ? (
+                    <>
+                      <span className="spinner"></span>
+                      Waiting for partner to join...
+                    </>
+                  ) : (
+                    <span className="spinner"></span>
+                  )
+                ) : (
+                  "Start"
+                )}
               </button>
             )}
         </li>

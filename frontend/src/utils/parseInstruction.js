@@ -176,7 +176,7 @@ export const parseEndInstruction = (index) => {
             You have completed the brainstorming portion of the first round of
             the two-player game. Please go back to the first tab in your browser
             to start the curation portion of this round. When instructed to
-            start the second round, you can click on the ‘match’ button to the
+            start the second round, you can click on the ‘Start’ button to the
             left of this chat screen again.
           </span>
         )
