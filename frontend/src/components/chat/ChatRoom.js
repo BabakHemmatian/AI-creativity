@@ -35,7 +35,23 @@ export default function ChatRoom({
 
   useEffect(() => {
     currentChatRef.current = currentChat
-  }, [currentChat])
+
+    if (!currentChat.chatType && currentUser) {
+      console.log("[ChatRoom] chatType missing — fetching session")
+      socket.current.emit("getSession", { userId: currentUser.uid })
+    }
+
+    if (
+      currentSession &&
+      currentSession.currentI === 0 &&
+      !currentChat.isEnd &&
+      currentChat._id &&
+      currentChat.chatType
+    ) {
+      console.log("[AutoStart] Emitting startRound for first round")
+      socket.current.emit("startRound", { userId: currentUser.uid })
+    }
+  }, [currentChat, currentSession])
 
   useEffect(() => {
     currentId.current = currentChat._id
@@ -56,7 +72,6 @@ export default function ChatRoom({
 
     sock.on("getMessage", (data) => {
       console.log("getMessage: received")
-      if (currentChatRef.current.chatType === "GPT") setIsProcessing(false)
 
       if (data.roomId === currentId.current) {
         setIncomingMessage({
@@ -64,6 +79,10 @@ export default function ChatRoom({
           message: data.message,
           roomId: data.roomId,
         })
+
+        if (["GPT", "CON"].includes(currentChatRef.current.chatType)) {
+          setIsProcessing(false)
+        }
       }
     })
 
@@ -145,7 +164,6 @@ export default function ChatRoom({
         userId: currentUser.uid,
       })
 
-      // ✅ For AI rounds, start timer immediately (no sync needed)
       if (["GPT", "CON"].includes(currentChat.chatType)) {
         const endTime = Date.now() + 15000
         clearInterval(intervalRef.current)
@@ -201,7 +219,16 @@ export default function ChatRoom({
     <div className="lg:col-span-2 lg:block">
       <div className="w-full">
         <div className="p-3 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
-          <Contact chatRoom={currentChat} currentUser={currentUser} />
+          {currentChat.members.includes("AI") ||
+          currentChat.members.length === 1 ? (
+            <div className="text-gray-800 dark:text-white font-semibold">
+              {currentChat.chatType === "GPT"
+                ? "Chat with GPT"
+                : "CONSTANT Response"}
+            </div>
+          ) : (
+            <Contact chatRoom={currentChat} currentUser={currentUser} />
+          )}
         </div>
 
         <div className="relative w-full p-6 overflow-y-auto h-[30rem] bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">

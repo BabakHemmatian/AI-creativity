@@ -9,6 +9,7 @@ import { DEFAULT_SESSION, MATCH_CONDITION, AI_UID } from "../constants.js"
 
 let waitingHumans = []
 let lastItem = -1
+let lastOrder = -1
 
 const ITEMS = process.env.ITEMS.split(",")
 const ITEMINDEX = [
@@ -45,56 +46,90 @@ const ORDERS = [
     ["CON", "GPT", "HUM"],
   ],
 ]
-let lastOrder = -1
 
-const getRandomOrders = () => {
-  if (lastOrder === -1) {
-    const idx = [0, 1][Math.floor(Math.random() * 2)]
-    lastOrder = idx
-    return ORDERS[idx][0]
-  } else {
-    const idx = lastOrder
-    lastOrder = -1
-    return ORDERS[idx][1]
-  }
+function getRandomOrderPair() {
+  const idx =
+    lastOrder === -1 ? Math.floor(Math.random() * ORDERS.length) : lastOrder
+  lastOrder = lastOrder === -1 ? idx : -1
+  print_log(
+    `Selected Pair: ${JSON.stringify(ORDERS[idx][0])} ↔ ${JSON.stringify(
+      ORDERS[idx][1]
+    )}`,
+    5
+  )
+  return ORDERS[idx]
 }
 
-const getRandomItems = () => {
+function getRandomItems() {
   const items = []
-  const idx = lastItem === -1 ? Math.floor(Math.random() * 6) : lastItem
+  const idx =
+    lastItem === -1 ? Math.floor(Math.random() * ITEMINDEX.length) : lastItem
   lastItem = lastItem === -1 ? idx : -1
   ITEMINDEX[idx].forEach((i) => items.push(ITEMS[i]))
   return items
 }
 
 export default async function handleMatchUser(socket, { userId }) {
+  print_log(`Handling match for user: ${userId}`, 5)
   let session = userSession.get(userId)
-  if (!session || session.ended) {
-    session = { ...DEFAULT_SESSION }
-    userSession.set(userId, session)
-  }
 
-  if (session.ended) {
-    const newOrder =
-      MATCH_CONDITION === "ALL" ? getRandomOrders() : [MATCH_CONDITION]
-    const newItems =
-      MATCH_CONDITION === "ALL"
-        ? getRandomItems()
-        : [ITEMS[Math.floor(Math.random() * 3)]]
-    const typeList = await createChatRoomListService(userId, newOrder)
+  const isNewSession = !session || session.ended || session.currentI >= 3
+  if (isNewSession) {
+    session = { ...DEFAULT_SESSION }
+
+    let assignedOrder, assignedItems
+
+    if (waitingHumans.length === 0) {
+      const [orderA] = getRandomOrderPair()
+      assignedOrder = orderA
+      assignedItems = getRandomItems()
+      print_log(
+        `No one waiting. Assigned order to ${userId}: ${JSON.stringify(
+          assignedOrder
+        )}`,
+        5
+      )
+    } else {
+      const waitingUserId = waitingHumans[0]
+      const waitingSession = userSession.get(waitingUserId)
+      print_log(`Found waiting user: ${waitingUserId}`, 5)
+      print_log(
+        `Waiting user's order: ${JSON.stringify(waitingSession.types)}`,
+        5
+      )
+
+      const matchPair = ORDERS.find(
+        ([orderA]) =>
+          JSON.stringify(orderA) === JSON.stringify(waitingSession.types)
+      )
+      assignedOrder = matchPair ? matchPair[1] : getRandomOrderPair()[1]
+      assignedItems = getRandomItems()
+      print_log(
+        `Matched complementary order for ${userId}: ${JSON.stringify(
+          assignedOrder
+        )}`,
+        5
+      )
+    }
+
+    const typeList = await createChatRoomListService(userId, assignedOrder)
+
     session = {
       ...session,
       ended: false,
-      types: newOrder,
-      items: newItems,
+      types: assignedOrder,
+      items: assignedItems,
       currentI: 0,
       currentList: typeList._id,
     }
     userSession.set(userId, session)
+    print_log(
+      `Final order for ${userId}: Order = ${JSON.stringify(session.types)}`,
+      5
+    )
   }
 
   const curI = session.currentI
-  const curType = session.types[curI]
   const curItem = session.items[curI]
   const curList = session.currentList
 
@@ -103,156 +138,60 @@ export default async function handleMatchUser(socket, { userId }) {
 
   const io = socket.server
 
-  // HUMAN TYPE HANDLING
-  if (curType === "HUM") {
-    if (!waitingHumans.includes(userId)) waitingHumans.push(userId)
-    print_log(`[Server:Match] ${userId} added to waitingHumans`, 5)
-
-    await attemptHumanPairing(io, curItem, curType, curList)
-
-    // fallback logic (only if still unmatched after 10s)
-    setTimeout(async () => {
-      if (waitingHumans.includes(userId)) {
-        print_log(
-          `[Server:Match] ${userId} fallback triggered after timeout`,
-          5
-        )
-        waitingHumans = waitingHumans.filter((u) => u !== userId)
-        // Retry same round, fallback to AI
-        await handleFallback(
-          userId,
-          session,
-          socket,
-          curItem,
-          curType,
-          curList,
-          curI
-        )
-      }
-    }, 10000)
+  if (waitingHumans.length === 0) {
+    if (!waitingHumans.includes(userId)) {
+      waitingHumans.push(userId)
+    }
+    print_log(`[Match] ${userId} added to waitingHumans`, 5)
   } else {
-    // AI round (CON/GPT)
-    await handleAIRound(
-      userId,
-      session,
-      socket,
-      curItem,
-      curType,
-      curList,
-      curI
-    )
-  }
-}
+    const waitingUserId = waitingHumans.shift()
+    const waitingSession = userSession.get(waitingUserId)
 
-async function attemptHumanPairing(io, curItem, curType, curList) {
-  const validUsers = waitingHumans.filter(
-    (uid) => onlineUsers.has(uid) && userSession.get(uid)?.isMatching
-  )
-  while (validUsers.length >= 2) {
-    const [userA, userB] = [validUsers.shift(), validUsers.shift()]
-    const sessionA = userSession.get(userA)
-    const sessionB = userSession.get(userB)
     const newRoom = await createChatRoomService(
-      [userA, userB],
+      [userId, waitingUserId],
       curItem,
-      curType,
+      "HUM",
       curList
     )
     await appendChatRoomService(newRoom._id, curList)
 
-    userSession.set(userA, {
-      ...sessionA,
-      currentChatRoom: newRoom,
+    const updatedSessionA = {
+      ...session,
       isMatching: false,
-    })
-    userSession.set(userB, {
-      ...sessionB,
       currentChatRoom: newRoom,
+    }
+
+    const updatedSessionB = {
+      ...waitingSession,
       isMatching: false,
+      currentChatRoom: newRoom,
+    }
+
+    userSession.set(userId, updatedSessionA)
+    userSession.set(waitingUserId, updatedSessionB)
+
+    print_log(`[Emit] matchedUser to ${userId}`, 5)
+    print_log(`[Emit] matchedUser to ${waitingUserId}`, 5)
+
+    io.to(onlineUsers.get(userId)).emit("matchedUser", {
+      data: {
+        ...newRoom.toObject(),
+        chatType: updatedSessionA.types[updatedSessionA.currentI],
+        index: updatedSessionA.currentI,
+      },
+      session: updatedSessionA,
     })
 
-    io.to(onlineUsers.get(userA)).emit("matchedUser", {
-      data: newRoom,
-      index: sessionA.currentI,
+    io.to(onlineUsers.get(waitingUserId)).emit("matchedUser", {
+      data: {
+        ...newRoom.toObject(),
+        chatType: updatedSessionB.types[updatedSessionB.currentI],
+        index: updatedSessionB.currentI,
+      },
+      session: updatedSessionB,
     })
-    io.to(onlineUsers.get(userB)).emit("matchedUser", {
-      data: newRoom,
-      index: sessionB.currentI,
-    })
 
-    waitingHumans = waitingHumans.filter((id) => id !== userA && id !== userB)
-    print_log(`[Server:Match] ${userA} + ${userB} matched`, 5)
+    print_log(`[Match] Matched ${userId} with ${waitingUserId}`, 5)
+    print_log(`Chat room created (HUM) for ${userId} and ${waitingUserId}`, 5)
   }
-}
-
-async function handleFallback(
-  userId,
-  session,
-  socket,
-  curItem,
-  curType,
-  curList,
-  curI
-) {
-  const fallbackType = Math.random() < 0.5 ? "CON" : "GPT"
-
-  const fallbackRoom = await createChatRoomService(
-    [userId, AI_UID],
-    curItem,
-    fallbackType,
-    curList
-  )
-  await appendChatRoomService(fallbackRoom._id, curList)
-
-  if (fallbackType === "CON") {
-    const quality =
-      Math.random() >= 0.66 ? "high" : Math.random() >= 0.5 ? "gpt" : "low"
-    session.quality = quality
-    const curResponse = constResponses[curItem][quality]
-    session.conMes = [...curResponse].sort(() => Math.random() - 0.5)
-  }
-
-  userSession.set(userId, {
-    ...session,
-    isMatching: false,
-    currentChatRoom: fallbackRoom,
-  })
-
-  socket.emit("matchedUser", { data: fallbackRoom, index: curI })
-  chatMessage.set(userId, [{ text: curItem, sender: 0, replied: true }])
-}
-
-async function handleAIRound(
-  userId,
-  session,
-  socket,
-  curItem,
-  curType,
-  curList,
-  curI
-) {
-  const newRoom = await createChatRoomService(
-    [userId, AI_UID],
-    curItem,
-    curType,
-    curList
-  )
-  await appendChatRoomService(newRoom._id, curList)
-
-  if (curType === "CON") {
-    const quality =
-      Math.random() >= 0.66 ? "high" : Math.random() >= 0.5 ? "gpt" : "low"
-    session.quality = quality
-    const curResponse = constResponses[curItem][quality]
-    session.conMes = [...curResponse].sort(() => Math.random() - 0.5)
-  }
-
-  userSession.set(userId, {
-    ...session,
-    isMatching: false,
-    currentChatRoom: newRoom,
-  })
-
-  socket.emit("matchedUser", { data: newRoom, index: curI })
-  chatMessage.set(userId, [{ text: curItem, sender: 0, replied: true }])
 }
