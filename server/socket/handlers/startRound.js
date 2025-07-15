@@ -6,6 +6,7 @@ import {
 } from "../../service/chatRoom.js"
 import { print_log } from "../../service/utils.js"
 import { AI_UID } from "../constants.js"
+import { constResponses } from "../../config/constResponse.js"
 
 const readyForRound = new Map()
 
@@ -105,6 +106,23 @@ export default async function handleStartRound(socket, { userId }) {
     readyForRound.delete(otherUserId)
 
     return
+  }
+
+  if (curType === "CON" && !session.conMes) {
+    const quality =
+      Math.random() >= 0.66 ? "high" : Math.random() >= 0.5 ? "gpt" : "low"
+    session.quality = quality
+
+    const allRes = constResponses[curItem]?.[quality]
+    if (!Array.isArray(allRes)) {
+      print_log(
+        `[startRound] WARNING: Missing replies for ${curItem} (${quality}). Using fallback`,
+        2
+      )
+      session.conMes = ["Sorry, I don't have a reply."]
+    } else {
+      session.conMes = [...allRes].sort(() => Math.random() - 0.5)
+    }
   }
 
   const members = curType === "GPT" ? [userId, AI_UID] : [userId]
