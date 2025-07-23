@@ -16,6 +16,10 @@ export default function handleReady(socket, { chatRoom, userId }) {
       WAIT_TIME = 12
       WAIT_TIME_DIFF = 1
       multiplier = 100
+    } else if (curType === "CON") {
+      WAIT_TIME = 3
+      WAIT_TIME_DIFF = 1
+      multiplier = 1000
     }
 
     socket.emit("userReady", { senderId: AI_UID })
