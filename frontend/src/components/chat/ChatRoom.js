@@ -20,6 +20,7 @@ export default function ChatRoom({
   handleEndChatRoom,
   currentSession,
 }) {
+  const DURATION_MS = (Number(process.env.REACT_APP_SESSION_TIME) || 240) * 1000
   const [messages, setMessages] = useState([])
   const [incomingMessage, setIncomingMessage] = useState(null)
   const [ready, setReady] = useState(0)
@@ -27,7 +28,7 @@ export default function ChatRoom({
   const [change, setChange] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
 
-  const [countdown, setCountdown] = useState(5)
+  const [countdown, setCountdown] = useState(Math.ceil(DURATION_MS / 1000))
   const intervalRef = useRef(null)
   const currentId = useRef(currentChat._id)
   const currentChatRef = useRef(currentChat)
@@ -41,7 +42,7 @@ export default function ChatRoom({
 
     setReady(0)
     setMessages([])
-    setCountdown(15)
+    setCountdown(Math.ceil(DURATION_MS / 1000))
     clearInterval(intervalRef.current)
     setIsProcessing(false)
     if (prevAI) setChange(true)
@@ -63,7 +64,7 @@ export default function ChatRoom({
     currentId.current = currentChat._id
     setReady(0)
     setMessages([])
-    setCountdown(15)
+    setCountdown(Math.ceil(DURATION_MS / 1000))
     clearInterval(intervalRef.current)
     if (prevAI) setChange(true)
   }, [currentChat._id])
@@ -104,7 +105,7 @@ export default function ChatRoom({
 
     sock.on("startChatSession", ({ startTime }) => {
       console.log("startChatSession received:", startTime)
-      const endTime = startTime + 15000
+      const endTime = startTime + DURATION_MS
       clearInterval(intervalRef.current)
 
       intervalRef.current = setInterval(() => {
@@ -171,7 +172,7 @@ export default function ChatRoom({
       })
 
       if (["GPT", "CON"].includes(currentChat.chatType)) {
-        const endTime = Date.now() + 15000
+        const endTime = Date.now() + DURATION_MS
         clearInterval(intervalRef.current)
 
         intervalRef.current = setInterval(() => {

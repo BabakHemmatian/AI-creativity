@@ -17,8 +17,8 @@ export default function handleReady(socket, { chatRoom, userId }) {
       WAIT_TIME_DIFF = 1
       multiplier = 100
     } else if (curType === "CON") {
-      WAIT_TIME = 3
-      WAIT_TIME_DIFF = 1
+      WAIT_TIME = 13
+      WAIT_TIME_DIFF = 0
       multiplier = 1000
     }
 
