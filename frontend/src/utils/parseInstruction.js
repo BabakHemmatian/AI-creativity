@@ -19,10 +19,10 @@ export const parseInstruction = (index, chatType, change) => {
             AI or a fellow human. You will have
             <span style={{ fontWeight: "bold" }}>4 minutes</span> to chat. After
             the brainstorming session, you will go back to the first tab in your
-            browser to curate and submit your best creative uses for the target
-            object. You will be evaluated based on how many uses you generate in
-            this curated response, their originality, surprisingness, and
-            practical usefulness. Your co-player for the current session is{" "}
+            browser to curate and submit five best creative uses for the target
+            object inspired by the chat. You will be evaluated based on
+            this curated response: How original and practicaly useful the ideas are. 
+            Your co-player for the current session is{" "}
             <span style={{ fontWeight: "bold" }}>an interactive human</span>.
             <span style={{ fontWeight: "bold" }}>
               When ready to start this part of the study, please respond in the
@@ -46,10 +46,10 @@ export const parseInstruction = (index, chatType, change) => {
             AI or a fellow human. You will have
             <span style={{ fontWeight: "bold" }}>4 minutes</span> to chat. After
             the brainstorming session, you will go back to the first tab in your
-            browser to curate and submit your best creative uses for the target
-            object. You will be evaluated based on how many uses you generate in
-            this curated response, their originality, surprisingness, and
-            practical usefulness. The current session is{" "}
+            browser to curate and submit five best creative uses for the target
+            object inspired by the chat. You will be evaluated based on
+            this curated response: How original and practicaly useful the ideas are. 
+            The current session is{" "}
             <span style={{ fontWeight: "bold" }}>non-interactive</span>. Note
             that non-interactive partners cannot see your chat responses and
             will simply generate their own independent ideas.
@@ -75,10 +75,10 @@ export const parseInstruction = (index, chatType, change) => {
             AI or a fellow human. You will have
             <span style={{ fontWeight: "bold" }}>4 minutes</span> to chat. After
             the brainstorming session, you will go back to the first tab in your
-            browser to curate and submit your best creative uses for the target
-            object. You will be evaluated based on how many uses you generate in
-            this curated response, their originality, surprisingness, and
-            practical usefulness. Your co-player for the current session is{" "}
+            browser to curate and submit five best creative uses for the target
+            object inspired by the chat. You will be evaluated based on
+            this curated response: How original and practicaly useful the ideas are. 
+            Your co-player for the current session is{" "}
             <span style={{ fontWeight: "bold" }}>an interactive AI</span>.
             <span style={{ fontWeight: "bold" }}>
               When ready to start this part of the study, please respond in the
@@ -87,9 +87,7 @@ export const parseInstruction = (index, chatType, change) => {
             . Once both matched players have indicated their readiness, the
             game’s target object will be revealed underneath this instruction
             and the timer will begin. Please wait for the AI's first message
-            after "ready" to start the conversation. After posting a message in
-            the chat, please wait a second for the AI to respond before sending
-            another message.
+            after "ready" to start the conversation. 
           </span>
         </div>
       )
@@ -106,11 +104,11 @@ export const parseInstruction = (index, chatType, change) => {
               interactive or non-interactive, an AI or a fellow human. You will
               have
               <span style={{ fontWeight: "bold" }}> 4 minutes</span> to chat.
-              After each brainstorming session, you will go back to the first
-              tab in your browser to curate and submit your best creative uses
-              for the target object. You will be evaluated based on how many
-              uses you generate in this curated response, their originality,
-              surprisingness, and practical usefulness.
+              After
+            the brainstorming session, you will go back to the first tab in your
+            browser to curate and submit five best creative uses for the target
+            object inspired by the chat. You will be evaluated based on
+            this curated response: How original and practicaly useful the ideas are. 
             </span>
           )}
           {index === 1 && Ins2}
@@ -156,9 +154,7 @@ export const parseInstruction = (index, chatType, change) => {
               and the timer will begin.{" "}
               <span style={{ fontWeight: "bold" }}>
                 Please wait for the AI's first message after "ready" to start
-                the conversation. After posting a message in the chat, please
-                wait a second for the AI to respond before sending another
-                message.
+                the conversation. 
               </span>
             </span>
           )}
@@ -194,7 +190,7 @@ export const parseEndInstruction = (index) => {
         return (
           <span>
             The 2-player part of our study has ended. Thank you! When ready,
-            please go back to the first tab to answer a few final questions and
+            please go back to the first tab to answer a survey questions and
             finish the study.
           </span>
         )
@@ -203,7 +199,7 @@ export const parseEndInstruction = (index) => {
     return (
       <span>
         The 2-player part of our study has ended. Thank you! When ready, please
-        go back to the first tab to answer a few final questions and finish the
+        go back to the first tab to answer survey questions and finish the
         study.
       </span>
     )
