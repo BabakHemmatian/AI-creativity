@@ -2,25 +2,31 @@ import { print_log } from "../../service/utils.js"
 import replyMessage from "../replyMessage.js"
 import { AI_UID } from "../constants.js"
 
+let WAIT_TIME = Number(process.env.WAIT_TIME) || 5
+let WAIT_TIME_DIFF = Number(process.env.WAIT_TIME_DIFF) || 2
+
+function jitterMs(baseSecs, diffSecs, multiplier) {
+  const delta =
+    diffSecs > 0 ? Math.floor(Math.random() * (diffSecs * 2 + 1)) - diffSecs : 0
+  const secs = Math.max(1, baseSecs + delta)
+  return secs * multiplier
+}
+
 export default function handleReady(socket, { chatRoom, userId }) {
   const curType = chatRoom.chatType
   const curId = chatRoom._id.toString()
 
-  const getDelayMs = (type) => {
-    if (type === "GPT") {
-      const base = 12
-      const jitter = Math.random() * 1
-      return (base + jitter) * 100
-    }
-    if (type === "CON") {
-      return 13 * 1000
-    }
-    const base = Number(process.env.WAIT_TIME) || 5
-    return base * 1000
-  }
-
   if (curType !== "HUM") {
-    const delayMs = getDelayMs(curType)
+    let multiplier = 1000
+    if (curType === "GPT") {
+      WAIT_TIME = 12
+      WAIT_TIME_DIFF = 1
+      multiplier = 100
+    } else if (curType === "CON") {
+      WAIT_TIME = 13
+      WAIT_TIME_DIFF = Number(process.env.WAIT_TIME_DIFF) || 2
+      multiplier = 1000
+    }
 
     socket.emit("userReady", { senderId: AI_UID })
 
@@ -30,12 +36,12 @@ export default function handleReady(socket, { chatRoom, userId }) {
 
       if (room && room._id.toString() === curId) {
         await replyMessage(socket, userId)
-        setTimeout(chatLoop, delayMs)
+        setTimeout(chatLoop, jitterMs(WAIT_TIME, WAIT_TIME_DIFF, multiplier))
       } else {
         not_ai_replied_first_map.set(userId, false)
         print_log(`AI reply ended for ${userId}`, 1)
       }
-    }, delayMs)
+    }, jitterMs(WAIT_TIME, WAIT_TIME_DIFF, multiplier))
   } else {
     const roomId = chatRoom._id.toString()
     if (!global.readyMap) global.readyMap = new Map()
