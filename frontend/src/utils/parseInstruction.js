@@ -199,7 +199,7 @@ export const parseEndInstruction = (index) => {
     return (
       <span>
         The 2-player part of our study has ended. Thank you! When ready, please
-        go back to the first tab to answer survey questions and finish the
+        go back to the first tab and press the -> button to answer survey questions and finish the
         study.
       </span>
     )
