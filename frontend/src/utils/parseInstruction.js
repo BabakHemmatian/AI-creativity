@@ -13,15 +13,15 @@ export const parseInstruction = (index, chatType, change) => {
           <span>
             We will now play a two-player version of the game described earlier.
             This part of the study has a brainstorming and a curation portion.
-            For the brainstorming portion, you and a paired player will use this
-            chat platform to come up with creative uses for an everyday object.
+            For the brainstorming portion, you and a paired player will chat 
+            to come up with creative uses for an everyday object.
             Your partner in this step may be interactive or non-interactive, an
             AI or a fellow human. You will have
             <span style={{ fontWeight: "bold" }}>4 minutes</span> to chat. After
             the brainstorming session, you will go back to the first tab in your
             browser to curate and submit five best creative uses for the target
             object inspired by the chat. You will be evaluated based on
-            this curated response: How original and practicaly useful the ideas are. 
+            how original and practically useful the curated ideas are. 
             Your co-player for the current session is{" "}
             <span style={{ fontWeight: "bold" }}>an interactive human</span>.
             <span style={{ fontWeight: "bold" }}>
@@ -40,15 +40,15 @@ export const parseInstruction = (index, chatType, change) => {
           <span>
             We will now play a two-player version of the game described earlier.
             This part of the study has a brainstorming and a curation portion.
-            For the brainstorming portion, you and a paired player will use this
-            chat platform to come up with creative uses for an everyday object.
+            For the brainstorming portion, you and a paired player chat 
+            to come up with creative uses for an everyday object.
             Your partner in this step may be interactive or non-interactive, an
             AI or a fellow human. You will have
             <span style={{ fontWeight: "bold" }}>4 minutes</span> to chat. After
             the brainstorming session, you will go back to the first tab in your
             browser to curate and submit five best creative uses for the target
             object inspired by the chat. You will be evaluated based on
-            this curated response: How original and practicaly useful the ideas are. 
+            how original and practically useful the curated ideas are. 
             The current session is{" "}
             <span style={{ fontWeight: "bold" }}>non-interactive</span>. Note
             that non-interactive partners cannot see your chat responses and
@@ -69,15 +69,15 @@ export const parseInstruction = (index, chatType, change) => {
           <span>
             We will now play a two-player version of the game described earlier.
             This part of the study has a brainstorming and a curation portion.
-            For the brainstorming portion, you and a paired player will use this
-            chat platform to come up with creative uses for an everyday object.
+            For the brainstorming portion, you and a paired player will chat
+            to come up with creative uses for an everyday object.
             Your partner in this step may be interactive or non-interactive, an
             AI or a fellow human. You will have
             <span style={{ fontWeight: "bold" }}>4 minutes</span> to chat. After
             the brainstorming session, you will go back to the first tab in your
             browser to curate and submit five best creative uses for the target
-            object inspired by the chat. You will be evaluated based on
-            this curated response: How original and practicaly useful the ideas are. 
+            object inspired by the chat. You will be evaluated based on how 
+            original and practically useful the ideas are. 
             Your co-player for the current session is{" "}
             <span style={{ fontWeight: "bold" }}>an interactive AI</span>.
             <span style={{ fontWeight: "bold" }}>
@@ -99,7 +99,7 @@ export const parseInstruction = (index, chatType, change) => {
               We will now play three rounds of a two-player version of the game
               described earlier. Each round has a brainstorming and a curation
               portion. For the brainstorming portion, you and a paired player
-              will use this chat platform to come up with creative uses for an
+              will chat to come up with creative uses for an
               everyday object. Your partner in the brainstorming step may be
               interactive or non-interactive, an AI or a fellow human. You will
               have
@@ -108,7 +108,7 @@ export const parseInstruction = (index, chatType, change) => {
             the brainstorming session, you will go back to the first tab in your
             browser to curate and submit five best creative uses for the target
             object inspired by the chat. You will be evaluated based on
-            this curated response: How original and practicaly useful the ideas are. 
+            how original and practically useful the curated ideas are. 
             </span>
           )}
           {index === 1 && Ins2}
