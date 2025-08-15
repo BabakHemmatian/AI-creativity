@@ -3,25 +3,6 @@ import { ChatGPTAPI } from 'chatgpt'
 import axios from 'axios';
 import { response } from "express";
 
-// var npm = require('npm');
-// npm.load(function(err) {
-//   // handle errors
-
-//   // install module ffi
-//   npm.commands.install(['openai'], function(er, data) {
-//     // log errors or data
-//   });
-
-//   npm.on('log', function(message) {
-//     // log installation progress
-//     console.log(message);
-//   });
-// });
-
-
-// import OpenAI from "openai";
-
-
 const chatgpt = new ChatGPTAPI({ apiKey: process.env.OPENAI_API_KEY });
 const configuration = new Configuration({
     apiKey: process.env.OPENAI_API_KEY,
@@ -168,60 +149,11 @@ const noPuncFilter = (sentence) => {
     }
 }
 
-
-// const generatePrompt = (messages) => {
-//     const item = messages[0].text
-//     if (messages.length === 1) {
-//         return `This is a single creative use for a ${item}:`;
-//     } else if (messages.length === 2 && messages[1].sender === 1) {
-//         // human send first message
-//         return `This is a single creative use for a ${item} that is very different from ${messages[1].text}:`;
-//     } else {
-//         const messages2 = messages.filter((message) => (message.sender !==0));
-//         const list_idea = messages2.map((message) => (noPuncFilter(message.text))).join(',');
-
-//         return `I already have this list for creative uses for a ${item}: ${list_idea}. This is a single creative use for a ${item} that is very different from any others in my current list:`
-//     }
-// }
-
-
-
-// const httpGPTCompletion = async(model, message, temperature) => 
-// {
-//     // console.log("AI INIT - START");
-//     // //const openai = new OpenAI();
-//     // console.log("AI INIT - DONE");
-//     // console.log(`Messages is ${message}, ${model}`);
-//     const content = {
-//         'model':model,
-//         'messages':[{'role':'user', 'content':message}],
-//         'temperature': temperature
-//     }
-//     try {
-//         const response = await axios.post("https://api.openai.com/v1/chat/completions", content, {headers: httpheaders});
-//         if (response.status === 200) {
-//             console.log("RESPONSE from gptcompletion:",response.data);
-//             return response.data.choices[0].message.content;
-//         } else {
-//             console.log("http gpt failed");
-//             console.log(response.statusText);
-//             // console.log(response);
-//         }
-//     } catch (error) {
-//         console.log("axios error", error.message);
-//     }
-    
-// }
-
-
 const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, msgs) => { //model, prompt, temp, ins_for_ai, msgs
     let messages = [{"role": "system", "content": ins_for_ai_hard}]; 
     let content;
     if (msgs.length === 1)
     {
-        //console.log("msgs.length = 1");
-        //console.log("msgs",msgs);
-        //console.log("message",message);
         const content_data = 
         {
             'model':model,
@@ -232,10 +164,6 @@ const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, ms
     }
     else
     {
-        //console.log("msgs.length > 1");
-        //console.log("msgs",msgs);
-        //console.log("message",message);
-
         let ai_messages = [];
         let user_messages = [];
 
@@ -254,15 +182,13 @@ const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, ms
         messages.push({"role": "assistant", "content": ai_messages[0]})
         for (let i = 0 ; i < user_messages.length - 1 ; i++)
         {
-            // console.log("user_messages[i]",user_messages[i]);
-            // console.log("ai_messages[i+1]",ai_messages[i+1]);
             messages.push({"role": "user", "content": user_messages[i]})
             messages.push({"role": "assistant", "content": ai_messages[i+1]})
         }
         messages.push({"role": "user", "content": user_messages[user_messages.length - 1]})
         const content_data = {
             'model':model,
-            'messages':messages, //user: message_user[-1] //system: ins_for_ai // assistant: message_ai  
+            'messages':messages, 
             'temperature': temperature
         }  
         content = content_data;
@@ -283,35 +209,6 @@ const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, ms
     }
 }
 
-
-// const httpGPTCompletion = async(model, message, temperature = 0.7) =>
-// {
-//     const openai = new OpenAI();
-//     const completion = await openai.chat.completions.create({
-//         messages: [{ role: "assistant", content: message }],
-//         model: "gpt-3.5-turbo",
-//         });
-//     console.log(completion.choices[0]);
-// }
-
-// import OpenAI from "openai";
-
-// const openai = new OpenAI();
-
-// async function main() {
-//   const completion = await openai.chat.completions.create({
-//     messages: [{ role: "system", content: "You are a helpful assistant." }],
-//     model: "gpt-3.5-turbo",
-//   });
-
-//   console.log(completion.choices[0]);
-// }
-
-// main();
-
-
-
-
 const apiGPTCompletion = async(model, message, temperature) => {
     const completion = await openai.createCompletion({
         model: model,
@@ -327,8 +224,6 @@ const apiGPTCompletion = async(model, message, temperature) => {
 //SO HAVE CHATGPT TRUE RESPONSES IN THE CHAT WITHOUT ANY MODIFICATION
 // WAIT_TIME REMOVE AND MAKE IT DEPENDENT ON USER INPUT
 
-
-
 const generateChatGPTPrompt = (messages) => {
     //console.log("generatechatgptprompt: ",messages);
     const item = messages[0].text
@@ -336,7 +231,7 @@ const generateChatGPTPrompt = (messages) => {
     //console.log("prompt generation messages2: ",messages2);
     const list_idea = messages2.map((message) => (noPuncFilter(message.text.trim()))).join(',');
     if (list_idea.length > 0) {
-        return `We already have this list of creative uses for a ${item}: ${list_idea}. Can you tell me a creative use that is very different from all the uses in this list?`
+        return `We already have this list of creative uses for a ${item}: ${list_idea}. Can you tell me a creative use that is different from all the uses in this list?`
     } else {
         return '';
     }
