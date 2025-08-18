@@ -1,324 +1,108 @@
-import { Configuration, OpenAIApi} from "openai";
-import { ChatGPTAPI } from 'chatgpt'
-import axios from 'axios';
-import { response } from "express";
+import axios from "axios"
 
-const chatgpt = new ChatGPTAPI({ apiKey: process.env.OPENAI_API_KEY });
-const configuration = new Configuration({
-    apiKey: process.env.OPENAI_API_KEY,
-});
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY
+if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not set")
 
-const openai = new OpenAIApi(configuration);
+const MODEL = process.env.OPENAI_MODEL || "gpt-5"
+const OPENAI_URL = "https://api.openai.com/v1/responses"
 
-const MAX_TOKEN = process.env.MAX_TOKEN || 3000;
-const AI_INS = process.env.AI_INS;
-const END_PROMPT = process.env.END_PROMPT;
-const COMMON_WORD = process.env.COMMON_WORD;
-const COMMON_SET = COMMON_WORD.split(',');
-const TRY_TIME = process.env.TRY_TIME;
-// const FILTER_CONTENT = process.env.FILTER_CONTENT;
-COMMON_SET.push(process.env.ITEM);
-
-// check string is fully punc
-const isPunc = (s) => {
-    return /^(\.|\,|\!|\?|\:|\;|\"|\'|\-|\(|\))*$/g.test(s);
+const headers = {
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${OPENAI_API_KEY}`,
 }
 
-const httpheaders = {
-    'Content-Type': 'application/json',
-    'Authorization':`Bearer ${process.env.OPENAI_API_KEY}`,
-}
+const INSTRUCTIONS = `
+You are going to play a game called the Alternative Uses Test (AUT; Guilford, 1967), where you work with a user to come up with creative uses for an everyday object. You may have played this game with this or other accounts in the past but play the game as if you have never played it before. You and the user will be taking turns to speak. You will be evaluated as a team based on the originality and practical usefulness of the ideas. When prompted, start the session by sharing a creative use for the object indicated. If the user follows up with you about your responses, succinctly answer any questions and consider any advice before continuing to generate ideas one at a time. The user will also generate ideas. Feel free to build your ideas off theirs, but make sure that anything you come up with is different from the user's ideas or anything that has already been shared in the chat. Also make sure you don't suggest any of the object’s conventional uses. Do not add uninformative sentences to your answer like “Sure, here is a creative use for X”. Generate one idea at a time. Each response should be no longer than a sentence, no more than 15 words.
+`.trim()
 
+const seedUser = (item) =>
+  `Start the chat by sharing a creative use for ${item}.`
 
-// the function will filter one sentence and remove duplicate punc at the end
-// if the sentence end has no punc, it will append one.
-const onePuncFilter = (sentence) => {
-    if (sentence.length < 2) {
-        //most of time it might be an empty string
-        return sentence;
-    } else {
-        if (isPunc(sentence.slice(-2))) {
-            // the end of sentence has two punc
-            return sentence.slice(0, -1);
-        } else if (! isPunc(sentence.slice(-1))) {
-            // the end of sentence has no punc
-            // we append one period at the end
-            return `${sentence}.`;
-        } else {
-            return sentence;
-        }
+const toInputBlocks = (raw) => {
+  const blocks = []
+  const hist = Array.isArray(raw) ? raw.slice(1) : [] // skip item holder
+  for (const m of hist) {
+    if (!m || m.text == null) continue
+    const text = String(m.text)
+    if (m.sender === 1) {
+      blocks.push({ role: "user", content: [{ type: "input_text", text }] })
+    } else if (m.sender === 2) {
+      blocks.push({
+        role: "assistant",
+        content: [{ type: "output_text", text }],
+      })
     }
-}
+  }
 
-const filterContent2 = (messages, sentence) => {
-    if (typeof sentence !== 'string') {
-        console.error('filterContent2: sentence is not string', sentence);
-        return '';
-    }
-    let s = sentence;
-    s = s.replace(/\s{2,}/g," ");
-    return s;
-}
-
-
-// filter the AI response
-const filterContent = (messages, sentence) => {
-
-    if (typeof sentence !== 'string') {
-        console.error('filterContent: sentence is not string', sentence);
-        return '';
-    }
-    let s = sentence;
-    const item = messages[0].text;
-    const filterArray = [
-        `A ${item} can be used`,
-        `A ${item} can also be used`,
-        `${item}s can also be used`,
-        `${item} can also be used`,
-        `${item} can be used as`,
-        `You can use ${item}s`,
-        `You can use a ${item}`,
-        `You can also use`,
-        `One creative use for a ${item} is`,
-        `Use a ${item}`,
-        `Use ${item}`,
-        `One creative use for a ${item} could be`,
-        `The ${item} can be used`,
-    ]
-    filterArray.forEach((prefix) => {
-        s = s.replace(prefix, ' ');
-        s = s.replace(prefix+' to', ' ');
-        s = s.replace(prefix+' to act', ' ');
+  const first = blocks[0]
+  if (!first || first.role !== "user") {
+    const item = raw?.[0]?.text || "the object"
+    blocks.unshift({
+      role: "user",
+      content: [{ type: "input_text", text: seedUser(item) }],
     })
-    s = s.replace(/\s{2,}/g," ");
-    return s;
+  }
+  return blocks
 }
 
-// 
-const sentenceToSet = (sentence) => {
-    // remove punc
-    let s = sentence.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
-    s = s.replace(/\s{2,}/g," ");
-    const toret = new Set(s.split(' '));
-    COMMON_SET.forEach((ele) => {
-        if (toret.has(ele)) {
-            toret.delete(ele);
+const extractOutputText = (data) => {
+  if (typeof data?.output_text === "string" && data.output_text.trim()) {
+    return data.output_text.trim()
+  }
+  if (Array.isArray(data?.output)) {
+    for (const item of data.output) {
+      if (Array.isArray(item?.content)) {
+        for (const c of item.content) {
+          if (
+            c?.type === "output_text" &&
+            typeof c.text === "string" &&
+            c.text.trim()
+          ) {
+            return c.text.trim()
+          }
+          if (
+            c?.type === "message" &&
+            c?.role === "assistant" &&
+            Array.isArray(c?.content)
+          ) {
+            const t = c.content.find(
+              (x) => x.type === "output_text" && typeof x.text === "string"
+            )
+            if (t?.text?.trim()) return t.text.trim()
+          }
         }
-    })
-    return toret;
-}
-
-const intersect = (set1, set2) => {
-    let c = 0;
-    set1.forEach(x => {
-        if (set2.has(x)) {
-            c += 1;
-        }
-    });
-    return c / Math.max(set1.size, set2.size);
-}
-
-const checkRepeat = (setArray, sentence) => {
-    const set2 = sentenceToSet(sentence);
-    let collide = -1;
-    setArray.forEach((set1, index) => {
-        const ratio = intersect(set1, set2);
-        if (ratio > 0.5) {
-            collide = index;
-        }
-    })
-    return collide;
-}
-
-// remove one or two punc at the end
-const noPuncFilter = (sentence) => {
-    if (sentence.length < 2) {
-        //most of time it might be an empty string
-        return sentence;
-    } else {
-        if (isPunc(sentence.slice(-2))) {
-            // the end of sentence has two punc
-            return sentence.slice(0, -2);
-        } else if (isPunc(sentence.slice(-1))) {
-            // the end of sentence has no punc
-            // we append one period at the end
-            return sentence.slice(0, -1);
-        } else {
-            return sentence;
-        }
+      }
     }
+  }
+  if (typeof data?.content === "string" && data.content.trim())
+    return data.content.trim()
+  return ""
 }
 
-const httpGPTCompletion = async(model, message, temperature, ins_for_ai_hard, msgs) => { //model, prompt, temp, ins_for_ai, msgs
-    let messages = [{"role": "system", "content": ins_for_ai_hard}]; 
-    let content;
-    if (msgs.length === 1)
-    {
-        const content_data = 
-        {
-            'model':model,
-            'messages':messages, //user: message_user[-1] //system: ins_for_ai // assistant: message_ai  
-            'temperature': temperature
-        }
-        content = content_data;
-    }
-    else
-    {
-        let ai_messages = [];
-        let user_messages = [];
+export const generateCompletion = async (messages) => {
+  const input = toInputBlocks(messages)
+  const body = { model: MODEL, instructions: INSTRUCTIONS, input }
 
-        for (let i = 0 ; i < msgs.length ; i++)
-        {
-            if (msgs[i].sender === 2)//ai
-            {
-                ai_messages.push(msgs[i].text);
-            }
-            else if (msgs[i].sender === 1)//user
-            {
-                user_messages.push(msgs[i].text);
-            }
-        }
+  try {
+    console.log("OpenAI request body:", JSON.stringify(body, null, 2))
+    const resp = await axios.post(OPENAI_URL, body, { headers })
+    const text = extractOutputText(resp.data)
 
-        messages.push({"role": "assistant", "content": ai_messages[0]})
-        for (let i = 0 ; i < user_messages.length - 1 ; i++)
-        {
-            messages.push({"role": "user", "content": user_messages[i]})
-            messages.push({"role": "assistant", "content": ai_messages[i+1]})
-        }
-        messages.push({"role": "user", "content": user_messages[user_messages.length - 1]})
-        const content_data = {
-            'model':model,
-            'messages':messages, 
-            'temperature': temperature
-        }  
-        content = content_data;
+    if (!text) {
+      console.error(
+        "OpenAI Responses empty output. Raw payload:",
+        JSON.stringify(resp.data)
+      )
+      throw new Error("Empty output from OpenAI Responses API")
     }
-
-    try {
-        const response = await axios.post("https://api.openai.com/v1/chat/completions", content, {headers: httpheaders});
-        if (response.status === 200) {
-            console.log("RESPONSE from gptcompletion:",response.data);
-            return response.data.choices[0].message.content;
-        } else {
-            console.log("http gpt failed");
-            console.log(response.statusText);
-            // console.log(response);
-        }
-    } catch (error) {
-        console.log("axios error", error.message);
-    }
+    return { text }
+  } catch (err) {
+    const detail = err?.response?.data || err?.message || "Unknown OpenAI error"
+    console.error("OpenAI Responses error:", detail)
+    throw err
+  }
 }
 
-const apiGPTCompletion = async(model, message, temperature) => {
-    const completion = await openai.createCompletion({
-        model: model,
-        prompt: message,
-        temperature: temperature,
-        max_tokens: MAX_TOKEN,
-    });
-    return res = completion.data.choices[0];
-}
-
-
-//formatted chat history for prompts
-//SO HAVE CHATGPT TRUE RESPONSES IN THE CHAT WITHOUT ANY MODIFICATION
-// WAIT_TIME REMOVE AND MAKE IT DEPENDENT ON USER INPUT
-
-const generateChatGPTPrompt = (messages) => {
-    //console.log("generatechatgptprompt: ",messages);
-    const item = messages[0].text
-    const messages2 = messages.filter((message) => (message.sender===2)); //AI returns
-    //console.log("prompt generation messages2: ",messages2);
-    const list_idea = messages2.map((message) => (noPuncFilter(message.text.trim()))).join(',');
-    if (list_idea.length > 0) {
-        return `We already have this list of creative uses for a ${item}: ${list_idea}. Can you tell me a creative use that is different from all the uses in this list?`
-    } else {
-        return '';
-    }
-}
-
-/**
- * generate one response for one sentence
- * @returns string
- */
-export const generateCompletion = async (messages,not_ai_first) => {    
-    //console.log('GPT-3.5 completion');
-    const prompt = generateChatGPTPrompt(messages)+' '+END_PROMPT;
-    const setArray = [];
-    //console.log("generateCompletion function initial prompt:",prompt);
-    messages.forEach((m) => 
-    {
-        if (m.sender !== 0) {
-            setArray.push(sentenceToSet(m.text));
-        }
-    })
-
-    const insForAI = `${AI_INS} ${messages[0].text}. ${prompt}`; // TRY CHANGING THIS
-    if (messages.filter((m) => m.sender===2).length > 0) 
-    {
-        const restext = await httpGPTCompletion("gpt-4", prompt, 0.7, insForAI, messages);
-        const res = {text: restext};
-        return res;
-    } 
-    else 
-    {
-        const restext = await httpGPTCompletion("gpt-4", insForAI, 0.7,insForAI, messages);
-        const res = {text: restext};
-        return res;
-    }
-
-}
-
-
-export const chatgptReply = async(message, messages, lastres) => {
-    //console.log("ChatGPT completion");
-    const prompt = generateChatGPTPrompt(messages)+' '+END_PROMPT;
-    const setArray = [];
-    //console.log(prompt);
-    messages.forEach((m) => {
-        if (m.sender !== 0) {
-            setArray.push(sentenceToSet(m.text));
-        }
-    })
-    console.log(`${setArray.length} sets in array`);
-
-
-    if (lastres !== undefined) {
-        let tryTimes = 0;
-        // let findMessage = false;
-        do {
-            const res = await chatgpt.sendMessage(prompt, {
-                conversationId: lastres.conversationId,
-                parentMessageId: lastres.id
-            })
-            //console.log("CHATGPT REPLY function: IF", res.text);
-            res.text=filterContent2(messages, res.text);
-            const i = checkRepeat(setArray, res.text);
-            if ( i === -1) {
-                console.log(`non repeat at ${tryTimes}`);
-                return res;
-            } else {
-                console.log(`'${res.text}' is similar to '${messages[i+1].text}'`)
-            }
-            tryTimes += 1;
-        } while (tryTimes < TRY_TIME);
-    } else {
-        // generate first idea
-        let tryTimes = 0;
-        const insForAI = `${AI_INS} ${messages[0].text}.`;
-        do {
-            const res = await chatgpt.sendMessage(insForAI+prompt);
-            //console.log("CHATGPT REPLY function: ELSE", res.text);
-            res.text = filterContent2(messages, res.text);
-            const i = checkRepeat(setArray, res.text);
-            if ( i === -1) {
-                console.log(`non repeat at ${tryTimes}`);
-                return res;
-            } else {
-                console.log(`'${res.text}' is similar to '${messages[i+1].text}'`)
-            }
-            tryTimes += 1;
-        } while (tryTimes < TRY_TIME); 
-    }
-    return {text:''};
+export const chatgptReply = async (_message, messages, _lastres) => {
+  return generateCompletion(messages)
 }
