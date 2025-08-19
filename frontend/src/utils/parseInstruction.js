@@ -87,7 +87,8 @@ export const parseInstruction = (index, chatType, change) => {
             . Once both matched players have indicated their readiness, the
             game’s target object will be revealed underneath this instruction
             and the timer will begin. Please wait for the AI's first message
-            after "ready" to start the conversation. 
+            after "ready" to start the conversation. You will need to also wait a few
+            seconds after each of your responses to allow the AI to generate its answer.
           </span>
         </div>
       )
@@ -154,7 +155,8 @@ export const parseInstruction = (index, chatType, change) => {
               and the timer will begin.{" "}
               <span style={{ fontWeight: "bold" }}>
                 Please wait for the AI's first message after "ready" to start
-                the conversation. 
+                the conversation. You will need to also wait a few
+                seconds after each of your responses to allow the AI to generate its answer.
               </span>
             </span>
           )}
