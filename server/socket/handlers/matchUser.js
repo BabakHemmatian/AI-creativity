@@ -7,7 +7,7 @@ import { constResponses } from "../../config/constResponse.js"
 import { print_log } from "../../service/utils.js"
 import { DEFAULT_SESSION, MATCH_CONDITION, AI_UID } from "../constants.js"
 
-let waitingHumans = []
+let waitingHumans = new Set()
 let lastItem = -1
 let lastOrder = -1
 
@@ -79,7 +79,7 @@ export default async function handleMatchUser(socket, { userId }) {
 
     let assignedOrder, assignedItems
 
-    if (waitingHumans.length === 0) {
+    if (waitingHumans.size === 0) {
       const [orderA] = getRandomOrderPair()
       assignedOrder = orderA
       assignedItems = getRandomItems()
@@ -90,7 +90,7 @@ export default async function handleMatchUser(socket, { userId }) {
         5
       )
     } else {
-      const waitingUserId = waitingHumans[0]
+      const waitingUserId = waitingHumans.values().next().value
       const waitingSession = userSession.get(waitingUserId)
       print_log(`Found waiting user: ${waitingUserId}`, 5)
       print_log(
@@ -138,13 +138,18 @@ export default async function handleMatchUser(socket, { userId }) {
 
   const io = socket.server
 
-  if (waitingHumans.length === 0) {
-    if (!waitingHumans.includes(userId)) {
-      waitingHumans.push(userId)
-    }
+  if (waitingHumans.size === 0) {
+    waitingHumans.add(userId)
     print_log(`[Match] ${userId} added to waitingHumans`, 5)
   } else {
-    const waitingUserId = waitingHumans.shift()
+    const waitingUserId = waitingHumans.values().next().value
+    waitingHumans.delete(waitingUserId)
+    if (waitingUserId === userId) {
+      waitingHumans.add(userId)
+      print_log(`[Guard] Prevented self-match for ${userId}`, 5)
+      return
+    }
+
     const waitingSession = userSession.get(waitingUserId)
 
     const newRoom = await createChatRoomService(
