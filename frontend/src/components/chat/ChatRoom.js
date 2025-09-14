@@ -27,6 +27,7 @@ export default function ChatRoom({
   const [prevAI, setPrevAI] = useState(false)
   const [change, setChange] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [scratchpad, setScratchpad] = useState("")
 
   const [countdown, setCountdown] = useState(Math.ceil(DURATION_MS / 1000))
   const intervalRef = useRef(null)
@@ -41,6 +42,7 @@ export default function ChatRoom({
     currentId.current = currentChat._id
 
     setReady(0)
+    setScratchpad("")
     setMessages([])
     setCountdown(Math.ceil(DURATION_MS / 1000))
     clearInterval(intervalRef.current)
@@ -266,6 +268,19 @@ export default function ChatRoom({
               {countdown === 0 && parseEndInstruction(currentChat.index)}
             </li>
           </ul>
+        </div>
+
+        <div className="p-3 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+          <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+            Scratchpad (private, not sent to chat)
+          </label>
+          <textarea
+            value={scratchpad}
+            onChange={(e) => setScratchpad(e.target.value)}
+            placeholder="Jot down your ideas here..."
+            className="w-full p-2 border rounded-md dark:bg-gray-900 dark:text-white"
+            rows={4}
+          />
         </div>
 
         <ChatForm
