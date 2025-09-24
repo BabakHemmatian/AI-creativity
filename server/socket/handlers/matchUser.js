@@ -137,13 +137,11 @@ export default async function handleMatchUser(socket, { userId }) {
   userSession.set(userId, session)
 
   const io = socket.server
-
-  // Handle GPT/CON direct match
-  if (MATCH_CONDITION === "GPT" || MATCH_CONDITION === "CON") {
+  if (MATCH_CONDITION === "GPT") {
     const newRoom = await createChatRoomService(
       [userId, AI_UID],
       curItem,
-      MATCH_CONDITION,
+      "GPT",
       curList
     )
     await appendChatRoomService(newRoom._id, curList)
@@ -165,7 +163,33 @@ export default async function handleMatchUser(socket, { userId }) {
       session: updatedSession,
     })
 
-    print_log(`[Match] ${userId} matched with ${MATCH_CONDITION}`, 5)
+    print_log(`[Match] ${userId} matched with GPT`, 5)
+    return
+  }
+
+  if (MATCH_CONDITION === "CON") {
+    const newRoom = await createChatRoomService(
+      [userId],
+      curItem,
+      "CON",
+      curList
+    )
+    await appendChatRoomService(newRoom._id, curList)
+
+    const updatedSession = {
+      ...session,
+      isMatching: false,
+      currentChatRoom: newRoom,
+      matchedUser: null, // no partner userId
+    }
+    userSession.set(userId, updatedSession)
+
+    io.to(onlineUsers.get(userId)).emit("matchedUser", {
+      data: { ...newRoom.toObject(), chatType: "CON", index: curI },
+      session: updatedSession,
+    })
+
+    print_log(`[Match] ${userId} matched with CON (non-interactive)`, 5)
     return
   }
 
