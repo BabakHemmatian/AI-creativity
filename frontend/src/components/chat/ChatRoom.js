@@ -278,7 +278,7 @@ export default function ChatRoom({
             value={scratchpad}
             onChange={(e) => setScratchpad(e.target.value)}
             placeholder="Jot down your ideas here..."
-            className="w-full p-2 border rounded-md dark:bg-gray-900 dark:text-white"
+            className="w-full p-1 text-sm rounded-md dark:bg-gray-800 dark:text-gray-300"
             rows={4}
           />
         </div>
