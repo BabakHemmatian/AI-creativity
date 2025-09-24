@@ -157,7 +157,7 @@ export default async function handleMatchUser(socket, { userId }) {
     io.to(onlineUsers.get(userId)).emit("matchedUser", {
       data: {
         ...newRoom.toObject(),
-        chatType: updatedSession.types[curI],
+        chatType: "GPT",
         index: curI,
       },
       session: updatedSession,
@@ -180,7 +180,7 @@ export default async function handleMatchUser(socket, { userId }) {
       ...session,
       isMatching: false,
       currentChatRoom: newRoom,
-      matchedUser: null, // no partner userId
+      matchedUser: null,
     }
     userSession.set(userId, updatedSession)
 
