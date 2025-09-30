@@ -7,8 +7,7 @@
 ## Table of Contents
 
 - [Introduction](#introduction)
-- [Motivation](#motivation)
-- [How-to Instructions](#how-to-instructions)
+- [How to Use](#how-to-instructions)
   - [Two-Computer Interaction](#two-computer-interaction)
   - [Single-Computer Interaction](#single-computer-interaction)
 - [FAQs](#faqs)
