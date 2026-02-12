@@ -13,7 +13,6 @@ export const constResponses = {
             "help with balance when doing yoga",
             "Make a book into a clock by attaching clock hands to the cover",
             "handkerchief",
-            "sex toy",
             "Make a purse out of an old book",
             "used in place of a cutting board when slicing vegetables or meat",
             "juggling",
@@ -34,7 +33,6 @@ export const constResponses = {
             "use to elevate something",
             "to smash bugs",
             "to make a collage or scrapbook",
-            "to resell",
         ],
     
         'gpt': [
@@ -53,7 +51,6 @@ export const constResponses = {
             "Wrap warp threads around a hardcover to use it as a simple portable weaving loom.",
             "Add elastic straps to a hardcover to convert it into a lap desk with tool holders.",
             "Cut angled slots into a thick book to make a desktop mail and note organizer.",
-            "Press the page edges into ink or paint to stamp parallel-line textures onto clay or paper."
         ]
     },
     'a fork or forks (used for eating)':{
@@ -65,7 +62,6 @@ export const constResponses = {
             "a toothbrush",
             "as a mirror",
             "instead of a paralyzed hand",
-            "sex toy",
             "CD rack",
             "tennis racket",
             "Hold a fork by the tines and use the handle to hammer in nails",
@@ -91,7 +87,6 @@ export const constResponses = {
             "as iron rod",
             "to make scratches in a window",
             "to cook food",
-            "remove lint from clothing",
         ],
         'gpt': [
             "Shape the handle and prongs to create a minimalist smartphone stand.",
@@ -109,7 +104,6 @@ export const constResponses = {
             "Score and sculpt clay with the tines for pottery work.",
             "Mount it upright on a base to display earrings from the tines.",
             "Clip forks to tablecloth corners as weights on a breezy day.",
-            "Bend the tines and handle to craft a minimalist smartphone stand."
         ]
     },
     'a tin can or tin cans (used to store perishables)':{
@@ -129,7 +123,6 @@ export const constResponses = {
             "Put four cans on their sides, board on them and skateboard",
             "take off the label and make an earring out of it",
             "cut in half and used as salt and pepper shakers",
-            "a phone case",
         ],
         'low':[
             "paperweight",
@@ -138,7 +131,7 @@ export const constResponses = {
             "as a vase for flowers",
             "to open",
             "candle holder",
-            "give it to a vagrant who collects cans",
+            "give it to someone who collects cans",
             "flattening and making objects out of them",
             "as a coin bank",
             "as ashtray",
@@ -147,7 +140,6 @@ export const constResponses = {
             "as a paintbrush holder",
             "as a cooler",
             "as a waste bin",
-            "As a form of art",
         ],
         'gpt': [
             "Nest and vent two cans to create a compact rocket stove for emergency cooking.",
@@ -165,7 +157,6 @@ export const constResponses = {
             "Pierce micro-holes and bury a can beside plants to act as a slow-release drip irrigator.",
             "Add a tangential side inlet and top outlet to turn a can into a cyclone pre-separator for a shop-vac.",
             "Use the rim as a scribing guide to draw perfect circles on wood or sheet metal.",
-            "Crimp a can over a worn broom handle end to serve as a reinforcing ferrule."
         ]
     },
 }
