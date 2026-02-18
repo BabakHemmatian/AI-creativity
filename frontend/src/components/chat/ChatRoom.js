@@ -135,7 +135,7 @@ export default function ChatRoom({
 
     sock.on("refresh", () => {
       alert(
-        "The co-player’s connection to the server was severed. Please refresh this page to start this session again. We apologize for the inconvenience."
+        "The co-player’s connection to the server was severed. Please refresh this page to start this session again. We apologize for the inconvenience.",
       )
     })
 
@@ -151,6 +151,18 @@ export default function ChatRoom({
   useEffect(() => {
     incomingMessage && setMessages((prev) => [...prev, incomingMessage])
   }, [incomingMessage])
+
+  useEffect(() => {
+    if (currentChat.chatType === "GPT" && messages.length > 0) {
+      const lastMsg = messages[messages.length - 1]
+      if (
+        lastMsg.senderId === "GPT" &&
+        lastMsg.message.trim().toLowerCase() === "ready"
+      ) {
+        setIsProcessing(false)
+      }
+    }
+  }, [messages, currentChat.chatType])
 
   const handleFormSubmit = async (message) => {
     console.log(`HandleFormSubmit: ${message}`)
@@ -203,7 +215,7 @@ export default function ChatRoom({
       alert("current chat room has ended, but you can match a new one")
     } else {
       const receiverId = currentChat.members.find(
-        (member) => member !== currentUser.uid
+        (member) => member !== currentUser.uid,
       )
 
       socket.current.emit("sendMessage", {
@@ -245,7 +257,7 @@ export default function ChatRoom({
               {parseInstruction(
                 currentChat.index,
                 currentChat.chatType,
-                change
+                change,
               )}
             </li>
             <li className="dark:text-white" style={{ fontWeight: "bold" }}>

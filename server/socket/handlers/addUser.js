@@ -14,6 +14,10 @@ export default function handleAddUser(socket, userId) {
 
   if (!session.ended && timediff < SESSION_TIME) {
     print_log("recover session", 4)
+    // Reset roundStartedFor and not_ai_replied_first_map on refresh
+    session.roundStartedFor = -1
+    not_ai_replied_first_map.set(userId, false)
+    userSession.set(userId, session)
     socket.emit("getSession", { isRecover: true, session })
   } else if (!session.ended) {
     print_log("session time out, start new", 4)

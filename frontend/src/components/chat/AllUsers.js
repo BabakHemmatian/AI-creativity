@@ -33,7 +33,7 @@ export default function AllUsers({
     const Ids = chatRooms
       .filter((chatRoom) => !chatRoom.isEnd)
       .map((chatRoom) =>
-        chatRoom.members.find((member) => member !== currentUser.uid)
+        chatRoom.members.find((member) => member !== currentUser.uid),
       )
 
     if (Ids.length === 0) setHasRoom(false)
@@ -69,7 +69,7 @@ export default function AllUsers({
         (room) =>
           !room.isEnd &&
           room.index === nextIndex &&
-          room.chatType === session.types[nextIndex]
+          room.chatType === session.types[nextIndex],
       )
       if (nextChatRoom) {
         nextChatRoom.index = nextIndex
@@ -112,7 +112,7 @@ export default function AllUsers({
     if (!matching && !hasRoom) {
       console.log(
         "[Client:Match] Emitting match request for user:",
-        currentUser.uid
+        currentUser.uid,
       )
       setMatching(true)
       setTimeout(() => {
@@ -188,34 +188,6 @@ export default function AllUsers({
                 )}
               </button>
             )}
-        </li>
-
-        <li>
-          {chatRooms
-            .filter((chatRoom) => !chatRoom.isEnd)
-            .map((chatRoom, index) => (
-              <div
-                key={index}
-                className={classNames(
-                  index === selectedChat
-                    ? "bg-gray-100 dark:bg-gray-700"
-                    : "transition duration-150 ease-in-out cursor-pointer bg-white border-b border-gray-200 hover:bg-gray-100 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-gray-700",
-                  "flex items-center px-3 py-2 text-sm "
-                )}
-                onClick={() => changeCurrentChat(index, chatRoom)}
-              >
-                {chatRoom.members.includes("AI") ||
-                chatRoom.members.length === 1 ? (
-                  <div className="text-gray-800 dark:text-white font-semibold">
-                    {chatRoom.chatType === "GPT"
-                      ? "Chat with AI"
-                      : "Chat with Constant Responses"}
-                  </div>
-                ) : (
-                  <Contact chatRoom={chatRoom} currentUser={currentUser} />
-                )}
-              </div>
-            ))}
         </li>
       </ul>
     </>

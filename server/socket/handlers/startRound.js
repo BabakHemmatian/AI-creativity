@@ -32,7 +32,7 @@ export default async function handleStartRound(socket, { userId }) {
   session.roundStartedFor = curI
   print_log(
     `[StartRound] User ${userId} starting round ${curI} (${curType})`,
-    5
+    5,
   )
   if (isHumanRound) {
     print_log(`[StartRound] HUM round`, 5)
@@ -61,7 +61,7 @@ export default async function handleStartRound(socket, { userId }) {
         [userId, otherUserId],
         curItem,
         curType,
-        curList
+        curList,
       )
       await appendChatRoomService(chatRoom._id, curList)
 
@@ -74,7 +74,7 @@ export default async function handleStartRound(socket, { userId }) {
 
       print_log(
         `[StartRound] New HUM room created for ${userId} & ${otherUserId}`,
-        5
+        5,
       )
     } else {
       print_log(`[StartRound] Reusing existing HUM room for ${userId}`, 5)
@@ -116,7 +116,7 @@ export default async function handleStartRound(socket, { userId }) {
     if (!Array.isArray(allRes)) {
       print_log(
         `[startRound] WARNING: Missing replies for ${curItem} (${quality}). Using fallback`,
-        2
+        2,
       )
       session.conMes = ["Sorry, I don't have a reply."]
     } else {
@@ -130,7 +130,7 @@ export default async function handleStartRound(socket, { userId }) {
     members,
     curItem,
     curType,
-    curList
+    curList,
   )
 
   await appendChatRoomService(newRoom._id, curList)
@@ -142,6 +142,7 @@ export default async function handleStartRound(socket, { userId }) {
   userSession.set(userId, updatedSession)
 
   chatMessage.set(userId, [{ text: curItem, sender: 0, replied: true }])
+  not_ai_replied_first_map.set(userId, false)
 
   const chatRoomPayload = {
     ...newRoom.toObject(),
