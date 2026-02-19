@@ -53,9 +53,9 @@ function getRandomOrderPair() {
   lastOrder = lastOrder === -1 ? idx : -1
   print_log(
     `Selected Pair: ${JSON.stringify(ORDERS[idx][0])} ↔ ${JSON.stringify(
-      ORDERS[idx][1]
+      ORDERS[idx][1],
     )}`,
-    5
+    5,
   )
   return ORDERS[idx]
 }
@@ -67,6 +67,10 @@ function getRandomItems() {
   lastItem = lastItem === -1 ? idx : -1
   ITEMINDEX[idx].forEach((i) => items.push(ITEMS[i]))
   return items
+}
+
+export function removeFromWaiting(userId) {
+  waitingHumans.delete(userId)
 }
 
 export default async function handleMatchUser(socket, { userId }) {
@@ -85,9 +89,9 @@ export default async function handleMatchUser(socket, { userId }) {
       assignedItems = getRandomItems()
       print_log(
         `No one waiting. Assigned order to ${userId}: ${JSON.stringify(
-          assignedOrder
+          assignedOrder,
         )}`,
-        5
+        5,
       )
     } else {
       const waitingUserId = waitingHumans.values().next().value
@@ -95,20 +99,20 @@ export default async function handleMatchUser(socket, { userId }) {
       print_log(`Found waiting user: ${waitingUserId}`, 5)
       print_log(
         `Waiting user's order: ${JSON.stringify(waitingSession.types)}`,
-        5
+        5,
       )
 
       const matchPair = ORDERS.find(
         ([orderA]) =>
-          JSON.stringify(orderA) === JSON.stringify(waitingSession.types)
+          JSON.stringify(orderA) === JSON.stringify(waitingSession.types),
       )
       assignedOrder = matchPair ? matchPair[1] : getRandomOrderPair()[1]
       assignedItems = getRandomItems()
       print_log(
         `Matched complementary order for ${userId}: ${JSON.stringify(
-          assignedOrder
+          assignedOrder,
         )}`,
-        5
+        5,
       )
     }
 
@@ -125,7 +129,7 @@ export default async function handleMatchUser(socket, { userId }) {
     userSession.set(userId, session)
     print_log(
       `Final order for ${userId}: Order = ${JSON.stringify(session.types)}`,
-      5
+      5,
     )
   }
 
@@ -142,7 +146,7 @@ export default async function handleMatchUser(socket, { userId }) {
       [userId, AI_UID],
       curItem,
       "GPT",
-      curList
+      curList,
     )
     await appendChatRoomService(newRoom._id, curList)
 
@@ -172,7 +176,7 @@ export default async function handleMatchUser(socket, { userId }) {
       [userId],
       curItem,
       "CON",
-      curList
+      curList,
     )
     await appendChatRoomService(newRoom._id, curList)
 
@@ -211,7 +215,7 @@ export default async function handleMatchUser(socket, { userId }) {
       [userId, waitingUserId],
       curItem,
       "HUM",
-      curList
+      curList,
     )
     await appendChatRoomService(newRoom._id, curList)
 

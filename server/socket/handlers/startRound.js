@@ -8,6 +8,10 @@ import { constResponses } from "../../config/constResponse.js"
 
 const readyForRound = new Map()
 
+export function removeFromReady(userId) {
+  readyForRound.delete(userId)
+}
+
 export default async function handleStartRound(socket, { userId }) {
   print_log(`[StartRound] Received request from ${userId}`, 5)
   const session = userSession.get(userId)

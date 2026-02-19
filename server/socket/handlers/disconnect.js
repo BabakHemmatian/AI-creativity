@@ -1,10 +1,15 @@
 import { print_log } from "../../service/utils.js"
 import { getKey } from "../helpers.js"
+import { removeFromWaiting } from "./matchUser.js"
+import { removeFromReady } from "./startRound.js"
 
 export default function handleDisconnect(socket) {
   const userId = getKey(onlineUsers, socket.id)
   const session = userSession.get(userId)
   const now = new Date()
+
+  removeFromWaiting(userId)
+  removeFromReady(userId)
 
   onlineUsers.delete(userId)
   print_log(`logout: ${userId} ${now}`, 4)
