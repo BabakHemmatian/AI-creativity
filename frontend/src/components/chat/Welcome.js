@@ -7,7 +7,7 @@ export default function Welcome() {
         <WelcomeSVG />
         <div className="text-center">
           <h2 className="text-xl text-gray-500 dark:text-gray-400">
-            Select a Chat to Start Messaging
+            Click the \"Match\" or \"Start\" button to the top left to begin. 
           </h2>
         </div>
       </div>
