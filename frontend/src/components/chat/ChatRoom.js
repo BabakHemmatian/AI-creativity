@@ -289,7 +289,7 @@ export default function ChatRoom({
           <textarea
             value={scratchpad}
             onChange={(e) => setScratchpad(e.target.value)}
-            placeholder="Jot down your ideas here..."
+            placeholder="Jot down ideas here if waiting for your partner to respond..."
             className="w-full p-1 text-sm rounded-md dark:bg-gray-800 dark:text-gray-300"
             rows={4}
           />
