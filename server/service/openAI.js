@@ -81,7 +81,14 @@ const extractOutputText = (data) => {
 
 export const generateCompletion = async (messages) => {
   const input = toInputBlocks(messages)
-  const body = { model: MODEL, instructions: INSTRUCTIONS, input }
+  const body = {
+    model: MODEL,
+    instructions: INSTRUCTIONS,
+    input,
+    reasoning: { effort: "minimal" },
+    text: { verbosity: "low" },
+    max_output_tokens: 40,
+  }
 
   try {
     console.log("OpenAI request body:", JSON.stringify(body, null, 2))
