@@ -1,138 +1,131 @@
-const REACT_APP_MATCH_CONDITION = process.env.REACT_APP_MATCH_CONDITION || "ALL"
+// frontend/src/utils/parseInstruction.js
 
-export const parseInstruction = (index, chatType, change) => {
+const REACT_APP_MATCH_CONDITION =
+  process.env.REACT_APP_MATCH_CONDITION || "ALL";
+
+const wrap = (children) => (
+  <div className="dark:text-white space-y-2">{children}</div>
+);
+
+export const parseInstruction = (index, chatType) => {
+  const base = (
+    <p>
+      You and a partner will use this chat to come up with as many{" "}
+      <strong>original and practically helpful alternate uses</strong> for an
+      everyday object as you can in <strong>4 minutes</strong>.
+    </p>
+  );
+
+  const ready = (
+    <p>
+      When ready to start, send <strong>'ready'</strong> in the chat to reveal
+      the target object and start the timer.
+    </p>
+  );
+
+  const hum = (
+    <p>
+      Your partner for this round is an{" "}
+      <strong>interactive human</strong>. Interact with them however you like.
+    </p>
+  );
+
+  const con = (
+    <p>
+      This round is <strong>non-interactive</strong>. You will see your
+      partner's chat messages, but they cannot see yours and will perform the
+      task independently.
+    </p>
+  );
+
+  const gpt = (
+    <p>
+      Your partner for this round is an{" "}
+      <strong>interactive AI</strong>. Wait for its first response, then
+      interact with it however you like. You can use the scratch pad while you
+      wait for its responses.
+    </p>
+  );
+
   switch (REACT_APP_MATCH_CONDITION) {
     case "HUM":
-      return (
-        <div className="dark:text-white">
-          <span>
-            You and a partner will use this chat to come up with as many <span style={{ fontWeight: "bold" }}>original</span>
-            and <span style={{ fontWeight: "bold" }}>practically helpful</span> 
-            alternate uses for an everyday object as you can in
-            <span style={{ fontWeight: "bold" }}>4 minutes</span>.
-            <br /><br />
-            Your partner for this round is{" "}
-            <span style={{ fontWeight: "bold" }}>an interactive human</span>.
-            Interact with them however you like.
-            <br /><br />
-            When ready to start, send <span style={{ fontWeight: "bold" }}>'ready'</span> in the chat to reveal the target object and start the timer.
-          </span>
-        </div>
-      )
+      return wrap(
+        <>
+          {base}
+          {hum}
+          {ready}
+        </>
+      );
+
     case "CON":
-      return (
-        <div className="dark:text-white">
-          <span>
-            You and a partner will use this chat to come up with as many <span style={{ fontWeight: "bold" }}>original</span>
-            and <span style={{ fontWeight: "bold" }}>practically helpful</span> 
-            alternate uses for an everyday object as you can in
-            <span style={{ fontWeight: "bold" }}>4 minutes</span>.
-            <br /><br />
-           This round is{" "}
-            <span style={{ fontWeight: "bold" }}>non-interactive</span>. You will see
-            your partner's chat messages, but they cannot see yours and will perform
-            the task independently. 
-            <br /><br />
-            When ready to start, send <span style={{ fontWeight: "bold" }}>'ready'</span> in the chat to reveal the target object and start the timer.
-          </span>
-        </div>
-      )
+      return wrap(
+        <>
+          {base}
+          {con}
+          {ready}
+        </>
+      );
+
     case "GPT":
-      return (
-        <div className="dark:text-white">
-          <span>
-            You and a partner will use this chat to come up with as many <span style={{ fontWeight: "bold" }}>original</span>
-            and <span style={{ fontWeight: "bold" }}>practically helpful</span> 
-            alternate uses for an everyday object as you can in
-            <span style={{ fontWeight: "bold" }}>4 minutes</span>.
-            <br /><br /> 
-            Your partner for this round is{" "}
-            <span style={{ fontWeight: "bold" }}>an interactive AI</span>. <span style={{ fontWeight: "bold" }}>Wait</span> for
-            its first response, then interact with it however you like. You can use the scratch pad while you wait for its responses. 
-            <br /><br /> 
-            When ready to start, send <span style={{ fontWeight: "bold" }}>'ready'</span> in the chat to reveal the target object and start the timer.
-          </span>
-        </div>
-      )
+      return wrap(
+        <>
+          {base}
+          {gpt}
+          {ready}
+        </>
+      );
+
     case "ALL":
-      return (
-        <div className="dark:text-white">
-          {index === 0 && (
-            <span>
-              You and a partner will use this chat to come up with as many <span style={{ fontWeight: "bold" }}>original</span>
-            and <span style={{ fontWeight: "bold" }}>practically helpful</span> 
-            alternate uses for an everyday object as you can in
-            <span style={{ fontWeight: "bold" }}>4 minutes</span>.
-            <br /><br />
-          )}
+    default:
+      return wrap(
+        <>
+          {index === 0 && base}
+
           {chatType === "HUM" && (
-            <span>
-              Your partner for this round is{" "}
-              <span style={{ fontWeight: "bold" }}>an interactive human</span>.{" "}. Interact with them however you like.
-              <br /><br />
-            When ready to start, send <span style={{ fontWeight: "bold" }}>'ready'</span> in the chat to reveal the target object and start the timer.
-            </span>
+            <>
+              {hum}
+              {ready}
+            </>
           )}
+
           {chatType === "CON" && (
-            <span>
-              This round is{" "}
-            <span style={{ fontWeight: "bold" }}>non-interactive</span>.</span>{" "} You will see
-            your partner's chat messages, but they cannot see yours and will perform
-            the task independently.
-              <br /><br />
-            When ready to start, send <span style={{ fontWeight: "bold" }}>'ready'</span> in the chat to reveal the target object and start the timer.
-            </span>
+            <>
+              {con}
+              {ready}
+            </>
           )}
-          {chatType === "GPT" && (
-            <span>
-              Your partner for this round is{" "}
-            <span style={{ fontWeight: "bold" }}>an interactive AI</span>.</span>{" "} <span style={{ fontWeight: "bold" }}>Wait</span> for
-            its first response, then interact with it however you like. You can use the scratch pad while you wait for its responses. 
-              </span>
-            </span>
-          )}
-        </div>
-      )
+
+          {chatType === "GPT" && gpt}
+        </>
+      );
   }
-}
+};
 
 export const parseEndInstruction = (index) => {
+  const roundEnd = (
+    <>
+      <p>
+        You have completed the <strong>brainstorming round</strong>. Go back to
+        the Qualtrics survey to curate the best ideas.
+      </p>
+      <p>
+        When instructed, click on the <strong>'Start'</strong> button to the top
+        left to begin the next round.
+      </p>
+    </>
+  );
+
+  const final = (
+    <p>
+      The <strong>co-creation part</strong> of our activity has ended. Go back
+      to the Qualtrics survey to curate the best ideas.
+    </p>
+  );
+
   if (REACT_APP_MATCH_CONDITION === "ALL") {
-    switch (index) {
-      case 0:
-        return (
-          <span>
-            You have the 1st brainstorming round. Go back to the Qualtrics survey
-            to curate the best ideas. 
-              <br /><br />
-              <span style={{ fontWeight: "bold" }}>When instructed</span>, click on the ‘Start’ button to the
-            top left to start the second round.
-          </span>
-        )
-      case 1:
-        return (
-          <span>
-            You have the 1st brainstorming round. Go back to the Qualtrics survey
-            to curate the best ideas. 
-              <br /><br />
-            <span style={{ fontWeight: "bold" }}>When instructed</span>, click on the ‘Start’ button to the
-            top left to start the second round.
-          </span>
-        )
-      case 2:
-        return (
-          <span>
-            The co-creation part of our activity has ended. Go back to the Qualtrics survey to
-          curate the best ideas.
-          </span>
-        )
-    }
-  } else {
-    return (
-      <span>
-        The co-creation part of our activity has ended. Go back to the Qualtrics survey to
-          curate the best ideas.
-      </span>
-    )
+    if (index === 2) return wrap(final);
+    return wrap(roundEnd);
   }
-}
+
+  return wrap(final);
+};
