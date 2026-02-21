@@ -1,10 +1,5 @@
 const REACT_APP_MATCH_CONDITION = process.env.REACT_APP_MATCH_CONDITION || "ALL"
 
-const Ins2 =
-  "Welcome to the second round! The rules are the same as before. When ready to start this round, please respond in the chat with ‘ready’. Once both matched players have indicated their readiness, the game’s target object will be revealed underneath this instruction and the timer will begin."
-const Ins3 =
-  "Welcome to the last round! The rules are the same as before. When ready to start this round, please respond in the chat with ‘ready’. Once both matched players have indicated their readiness, the game’s target object will be revealed underneath this instruction and the timer will begin."
-
 export const parseInstruction = (index, chatType, change) => {
   switch (REACT_APP_MATCH_CONDITION) {
     case "HUM":
@@ -70,8 +65,6 @@ export const parseInstruction = (index, chatType, change) => {
             <span style={{ fontWeight: "bold" }}>4 minutes</span>.
             <br /><br />
           )}
-          {index === 1 && Ins2}
-          {index === 2 && Ins3}
           {chatType === "HUM" && (
             <span>
               Your partner for this round is{" "}
