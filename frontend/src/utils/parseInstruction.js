@@ -11,26 +11,16 @@ export const parseInstruction = (index, chatType, change) => {
       return (
         <div className="dark:text-white">
           <span>
-            We will now play a two-player version of the game described earlier.
-            This part of the study has a brainstorming and a curation portion.
-            For the brainstorming portion, you and a paired player will chat 
-            to come up with creative uses for an everyday object.
-            Your partner in this step may be interactive or non-interactive, an
-            AI or a fellow human. You will have
-            <span style={{ fontWeight: "bold" }}>4 minutes</span> to chat. After
-            the brainstorming session, you will go back to the first tab in your
-            browser to curate and submit five best creative uses for the target
-            object inspired by the chat. You will be evaluated based on
-            how original and practically useful the curated ideas are. 
-            Your co-player for the current session is{" "}
+            You and a partner will use this chat to come up with as many <span style={{ fontWeight: "bold" }}>original</span>
+            and <span style={{ fontWeight: "bold" }}>practically helpful</span> 
+            alternate uses for an everyday object as you can in
+            <span style={{ fontWeight: "bold" }}>4 minutes</span>.
+            <br /><br />
+            Your partner for this round is{" "}
             <span style={{ fontWeight: "bold" }}>an interactive human</span>.
-            <span style={{ fontWeight: "bold" }}>
-              When ready to start this part of the study, please respond in the
-              chat with 'ready'
-            </span>
-            . Once both matched players have indicated their readiness, the
-            game’s target object will be revealed underneath this instruction
-            and the timer will begin.
+            Interact with them however you like.
+            <br /><br />
+            When ready to start, send <span style={{ fontWeight: "bold" }}>'ready'</span> in the chat to reveal the target object and start the timer.
           </span>
         </div>
       )
@@ -38,28 +28,17 @@ export const parseInstruction = (index, chatType, change) => {
       return (
         <div className="dark:text-white">
           <span>
-            We will now play a two-player version of the game described earlier.
-            This part of the study has a brainstorming and a curation portion.
-            For the brainstorming portion, you and a paired player chat 
-            to come up with creative uses for an everyday object.
-            Your partner in this step may be interactive or non-interactive, an
-            AI or a fellow human. You will have
-            <span style={{ fontWeight: "bold" }}>4 minutes</span> to chat. After
-            the brainstorming session, you will go back to the first tab in your
-            browser to curate and submit five best creative uses for the target
-            object inspired by the chat. You will be evaluated based on
-            how original and practically useful the curated ideas are. 
-            The current session is{" "}
-            <span style={{ fontWeight: "bold" }}>non-interactive</span>. Note
-            that non-interactive partners cannot see your chat responses and
-            will simply generate their own independent ideas.
-            <span style={{ fontWeight: "bold" }}>
-              When ready to start this part of the study, please respond in the
-              chat with 'ready'
-            </span>
-            . Once both matched players have indicated their readiness, the
-            game’s target object will be revealed underneath this instruction
-            and the timer will begin.
+            You and a partner will use this chat to come up with as many <span style={{ fontWeight: "bold" }}>original</span>
+            and <span style={{ fontWeight: "bold" }}>practically helpful</span> 
+            alternate uses for an everyday object as you can in
+            <span style={{ fontWeight: "bold" }}>4 minutes</span>.
+            <br /><br />
+           This round is{" "}
+            <span style={{ fontWeight: "bold" }}>non-interactive</span>. You will see
+            your partner's chat messages, but they cannot see yours and will perform
+            the task independently. 
+            <br /><br />
+            When ready to start, send <span style={{ fontWeight: "bold" }}>'ready'</span> in the chat to reveal the target object and start the timer.
           </span>
         </div>
       )
@@ -67,28 +46,16 @@ export const parseInstruction = (index, chatType, change) => {
       return (
         <div className="dark:text-white">
           <span>
-            We will now play a two-player version of the game described earlier.
-            This part of the study has a brainstorming and a curation portion.
-            For the brainstorming portion, you and a paired player will chat
-            to come up with creative uses for an everyday object.
-            Your partner in this step may be interactive or non-interactive, an
-            AI or a fellow human. You will have
-            <span style={{ fontWeight: "bold" }}>4 minutes</span> to chat. After
-            the brainstorming session, you will go back to the first tab in your
-            browser to curate and submit five best creative uses for the target
-            object inspired by the chat. You will be evaluated based on how 
-            original and practically useful the ideas are. 
-            Your co-player for the current session is{" "}
-            <span style={{ fontWeight: "bold" }}>an interactive AI</span>.
-            <span style={{ fontWeight: "bold" }}>
-              When ready to start this part of the study, please respond in the
-              chat with 'ready'
-            </span>
-            . Once both matched players have indicated their readiness, the
-            game’s target object will be revealed underneath this instruction
-            and the timer will begin. Please wait for the AI's first message
-            after "ready" to start the conversation. You will need to also wait a few
-            seconds after each of your responses to allow the AI to generate its answer.
+            You and a partner will use this chat to come up with as many <span style={{ fontWeight: "bold" }}>original</span>
+            and <span style={{ fontWeight: "bold" }}>practically helpful</span> 
+            alternate uses for an everyday object as you can in
+            <span style={{ fontWeight: "bold" }}>4 minutes</span>.
+            <br /><br /> 
+            Your partner for this round is{" "}
+            <span style={{ fontWeight: "bold" }}>an interactive AI</span>. <span style={{ fontWeight: "bold" }}>Wait</span> for
+            its first response, then interact with it however you like. You can use the scratch pad while you wait for its responses. 
+            <br /><br /> 
+            When ready to start, send <span style={{ fontWeight: "bold" }}>'ready'</span> in the chat to reveal the target object and start the timer.
           </span>
         </div>
       )
@@ -97,66 +64,37 @@ export const parseInstruction = (index, chatType, change) => {
         <div className="dark:text-white">
           {index === 0 && (
             <span>
-              We will now play three rounds of a two-player version of the game
-              described earlier. Each round has a brainstorming and a curation
-              portion. For the brainstorming portion, you and a paired player
-              will chat to come up with creative uses for an
-              everyday object. Your partner in the brainstorming step may be
-              interactive or non-interactive, an AI or a fellow human. You will
-              have
-              <span style={{ fontWeight: "bold" }}> 4 minutes</span> to chat.
-              After
-            the brainstorming session, you will go back to the first tab in your
-            browser to curate and submit five best creative uses for the target
-            object inspired by the chat. You will be evaluated based on
-            how original and practically useful the curated ideas are. 
-            </span>
+              You and a partner will use this chat to come up with as many <span style={{ fontWeight: "bold" }}>original</span>
+            and <span style={{ fontWeight: "bold" }}>practically helpful</span> 
+            alternate uses for an everyday object as you can in
+            <span style={{ fontWeight: "bold" }}>4 minutes</span>.
+            <br /><br />
           )}
           {index === 1 && Ins2}
           {index === 2 && Ins3}
           {chatType === "HUM" && (
             <span>
-              Your co-player for this round will be{" "}
-              <span style={{ fontWeight: "bold" }}>an interactive human</span>.{" "}
-              <span style={{ fontWeight: "bold" }}>
-                When ready to start this part of the study, please respond in
-                the chat with 'ready'
-              </span>
-              . Once both matched players have indicated their readiness, the
-              game’s target object will appear underneath this instruction and
-              the timer will begin.
+              Your partner for this round is{" "}
+              <span style={{ fontWeight: "bold" }}>an interactive human</span>.{" "}. Interact with them however you like.
+              <br /><br />
+            When ready to start, send <span style={{ fontWeight: "bold" }}>'ready'</span> in the chat to reveal the target object and start the timer.
             </span>
           )}
           {chatType === "CON" && (
             <span>
-              This round will be{" "}
-              <span style={{ fontWeight: "bold" }}>
-                non-interactive. Note that non-interactive partners cannot see
-                your chat responses and will simply generate their own
-                independent ideas.
-              </span>{" "}
-              <span style={{ fontWeight: "bold" }}>
-                When ready to start this part of the study, please respond in
-                the chat with 'ready'
-              </span>
-              . Once both matched players have indicated their readiness, the
-              game’s target object will appear underneath this instruction and
-              the timer will begin.
+              This round is{" "}
+            <span style={{ fontWeight: "bold" }}>non-interactive</span>.</span>{" "} You will see
+            your partner's chat messages, but they cannot see yours and will perform
+            the task independently.
+              <br /><br />
+            When ready to start, send <span style={{ fontWeight: "bold" }}>'ready'</span> in the chat to reveal the target object and start the timer.
             </span>
           )}
           {chatType === "GPT" && (
             <span>
-              Your co-player for this round will be{" "}
-              <span style={{ fontWeight: "bold" }}>an interactive AI</span>.{" "}
-              <span style={{ fontWeight: "bold" }}>. </span> When ready to start
-              this part of the study, please respond in the chat with 'ready'.
-              Once both matched players have indicated their readiness, the
-              game’s target object will be revealed underneath this instruction
-              and the timer will begin.{" "}
-              <span style={{ fontWeight: "bold" }}>
-                Please wait for the AI's first message after "ready" to start
-                the conversation. You will need to also wait a few
-                seconds after each of your responses to allow the AI to generate its answer.
+              Your partner for this round is{" "}
+            <span style={{ fontWeight: "bold" }}>an interactive AI</span>.</span>{" "} <span style={{ fontWeight: "bold" }}>Wait</span> for
+            its first response, then interact with it however you like. You can use the scratch pad while you wait for its responses. 
               </span>
             </span>
           )}
@@ -171,38 +109,36 @@ export const parseEndInstruction = (index) => {
       case 0:
         return (
           <span>
-            You have completed the brainstorming portion of the first round of
-            the two-player game. Please go back to the first tab in your browser
-            to start the curation portion of this round. When instructed to
-            start the second round, you can click on the ‘Start’ button to the
-            left of this chat screen again.
+            You have the 1st brainstorming round. Go back to the Qualtrics survey
+            to curate the best ideas. 
+              <br /><br />
+              <span style={{ fontWeight: "bold" }}>When instructed</span>, click on the ‘Start’ button to the
+            top left to start the second round.
           </span>
         )
       case 1:
         return (
           <span>
-            You have completed the brainstorming portion of the second round of
-            the two-player game. Please go back to the first tab in your browser
-            to start the curation portion of this round. When instructed to
-            start the third round, you can click on the ‘Start’ button to the
-            left of this chat screen again.
+            You have the 1st brainstorming round. Go back to the Qualtrics survey
+            to curate the best ideas. 
+              <br /><br />
+            <span style={{ fontWeight: "bold" }}>When instructed</span>, click on the ‘Start’ button to the
+            top left to start the second round.
           </span>
         )
       case 2:
         return (
           <span>
-            The 2-player part of our study has ended. Thank you! When ready,
-            please go back to the first tab to answer a survey questions and
-            finish the study.
+            The co-creation part of our activity has ended. Go back to the Qualtrics survey to
+          curate the best ideas.
           </span>
         )
     }
   } else {
     return (
       <span>
-        The 2-player part of our study has ended. Thank you! When ready, please
-        go back to the first tab and press the -> button to answer survey questions and finish the
-        study.
+        The co-creation part of our activity has ended. Go back to the Qualtrics survey to
+          curate the best ideas.
       </span>
     )
   }
