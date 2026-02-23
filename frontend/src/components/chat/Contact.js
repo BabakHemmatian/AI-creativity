@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { getUser } from "../../services/ChatService";
 import UserLayout from "../layouts/UserLayout";
 import { aiPartnerAvatarUrl } from "../../utils/GenerateAvatar";
@@ -7,18 +7,18 @@ export default function Contact({ chatRoom, currentUser }) {
   const [contact, setContact] = useState(null);
 
   useEffect(() => {
-    // AI partner: don't fetch a "user", just show a stable robot avatar + label
-    if (chatRoom?.chatType === "GPT") {
-      setContact({
-        __kind: "AI_PARTNER",
-        photoURL: aiPartnerAvatarUrl(), // stable robot
-      });
+    if (!chatRoom) return;
+
+    // AI partner: no user fetch; use stable robot avatar
+    if (chatRoom.chatType === "GPT") {
+      setContact({ __kind: "AI_PARTNER" });
       return;
     }
 
-    const contactId = chatRoom?.members?.find(
+    const contactId = chatRoom.members?.find(
       (member) => member !== currentUser?.uid
     );
+
     if (!contactId) {
       setContact(null);
       return;
@@ -34,7 +34,6 @@ export default function Contact({ chatRoom, currentUser }) {
 
   if (!chatRoom) return null;
 
-  // AI partner: Just a stable avatar
   if (chatRoom.chatType === "GPT") {
     return (
       <UserLayout
@@ -46,7 +45,6 @@ export default function Contact({ chatRoom, currentUser }) {
     );
   }
 
-  // Human partner: Fetch the actual avatar
   if (chatRoom.chatType === "HUM") {
     return (
       <UserLayout
@@ -57,6 +55,12 @@ export default function Contact({ chatRoom, currentUser }) {
     );
   }
 
-  // Default behavior for other types (e.g. CON) 
-  return <UserLayout user={contact} label="Partner" showEmail={false} />;
+  // CON or other types: label only, no avatar
+  return (
+    <UserLayout
+      user={contact}
+      label="Partner"
+      showEmail={false}
+    />
+  );
 }
