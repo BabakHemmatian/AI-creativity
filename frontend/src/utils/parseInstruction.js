@@ -33,7 +33,7 @@ export const parseInstruction = (index, chatType) => {
   const con = (
     <p>
       This round is <strong>non-interactive</strong>. You will see your
-      partner's chat messages, but they cannot see yours and will perform the
+      partner agent's chat messages, but they cannot see yours and will perform the
       task independently.
     </p>
   );
