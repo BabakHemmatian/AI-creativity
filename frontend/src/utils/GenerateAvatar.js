@@ -1,26 +1,28 @@
-const generateDiceBearAvataaars = (seed) =>
-  `https://api.dicebear.com/8.x/avataaars/svg?seed=${seed}`;
+const dicebear = (style, seed) =>
+  `https://api.dicebear.com/8.x/${style}/svg?seed=${seed}`;
 
-const generateDiceBearBottts = (seed) =>
-  `https://api.dicebear.com/8.x/bottts/svg?seed=${seed}`;
+const HUMAN_STYLE = "avataaars";
+const BOT_STYLE = "bottts";
 
-const generateDiceBearGridy = (seed) =>
-  `https://api.dicebear.com/8.x/open-peeps/svg?seed=${seed}`;
+// Random seed generator
+const randSeed = () => Math.random().toString(36).slice(2);
 
-export const generateAvatar = () => {
+/**
+ * Generates avatar options for users.
+ */
+export const generateAvatar = ({ count = 6 } = {}) => {
   const data = [];
 
-  for (let i = 0; i < 2; i++) {
-    const res = generateDiceBearAvataaars(Math.random());
-    data.push(res);
+  for (let i = 0; i < count; i++) {
+    data.push(dicebear(HUMAN_STYLE, randSeed()));
   }
-  for (let i = 0; i < 2; i++) {
-    const res = generateDiceBearBottts(Math.random());
-    data.push(res);
-  }
-  for (let i = 0; i < 2; i++) {
-    const res = generateDiceBearGridy(Math.random());
-    data.push(res);
-  }
+
   return data;
 };
+
+/**
+ * Stable robot avatar for Interactive AI Partner
+ * (used in Contact.js)
+ */
+export const aiPartnerAvatarUrl = (seed = "interactive-ai-partner") =>
+  dicebear(BOT_STYLE, seed);
