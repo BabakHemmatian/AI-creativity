@@ -30,13 +30,20 @@ export function AuthProvider({ children }) {
     return signOut(auth);
   }
 
+  // ✅ Ensures avatar updates show immediately and triggers React rerender
   async function updateUserProfile(user, profile) {
-    await updateProfile(user, profile);
+    // Use the live auth user if caller passed something stale
+    const targetUser = auth.currentUser || user;
+    if (!targetUser) throw new Error("No authenticated user");
 
-    if (typeof user?.reload === "function") {
-      await user.reload();
+    await updateProfile(targetUser, profile);
+
+    // refresh auth.currentUser fields like photoURL/displayName
+    if (typeof targetUser.reload === "function") {
+      await targetUser.reload();
     }
 
+    // IMPORTANT: clone to force rerender (Firebase user object is mutable)
     setCurrentUser(auth.currentUser ? { ...auth.currentUser } : null);
   }
 
@@ -45,7 +52,6 @@ export function AuthProvider({ children }) {
       setCurrentUser(user ? { ...user } : null);
       setLoading(false);
     });
-
     return unsubscribe;
   }, []);
 
