@@ -32,21 +32,18 @@ export function AuthProvider({ children }) {
     return signOut(auth);
   }
 
-  function updateUserProfile(user, profile) {
-    return updateProfile(user, profile);
+  async function updateUserProfile(user, profile) {
+  // Update in Firebase
+  await updateProfile(user, profile);
+
+  // Force-refresh the user object so photoURL/displayName are current
+  if (typeof user?.reload === "function") {
+    await user.reload();
   }
 
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      setCurrentUser(user);
-      setLoading(false);
-
-      if (user) {
-        console.log("Firebase Auth Changed: User is signed in", user);
-      } else {
-        console.log("No user is currently signed in.");
-      }
-    });
+  // Ensure React rerenders consumers immediately
+  setCurrentUser({ ...auth.currentUser });
+  }
 
     return unsubscribe;
   }, []);
