@@ -42,8 +42,7 @@ export const parseInstruction = (index, chatType) => {
     <p>
       Your partner for this round is an{" "}
       <strong>interactive AI</strong>. Wait for its first response, then
-      interact with it however you like. You can use the scratch pad while you
-      wait for its responses.
+      interact with it however you like. 
     </p>
   );
 
