@@ -1,28 +1,26 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
 } from "firebase/auth";
-
 import auth from "../config/firebase";
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 export function useAuth() {
   return useContext(AuthContext);
 }
 
 export function AuthProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState();
+  const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   function register(email, password) {
     return createUserWithEmailAndPassword(auth, email, password);
   }
-
 
   function login(email, password) {
     return signInWithEmailAndPassword(auth, email, password);
@@ -32,18 +30,24 @@ export function AuthProvider({ children }) {
     return signOut(auth);
   }
 
+  // ✅ Fix #2: ensure avatar updates show immediately (reload + state refresh)
   async function updateUserProfile(user, profile) {
-  // Update in Firebase
-  await updateProfile(user, profile);
+    await updateProfile(user, profile);
 
-  // Force-refresh the user object so photoURL/displayName are current
-  if (typeof user?.reload === "function") {
-    await user.reload();
+    // refresh auth.currentUser fields like photoURL/displayName
+    if (typeof user?.reload === "function") {
+      await user.reload();
+    }
+
+    // force rerender for consumers
+    setCurrentUser(auth.currentUser);
   }
 
-  // Ensure React rerenders consumers immediately
-  setCurrentUser({ ...auth.currentUser });
-  }
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setCurrentUser(user);
+      setLoading(false);
+    });
 
     return unsubscribe;
   }, []);
