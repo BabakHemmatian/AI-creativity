@@ -1,16 +1,12 @@
 const REACT_APP_AVATAR_OPTION = process.env.REACT_APP_AVATAR_OPTION;
 
-/**
- * Tries to normalize an existing dicebear URL into a chosen style.
- * (Keeps your existing behavior, but made safer.)
- */
 function normalizeDicebearUrl(url) {
   if (!url) return url;
 
-  // If it isn't dicebear, just return it
+  // Only normalize dicebear URLs
   if (!url.includes("api.dicebear.com/8.x/")) return url;
 
-  // Extract seed value from `...seed=XYZ`
+  // Extract seed from the url
   const match = url.match(/seed=([^&]+)/);
   const seed = match?.[1];
   if (!seed) return url;
@@ -30,10 +26,10 @@ export default function UserLayout({
   forceAvatarUrl,
   showEmail = false,
 }) {
-  const rawUrl = forceAvatarUrl || user?.photoURL;
-  const avatarUrl = normalizeDicebearUrl(rawUrl);
+  const avatarUrl = forceAvatarUrl
+    ? forceAvatarUrl
+    : normalizeDicebearUrl(user?.photoURL);
 
-  // Label wins; otherwise fall back to displayName; then email.
   const title = label || user?.displayName || user?.email || "Partner";
 
   return (
@@ -50,7 +46,9 @@ export default function UserLayout({
       )}
 
       <div className="leading-tight">
-        <div className="font-medium">{title}</div>
+        <div className="font-semibold text-gray-800 dark:text-white">
+          {title}
+        </div>
 
         {showEmail && user?.email && (
           <div className="text-sm opacity-70">{user.email}</div>
