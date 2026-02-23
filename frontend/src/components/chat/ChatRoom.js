@@ -243,8 +243,8 @@ export default function ChatRoom({
           {currentChat.chatType != "HUM" || currentChat.members.length === 1 ? (
             <div className="text-gray-800 dark:text-white font-semibold">
               {currentChat.chatType === "GPT"
-                ? "Interactive AI Round"
-                : "Non Interactive Round"}
+                ? "Interactive AI Partner"
+                : "Non-Interactive Agent"}
             </div>
           ) : (
             <Contact chatRoom={currentChat} currentUser={currentUser} />
