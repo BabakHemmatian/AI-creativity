@@ -240,13 +240,19 @@ export default function ChatRoom({
     <div className="lg:col-span-2 lg:block">
       <div className="w-full">
         <div className="p-3 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
-          {currentChat.chatType != "HUM" || currentChat.members.length === 1 ? (
+          {currentChat.chatType === "CON" ? (
+            // CON: always text-only
             <div className="text-gray-800 dark:text-white font-semibold">
-              {currentChat.chatType === "GPT"
-                ? "Interactive AI Partner"
-                : "Non-Interactive Agent"}
+              Non-Interactive Agent
+            </div>
+          ) : currentChat.chatType === "HUM" &&
+            currentChat.members.length === 1 ? (
+            // HUM but not yet paired
+            <div className="text-gray-800 dark:text-white font-semibold">
+              Interactive Human Partner
             </div>
           ) : (
+            // HUM OR GPT: show avatar + label via Contact
             <Contact chatRoom={currentChat} currentUser={currentUser} />
           )}
         </div>
