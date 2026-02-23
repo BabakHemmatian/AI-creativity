@@ -30,22 +30,19 @@ export function AuthProvider({ children }) {
     return signOut(auth);
   }
 
-  // ✅ Fix #2: ensure avatar updates show immediately (reload + state refresh)
   async function updateUserProfile(user, profile) {
     await updateProfile(user, profile);
 
-    // refresh auth.currentUser fields like photoURL/displayName
     if (typeof user?.reload === "function") {
       await user.reload();
     }
 
-    // force rerender for consumers
-    setCurrentUser(auth.currentUser);
+    setCurrentUser(auth.currentUser ? { ...auth.currentUser } : null);
   }
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
-      setCurrentUser(user);
+      setCurrentUser(user ? { ...user } : null);
       setLoading(false);
     });
 
