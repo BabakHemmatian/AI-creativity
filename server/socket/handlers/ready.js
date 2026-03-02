@@ -2,8 +2,8 @@ import { print_log } from "../../service/utils.js"
 import replyMessage from "../replyMessage.js"
 import { AI_UID } from "../constants.js"
 
-let WAIT_TIME = Number(process.env.WAIT_TIME) || 5
-let WAIT_TIME_DIFF = Number(process.env.WAIT_TIME_DIFF) || 2
+const WAIT_TIME = Number(process.env.WAIT_TIME) || 5
+const WAIT_TIME_DIFF = Number(process.env.WAIT_TIME_DIFF) || 2
 
 function jitterMs(baseSecs, diffSecs, multiplier) {
   const delta =
@@ -17,31 +17,45 @@ export default function handleReady(socket, { chatRoom, userId }) {
   const curId = chatRoom._id.toString()
 
   if (curType !== "HUM") {
+    // Local constants per call — avoids shared state mutation across concurrent users
+    let waitTime = WAIT_TIME
+    let waitTimeDiff = WAIT_TIME_DIFF
     let multiplier = 1000
     if (curType === "GPT") {
-      WAIT_TIME = 12
-      WAIT_TIME_DIFF = 1
+      waitTime = 12
+      waitTimeDiff = 1
       multiplier = 100
     } else if (curType === "CON") {
-      WAIT_TIME = 13
-      WAIT_TIME_DIFF = Number(process.env.WAIT_TIME_DIFF) || 2
+      waitTime = 13
+      waitTimeDiff = WAIT_TIME_DIFF
       multiplier = 1000
     }
 
     socket.emit("userReady", { senderId: AI_UID })
 
-    setTimeout(async function chatLoop() {
-      const session = userSession.get(userId)
-      const room = session?.currentChatRoom
+    setTimeout(
+      async function chatLoop() {
+        const session = userSession.get(userId)
+        const room = session?.currentChatRoom
 
-      if (room && room._id.toString() === curId) {
-        await replyMessage(socket, userId)
-        setTimeout(chatLoop, jitterMs(WAIT_TIME, WAIT_TIME_DIFF, multiplier))
-      } else {
-        not_ai_replied_first_map.set(userId, false)
-        print_log(`AI reply ended for ${userId}`, 1)
-      }
-    }, jitterMs(WAIT_TIME, WAIT_TIME_DIFF, multiplier))
+        if (room && room._id.toString() === curId) {
+          try {
+            await replyMessage(socket, userId)
+          } catch (err) {
+            print_log(`chatLoop: AI reply failed for ${userId}`, -1)
+            print_log(err)
+            socket.emit("aiError", {
+              message: "AI response failed. Retrying shortly.",
+            })
+          }
+          setTimeout(chatLoop, jitterMs(waitTime, waitTimeDiff, multiplier))
+        } else {
+          not_ai_replied_first_map.set(userId, false)
+          print_log(`AI reply ended for ${userId}`, 1)
+        }
+      },
+      jitterMs(waitTime, waitTimeDiff, multiplier),
+    )
   } else {
     const roomId = chatRoom._id.toString()
     if (!global.readyMap) global.readyMap = new Map()

@@ -56,3 +56,38 @@ global.not_ai_replied_first_map = new Map()
 /** Start Socket Event Binding */
 
 setupSocket(io)
+
+const CLEANUP_INTERVAL_MS = 30 * 60 * 1000
+const STALE_THRESHOLD_MS = 30 * 60 * 1000
+
+setInterval(() => {
+  const now = Date.now()
+  let removed = 0
+
+  for (const [userId, session] of global.userSession.entries()) {
+    // Skip users who are currently online
+    if (global.onlineUsers.has(userId)) continue
+
+    const disconnectedAt = session?.disconnecttime
+      ? new Date(session.disconnecttime).getTime()
+      : 0
+    const isStale = now - disconnectedAt > STALE_THRESHOLD_MS
+
+    if (isStale) {
+      global.userSession.delete(userId)
+      global.chatMessage.delete(userId)
+      global.userToRoom.delete(userId)
+      global.userToRes.delete(userId)
+      global.userToTypes.delete(userId)
+      global.userToList.delete(userId)
+      global.not_ai_replied_first_map.delete(userId)
+      removed++
+    }
+  }
+
+  if (removed > 0) {
+    print_log(
+      `[Cleanup] Removed ${removed} stale session(s). Active sessions: ${global.userSession.size}`,
+    )
+  }
+}, CLEANUP_INTERVAL_MS)

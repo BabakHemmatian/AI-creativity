@@ -3,6 +3,25 @@ import axios from "axios"
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not set")
 
+async function withRetry(fn, maxRetries = 3) {
+  let delay = 1000
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn()
+    } catch (err) {
+      const status = err?.response?.status
+      const isRetryable =
+        status === 429 || (status >= 500 && status < 600) || !status
+      if (attempt === maxRetries || !isRetryable) throw err
+      console.warn(
+        `OpenAI request failed with status ${status} (attempt ${attempt + 1}/${maxRetries}), retrying in ${delay}ms...`,
+      )
+      await new Promise((r) => setTimeout(r, delay))
+      delay *= 2
+    }
+  }
+}
+
 const MODEL = process.env.OPENAI_MODEL || "gpt-5"
 const OPENAI_URL = "https://api.openai.com/v1/responses"
 
@@ -66,7 +85,7 @@ const extractOutputText = (data) => {
             Array.isArray(c?.content)
           ) {
             const t = c.content.find(
-              (x) => x.type === "output_text" && typeof x.text === "string"
+              (x) => x.type === "output_text" && typeof x.text === "string",
             )
             if (t?.text?.trim()) return t.text.trim()
           }
@@ -89,20 +108,24 @@ export const generateCompletion = async (messages) => {
     text: { verbosity: "low" },
     max_output_tokens: 40,
   }
-
   try {
-    console.log("OpenAI request body:", JSON.stringify(body, null, 2))
-    const resp = await axios.post(OPENAI_URL, body, { headers })
-    const text = extractOutputText(resp.data)
+    return await withRetry(async () => {
+      const input = toInputBlocks(messages)
+      const body = { model: MODEL, instructions: INSTRUCTIONS, input }
 
-    if (!text) {
-      console.error(
-        "OpenAI Responses empty output. Raw payload:",
-        JSON.stringify(resp.data)
-      )
-      throw new Error("Empty output from OpenAI Responses API")
-    }
-    return { text }
+      console.log("OpenAI request body:", JSON.stringify(body, null, 2))
+      const resp = await axios.post(OPENAI_URL, body, { headers })
+      const text = extractOutputText(resp.data)
+
+      if (!text) {
+        console.error(
+          "OpenAI Responses empty output. Raw payload:",
+          JSON.stringify(resp.data),
+        )
+        throw new Error("Empty output from OpenAI Responses API")
+      }
+      return { text }
+    })
   } catch (err) {
     const detail = err?.response?.data || err?.message || "Unknown OpenAI error"
     console.error("OpenAI Responses error:", detail)

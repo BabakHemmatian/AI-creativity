@@ -38,7 +38,7 @@ export default async function replyMessage(socket, userId) {
         response = await chatgptReply(
           { text: NON_REPLY_PROMPT, replied: true },
           messages,
-          res
+          res,
         )
       } else {
         response = await chatgptReply(userMessage.at(-1), messages, res)
@@ -63,7 +63,7 @@ export default async function replyMessage(socket, userId) {
       await createChatMessageService(roomId, AI_UID, response.text)
       const socketId = onlineUsers.get(userId)
       if (socketId) {
-        socket.emit("getMessage", {
+        socket.server.to(socketId).emit("getMessage", {
           senderId: AI_UID,
           message: response.text,
           roomId,
