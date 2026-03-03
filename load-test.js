@@ -10,6 +10,7 @@ const stats = {
   sessionReady: 0,
   matched: 0,
   roundReady: 0,
+  userReady: 0,
   sessionStarted: 0,
   gotMessage: 0,
   selfMatch: 0,
@@ -40,6 +41,7 @@ function simulateUser(index) {
   })
 
   let matchedRoom = null
+  let matchedPartnerId = null
   let roundStarted = false
 
   socket.on("connect", () => {
@@ -63,6 +65,8 @@ function simulateUser(index) {
 
   socket.on("matchedUser", ({ data }) => {
     matchedRoom = data
+    // find the partner (the other member, not us)
+    matchedPartnerId = data?.members?.find((m) => m !== uid) ?? AI_UID
 
     if (!roundStarted) {
       roundStarted = true
@@ -95,7 +99,7 @@ function simulateUser(index) {
   })
 
   socket.on("userReady", () => {
-    stats.sessionStarted++
+    stats.userReady++
   })
 
   socket.on("startChatSession", () => {
@@ -107,7 +111,7 @@ function simulateUser(index) {
     if (matchedRoom) {
       socket.emit("sendMessage", {
         senderId: uid,
-        receiverId: AI_UID,
+        receiverId: matchedPartnerId,
         message: "A pencil can be used as a drumstick",
       })
     }
@@ -133,7 +137,7 @@ setInterval(() => {
   ).length
 
   console.log(
-    `[Stats] connected=${stats.connected} | sessionReady=${stats.sessionReady} | matched=${stats.matched} | roundReady=${stats.roundReady} | sessionStarted=${stats.sessionStarted} | messages=${stats.gotMessage} | humRooms=${humRooms} | aiRooms=${aiRooms} | stuckHUM=${stuckHumRooms} | selfMatch=${stats.selfMatch} | errors=${stats.errors}`,
+    `[Stats] connected=${stats.connected} | sessionReady=${stats.sessionReady} | matched=${stats.matched} | roundReady=${stats.roundReady} | userReady=${stats.userReady} | sessionStarted=${stats.sessionStarted} | messages=${stats.gotMessage} | humRooms=${humRooms} | aiRooms=${aiRooms} | stuckHUM=${stuckHumRooms} | selfMatch=${stats.selfMatch} | errors=${stats.errors}`,
   )
 }, 5000)
 

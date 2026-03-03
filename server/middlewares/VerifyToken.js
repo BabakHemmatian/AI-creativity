@@ -2,72 +2,71 @@
  * this file is used for firebase authentication
  */
 
-
-//You can double check your credential and maybe database url in the serviceAccountKey.json file, 
-//the one that had the compromised data and did changes. And maybe check if that new account key 
+//You can double check your credential and maybe database url in the serviceAccountKey.json file,
+//the one that had the compromised data and did changes. And maybe check if that new account key
 //has the necessary permissions in the Firebase project.
 
-import auth from "../config/firebase-config.js";
+import auth from "../config/firebase-config.js"
 
 export const VerifyToken = async (req, res, next) => {
-  const Authorization_Header = req.headers.authorization;
-  if (Authorization_Header)
-    {  
-    const token = Authorization_Header.split(" ")[1];
+  const Authorization_Header = req.headers.authorization
+  if (Authorization_Header) {
+    const token = Authorization_Header.split(" ")[1]
     try {
-      const decodeValue = await auth.verifyIdToken(token);
+      const decodeValue = await auth.verifyIdToken(token)
       if (decodeValue) {
-        req.user = decodeValue;
-        return next();
-      }
-      else 
-      {
-        console.log("Unauthorized - VerifyToken function");
-        return res.status(401).json({ message: "Unauthorized" });
+        req.user = decodeValue
+        return next()
+      } else {
+        console.log("Unauthorized - VerifyToken function")
+        return res.status(401).json({ message: "Unauthorized" })
       }
     } catch (e) {
-      console.log("Internal Error - VerifyToken function");
-      return res.status(500).json({ message: "Internal Error" });
+      console.log("Internal Error - VerifyToken function")
+      return res.status(500).json({ message: "Internal Error" })
     }
-  } 
-  else 
-  {
-    console.log("No Authorization Header - VerifyToken function");
+  } else {
+    console.log("No Authorization Header - VerifyToken function")
     console.log("Request Method: ", req.method)
-    console.log("Request URL: ", req.url);
-    console.log("Request Body: ", req.body);
-    console.log("Request Query: ", req.query);
-    console.log("Request Params: ", req.params);
-    console.log("Request Headers: ", req.headers);
-    return res.status(401).json({ message: "No Authorization Header!" });
+    console.log("Request URL: ", req.url)
+    console.log("Request Body: ", req.body)
+    console.log("Request Query: ", req.query)
+    console.log("Request Params: ", req.params)
+    console.log("Request Headers: ", req.headers)
+    return res.status(401).json({ message: "No Authorization Header!" })
   }
-};
+}
 
 export const VerifySocketToken = async (socket, next) => {
-  const handshake_auth = socket.handshake.auth;
+  const handshake_auth = socket.handshake.auth
 
-  if (handshake_auth)
-  {
-    const token = socket.handshake.auth.token;
+  if (handshake_auth) {
+    const token = socket.handshake.auth.token
+
+    // Dev bypass for load testing
+    if (
+      process.env.NODE_ENV === "development" &&
+      token?.startsWith("loadtest-")
+    ) {
+      socket.user = { uid: token }
+      return next()
+    }
+
     try {
-      const decodeValue = await auth.verifyIdToken(token);
-      if (decodeValue) 
-      {
-        socket.user = decodeValue;
-        return next();
-      }
-      else 
-      {
-        console.log("Unauthorized - VerifySocketToken function");
-        return next(new Error("Unauthorized"));
+      const decodeValue = await auth.verifyIdToken(token)
+      if (decodeValue) {
+        socket.user = decodeValue
+        return next()
+      } else {
+        console.log("Unauthorized - VerifySocketToken function")
+        return next(new Error("Unauthorized"))
       }
     } catch (e) {
-      console.log("Internal Error - VerifySocketToken function");
-      return next(new Error("Internal Error"));
+      console.log("Internal Error - VerifySocketToken function")
+      return next(new Error("Internal Error"))
     }
-  }else
-  {
-    console.log("No Authorization Header - VerifySocketToken function");
-    return next(new Error("No Authorization Header"));
+  } else {
+    console.log("No Authorization Header - VerifySocketToken function")
+    return next(new Error("No Authorization Header"))
   }
-};
+}
