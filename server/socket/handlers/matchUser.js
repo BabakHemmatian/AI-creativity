@@ -203,6 +203,16 @@ export default async function handleMatchUser(socket, { userId }) {
   } else {
     const waitingUserId = waitingHumans.values().next().value
     waitingHumans.delete(waitingUserId)
+
+    if (!onlineUsers.has(waitingUserId)) {
+      print_log(
+        `[Guard] Waiting user ${waitingUserId} is offline, re-queuing ${userId}`,
+        5,
+      )
+      waitingHumans.add(userId)
+      return
+    }
+
     if (waitingUserId === userId) {
       waitingHumans.add(userId)
       print_log(`[Guard] Prevented self-match for ${userId}`, 5)

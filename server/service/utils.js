@@ -1,4 +1,4 @@
-const SHOW_LOG = process.env.SHOW_LOG || true
+const SHOW_LOG = process.env.SHOW_LOG !== "false"
 const LOG_REPLY = true
 const LOG_HEART = false
 const LOG_COMMU = false
