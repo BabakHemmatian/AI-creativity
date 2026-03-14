@@ -83,7 +83,10 @@ export default async function handleMatchUser(socket, { userId }) {
 
     let assignedOrder, assignedItems
 
-    if (waitingHumans.size === 0) {
+    if (MATCH_CONDITION !== "ALL") {
+      assignedOrder = [MATCH_CONDITION, MATCH_CONDITION, MATCH_CONDITION]
+      assignedItems = getRandomItems()
+    } else if (waitingHumans.size === 0) {
       const [orderA] = getRandomOrderPair()
       assignedOrder = orderA
       assignedItems = getRandomItems()
