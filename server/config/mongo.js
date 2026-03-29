@@ -24,7 +24,6 @@ mongoose.connection.on("reconnected", () => {
 })
 mongoose.connection.on("error", (error) => {
   console.log("Mongo connection has an error", error)
-  mongoose.disconnect()
 })
 mongoose.connection.on("disconnected", () => {
   console.log("Mongo connection is disconnected")
