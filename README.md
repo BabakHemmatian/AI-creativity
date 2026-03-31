@@ -16,7 +16,7 @@
 
 ## Introduction
 
-We present a [new experiment platform](https://co-creativity.onrender.com/) to allow controlled study of human-AI and human-human teams during a co-creation task. We have created a cooperative version of the classic Alternate Uses Test (AUT; Guilford, 1967), where the goal is to produce as many original and practical creative uses for an everyday object as possible within a time limit. Our platform allows co-players to interact during the ideation stage before choosing their personal responses during the curation step. Our original webapp allows identical procedures to be used for human-human and human-AI pairs and experimental controls to be applied to the chat. The results can be evaluated using the same procedures as in the standard individual test of creativity. We currently use GPT-5 as the AI agent, but the platform’s modularity allows us to replace it with more or less advanced algorithms as needed. Write to [Babak Hemmatian, Ph.D.](mailto:bhemmatian2@unl.edu) with any questions or concerns. 
+We present a [new experiment platform](https://co-creativity.onrender.com/) to allow controlled study of human-AI and human-human teams during a co-creation task. We have created a cooperative version of the classic Alternate Uses Test (AUT; Guilford, 1967), where the goal is to produce as many original and practical creative uses for an everyday object as possible within a time limit. Our platform allows co-players to interact during the ideation stage before choosing their personal responses during the curation step. Our original webapp allows identical procedures to be used for human-human and human-AI pairs and experimental controls to be applied to the chat. The results can be evaluated using the same procedures as in the standard individual test of creativity. We currently use GPT-5 as the AI agent, but the platform’s modularity allows us to replace it with more or less advanced algorithms as needed. Write to [Babak Hemmatian, Ph.D.](mailto:babak.hemmatian@stonybrook.edu) with any questions or concerns. 
 
 ## How to Use
 
@@ -84,4 +84,4 @@ The link is [here.](https://github.com/foogeeks/AI-creativity/blob/3condition/se
 Please refresh the page and the chat app will restart from the round you were currently in. If the problem persists, please log out and then log in again. 
 
 ### I want to provide feedback on the chat app. Who should I contact?
-Please contact [Babak Hemmatian, Ph.D.](mailto:bhemmatian2@unl.edu).
+Please contact [Babak Hemmatian, Ph.D.](mailto:babak.hemmatian@stonybrook.edu).
