@@ -41,7 +41,7 @@ export const parseInstruction = (index, chatType) => {
   const gpt = (
     <p>
       Your partner for this round is an{" "}
-      <strong>interactive AI</strong>. Wait for its first response, then
+      <strong>interactive AI</strong>. Send 'ready' in the chat, wait for its first response, then
       interact with it however you like. 
     </p>
   );
