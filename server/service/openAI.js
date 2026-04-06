@@ -5,6 +5,7 @@ if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not set")
 
 async function withRetry(fn, maxRetries = 3) {
   let delay = 1000
+
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await fn()
@@ -12,10 +13,13 @@ async function withRetry(fn, maxRetries = 3) {
       const status = err?.response?.status
       const isRetryable =
         status === 429 || (status >= 500 && status < 600) || !status
+
       if (attempt === maxRetries || !isRetryable) throw err
+
       console.warn(
         `OpenAI request failed with status ${status} (attempt ${attempt + 1}/${maxRetries}), retrying in ${delay}ms...`,
       )
+
       await new Promise((r) => setTimeout(r, delay))
       delay *= 2
     }
@@ -30,21 +34,29 @@ const headers = {
   Authorization: `Bearer ${OPENAI_API_KEY}`,
 }
 
-const INSTRUCTIONS = `
-You are going to play a game called the Alternative Uses Test (AUT; Guilford, 1967), where you work with a user to come up with creative uses for an everyday object. You may have played this game with this or other accounts in the past but play the game as if you have never played it before. You and the user will be taking turns to speak. You will be evaluated as a team based on the originality and practical usefulness of the ideas. When prompted, start the session by sharing a creative use for the object indicated. If the user follows up with you about your responses, succinctly answer any questions and consider any advice before continuing to generate ideas one at a time. The user will also generate ideas. Feel free to build your ideas off theirs, but make sure that anything you come up with is different from the user's ideas or anything that has already been shared in the chat. Also make sure you don't suggest any of the object’s conventional uses. Do not add uninformative sentences to your answer like “Sure, here is a creative use for X”. Generate one idea at a time. Each response should be no longer than a sentence, no more than 15 words.
+const DEFAULT_INSTRUCTIONS = `
+You will work with the user to come up with as many original and practically helpful alternate uses for an everyday object as you can in 4 minutes. Assume you are playing this game for the first time. You will be evaluated as a team. You will start the conversation. Remain focused on the task and contribute while keeping interacting with the user as appropriate. Generate no more than one idea at a time. Keep your answers succinct and do not add uninformative phrases like "here is a creative use fo X". Feel free to build off of the user's ideas, but make sure that anything you come up with is different from their ideas or anything that has already been shared.
 `.trim()
 
+const INSTRUCTIONS = (process.env.AI_INS || DEFAULT_INSTRUCTIONS).trim()
+
 const seedUser = (item) =>
-  `Start the chat by sharing a creative use for ${item}.`
+  `The object you will be coming up with creative uses for is : ${item}`
 
 const toInputBlocks = (raw) => {
   const blocks = []
   const hist = Array.isArray(raw) ? raw.slice(1) : [] // skip item holder
+
   for (const m of hist) {
     if (!m || m.text == null) continue
+
     const text = String(m.text)
+
     if (m.sender === 1) {
-      blocks.push({ role: "user", content: [{ type: "input_text", text }] })
+      blocks.push({
+        role: "user",
+        content: [{ type: "input_text", text }],
+      })
     } else if (m.sender === 2) {
       blocks.push({
         role: "assistant",
@@ -55,12 +67,13 @@ const toInputBlocks = (raw) => {
 
   const first = blocks[0]
   if (!first || first.role !== "user") {
-    const item = raw?.[0]?.text || "the object"
+    const item = process.env.ITEM || raw?.[0]?.text || "the object"
     blocks.unshift({
       role: "user",
       content: [{ type: "input_text", text: seedUser(item) }],
     })
   }
+
   return blocks
 }
 
@@ -68,6 +81,7 @@ const extractOutputText = (data) => {
   if (typeof data?.output_text === "string" && data.output_text.trim()) {
     return data.output_text.trim()
   }
+
   if (Array.isArray(data?.output)) {
     for (const item of data.output) {
       if (Array.isArray(item?.content)) {
@@ -79,6 +93,7 @@ const extractOutputText = (data) => {
           ) {
             return c.text.trim()
           }
+
           if (
             c?.type === "message" &&
             c?.role === "assistant" &&
@@ -93,27 +108,30 @@ const extractOutputText = (data) => {
       }
     }
   }
-  if (typeof data?.content === "string" && data.content.trim())
+
+  if (typeof data?.content === "string" && data.content.trim()) {
     return data.content.trim()
+  }
+
   return ""
 }
 
 export const generateCompletion = async (messages) => {
-  const input = toInputBlocks(messages)
-  const body = {
-    model: MODEL,
-    instructions: INSTRUCTIONS,
-    input,
-    reasoning: { effort: "minimal" },
-    text: { verbosity: "low" },
-    max_output_tokens: 40,
-  }
   try {
     return await withRetry(async () => {
       const input = toInputBlocks(messages)
-      const body = { model: MODEL, instructions: INSTRUCTIONS, input }
+
+      const body = {
+        model: MODEL,
+        instructions: INSTRUCTIONS,
+        input,
+        reasoning: { effort: "minimal" },
+        text: { verbosity: "low" },
+        max_output_tokens: 40,
+      }
 
       console.log("OpenAI request body:", JSON.stringify(body, null, 2))
+
       const resp = await axios.post(OPENAI_URL, body, { headers })
       const text = extractOutputText(resp.data)
 
@@ -124,6 +142,7 @@ export const generateCompletion = async (messages) => {
         )
         throw new Error("Empty output from OpenAI Responses API")
       }
+
       return { text }
     })
   } catch (err) {
