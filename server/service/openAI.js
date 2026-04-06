@@ -127,7 +127,6 @@ export const generateCompletion = async (messages) => {
         input,
         reasoning: { effort: "minimal" },
         text: { verbosity: "low" },
-        max_output_tokens: 40,
       }
 
       console.log("OpenAI request body:", JSON.stringify(body, null, 2))
