@@ -18,4 +18,10 @@ export default async function handleTimeout(socket, { roomId, userId }) {
 
   userSession.set(userId, session)
   await endChatRoomService(roomId, false)
+
+  // Notify the client of the updated session so buttons render correctly
+  const socketId = onlineUsers.get(userId)
+  if (socketId) {
+    socket.server.to(socketId).emit("sessionUpdate", { session })
+  }
 }

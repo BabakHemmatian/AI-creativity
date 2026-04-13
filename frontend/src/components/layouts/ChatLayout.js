@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
 import {
   getAllUsers,
   getChatRooms,
@@ -43,7 +43,7 @@ export default function ChatLayout() {
       res.off("matchedUser").on("matchedUser", ({ data, index, session }) => {
         console.log(
           "[Socket] matchedUser received (ChatLayout)",
-          session.userId
+          session.userId,
         )
         setMatchedData({ data, session })
       })
@@ -55,7 +55,7 @@ export default function ChatLayout() {
         console.log(`getSession: received`)
         console.log(
           "[Socket:Session] Initializing session for user:",
-          currentUser.uid
+          currentUser.uid,
         )
 
         if (isRecover && session?.currentChatRoom) {
@@ -67,6 +67,14 @@ export default function ChatLayout() {
 
         setCursession(session)
         setLoad(false)
+      })
+
+      socket.current.on("sessionUpdate", ({ session }) => {
+        console.log(
+          "[Socket:Session] sessionUpdate received:",
+          session.currentI,
+        )
+        setCursession(session)
       })
     }
 
@@ -112,9 +120,9 @@ export default function ChatLayout() {
     setTimeout(ping, 40000)
   }, [])
 
-  const handleEndChatRoom = async () => {
+  const handleEndChatRoom = useCallback(async () => {
     setChatRooms([])
-  }
+  }, [])
 
   return (
     <div className="container mx-auto">
