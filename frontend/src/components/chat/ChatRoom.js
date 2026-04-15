@@ -8,9 +8,6 @@ import {
   parseEndInstruction,
 } from "../../utils/parseInstruction"
 
-const START_KEYWORD = "ready"
-const START_KEYWORDS = new Set(["Ready", "READY"]) // backward compatibility
-
 export default function ChatRoom({
   currentChat,
   currentUser,
@@ -26,6 +23,7 @@ export default function ChatRoom({
   const [change, setChange] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [scratchpad, setScratchpad] = useState("")
+
   const [countdown, setCountdown] = useState(Math.ceil(DURATION_MS / 1000))
 
   const intervalRef = useRef(null)
@@ -62,6 +60,15 @@ export default function ChatRoom({
   }, [currentChat._id])
 
   useEffect(() => {
+    currentId.current = currentChat._id
+    setReady(0)
+    setMessages([])
+    setCountdown(Math.ceil(DURATION_MS / 1000))
+    clearInterval(intervalRef.current)
+    if (prevAI) setChange(true)
+  }, [currentChat._id])
+
+  useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
@@ -91,7 +98,7 @@ export default function ChatRoom({
       setReady((prev) => prev | (data.senderId === currentUser.uid ? 2 : 1))
       setIncomingMessage({
         senderId: data.senderId,
-        message: START_KEYWORD,
+        message: "ready",
         roomId: currentId.current,
       })
     })
@@ -128,7 +135,7 @@ export default function ChatRoom({
 
     sock.on("refresh", () => {
       alert(
-        "Se ha interrumpido la conexión del otro jugador con el servidor. Por favor, actualiza esta página para reiniciar la sesión. Lamentamos las molestias.",
+        "The co-player’s connection to the server was severed. Please refresh this page to start this session again. We apologize for the inconvenience.",
       )
     })
 
@@ -142,19 +149,16 @@ export default function ChatRoom({
   }, [socket, currentUser.uid, handleEndChatRoom])
 
   useEffect(() => {
-    if (incomingMessage) {
-      setMessages((prev) => [...prev, incomingMessage])
-    }
+    incomingMessage && setMessages((prev) => [...prev, incomingMessage])
   }, [incomingMessage])
 
   useEffect(() => {
     if (currentChat.chatType === "GPT" && messages.length > 0) {
       const lastMsg = messages[messages.length - 1]
-      const normalizedLastMessage = lastMsg.message?.trim().toLowerCase()
 
       if (
         lastMsg.senderId === "GPT" &&
-        START_KEYWORDS.has(normalizedLastMessage)
+        lastMsg.message.trim().toLowerCase() === "ready"
       ) {
         setIsProcessing(false)
       }
@@ -164,18 +168,17 @@ export default function ChatRoom({
   const handleFormSubmit = async (message) => {
     console.log(`HandleFormSubmit: ${message}`)
 
-    const normalizedMessage = message.trim().toLowerCase()
-
     if (currentChat.chatType === "GPT" && isProcessing) return
+    if (currentChat.chatType === "GPT") setIsProcessing(true)
 
-    if (START_KEYWORDS.has(normalizedMessage) && ready !== 3) {
+    if (message === "ready" && ready !== 3) {
       setReady((prev) => prev | 2)
-      setMessages((prev) => [
-        ...prev,
+      setMessages([
+        ...messages,
         {
           roomId: currentId.current,
           sender: currentUser.uid,
-          message: START_KEYWORD,
+          message: "ready",
         },
       ])
 
@@ -209,43 +212,31 @@ export default function ChatRoom({
           }
         }, 500)
       }
+    } else if (ready !== 3) {
+      alert("please first type ready!")
+    } else if (currentChat.isEnd) {
+      alert("current chat room has ended, but you can match a new one")
+    } else {
+      const receiverId = currentChat.members.find(
+        (member) => member !== currentUser.uid,
+      )
 
-      return
-    }
-
-    if (ready !== 3) {
-      alert("¡Primero escribe 'listo'!")
-      return
-    }
-
-    if (currentChat.isEnd) {
-      alert("La sala de chat actual se ha cerrado, pero puedes buscar una nueva.")
-      return
-    }
-
-    if (currentChat.chatType === "GPT") {
-      setIsProcessing(true)
-    }
-
-    const receiverId = currentChat.members.find(
-      (member) => member !== currentUser.uid,
-    )
-
-    socket.current.emit("sendMessage", {
-      senderId: currentUser.uid,
-      receiverId,
-      message,
-      chatRoom: currentChat,
-    })
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        roomId: currentId.current,
-        sender: currentUser.uid,
+      socket.current.emit("sendMessage", {
+        senderId: currentUser.uid,
+        receiverId,
         message,
-      },
-    ])
+        chatRoom: currentChat,
+      })
+
+      setMessages([
+        ...messages,
+        {
+          roomId: currentId.current,
+          sender: currentUser.uid,
+          message,
+        },
+      ])
+    }
   }
 
   return (
@@ -253,15 +244,18 @@ export default function ChatRoom({
       <div className="w-full">
         <div className="p-3 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
           {currentChat.chatType === "CON" ? (
+            // CON: always text-only
             <div className="text-gray-800 dark:text-white font-semibold">
-              Agente no interactivo
+              Non-Interactive Agent
             </div>
           ) : currentChat.chatType === "HUM" &&
             currentChat.members.length === 1 ? (
+            // HUM but not yet paired
             <div className="text-gray-800 dark:text-white font-semibold">
-              Compañero humano interactivo
+              Interactive Human Partner
             </div>
           ) : (
+            // HUM OR GPT: show avatar + label via Contact
             <Contact chatRoom={currentChat} currentUser={currentUser} />
           )}
         </div>
@@ -279,7 +273,7 @@ export default function ChatRoom({
             <li className="dark:text-white" style={{ fontWeight: "bold" }}>
               <div>
                 {ready === 3 &&
-                  `El objeto para el que idearás usos creativos es: ${currentChat.instruction}`}
+                  `The object you will be coming up with creative uses for is: ${currentChat.instruction}`}
               </div>
             </li>
 
@@ -292,7 +286,7 @@ export default function ChatRoom({
               ))}
 
             <li className="dark:text-white" style={{ fontWeight: "bold" }}>
-              {`Esta sala de chat terminará en ${countdown} segundos.`}
+              {`This chat room will end in ${countdown} seconds`}
             </li>
 
             <li className="dark:text-white" style={{ fontWeight: "bold" }}>
@@ -303,12 +297,12 @@ export default function ChatRoom({
 
         <div className="p-3 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
           <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-            Bloc de notas (privado, no se envía al chat)
+            Scratchpad (private, not sent to chat)
           </label>
           <textarea
             value={scratchpad}
             onChange={(e) => setScratchpad(e.target.value)}
-            placeholder="Puedes organizar tus ideas aquí..."
+            placeholder="You can organize ideas here..."
             className="w-full p-1 text-sm rounded-md dark:bg-gray-800 dark:text-gray-300"
             rows={4}
           />

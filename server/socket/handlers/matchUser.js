@@ -20,30 +20,22 @@ const ITEMINDEX = [
   [0, 1, 2],
   [0, 2, 1],
 ]
+// ORDERS: pairs where HUM is at same index, CON and GPT are flipped
 const ORDERS = [
+  // HUM at index 0
   [
     ["HUM", "CON", "GPT"],
     ["HUM", "GPT", "CON"],
   ],
-  [
-    ["HUM", "GPT", "CON"],
-    ["HUM", "CON", "GPT"],
-  ],
+  // HUM at index 1
   [
     ["CON", "HUM", "GPT"],
     ["GPT", "HUM", "CON"],
   ],
-  [
-    ["GPT", "HUM", "CON"],
-    ["CON", "HUM", "GPT"],
-  ],
+  // HUM at index 2
   [
     ["CON", "GPT", "HUM"],
     ["GPT", "CON", "HUM"],
-  ],
-  [
-    ["GPT", "CON", "HUM"],
-    ["CON", "GPT", "HUM"],
   ],
 ]
 

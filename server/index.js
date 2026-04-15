@@ -5,6 +5,11 @@ import { Server } from "socket.io"
 
 import "./config/mongo.js"
 
+// Import models to register schemas
+import "./models/UserSession.js"
+import "./models/MatchQueue.js"
+import "./models/Match.js"
+
 import { VerifyToken, VerifySocketToken } from "./middlewares/VerifyToken.js"
 import chatRoomRoutes from "./routes/chatRoom.js"
 import chatMessageRoutes from "./routes/chatMessage.js"
