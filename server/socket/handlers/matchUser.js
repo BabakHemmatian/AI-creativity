@@ -3,11 +3,12 @@ import {
   appendChatRoomService,
   createChatRoomListService,
 } from "../../service/chatRoom.js"
-import { constResponses } from "../../config/constResponse.js"
 import { print_log } from "../../service/utils.js"
-import { DEFAULT_SESSION, MATCH_CONDITION, AI_UID } from "../constants.js"
+import { MATCH_CONDITION, AI_UID } from "../constants.js"
+import UserSession from "../../models/UserSession.js"
+import MatchQueue from "../../models/MatchQueue.js"
+import Match from "../../models/Match.js"
 
-let waitingHumans = new Set()
 let lastItem = -1
 let lastOrder = -1
 
@@ -20,6 +21,7 @@ const ITEMINDEX = [
   [0, 1, 2],
   [0, 2, 1],
 ]
+
 // ORDERS: pairs where HUM is at same index, CON and GPT are flipped
 const ORDERS = [
   // HUM at index 0
@@ -61,67 +63,57 @@ function getRandomItems() {
   return items
 }
 
-export function removeFromWaiting(userId) {
-  waitingHumans.delete(userId)
+function findComplementaryOrder(userOrder) {
+  const pair = ORDERS.find(
+    ([orderA]) => JSON.stringify(orderA) === JSON.stringify(userOrder),
+  )
+  return pair ? pair[1] : getRandomOrderPair()[1]
+}
+
+export async function removeFromWaiting(userId) {
+  await MatchQueue.updateOne(
+    { userId, status: "waiting" },
+    { status: "timed_out" },
+  )
 }
 
 export default async function handleMatchUser(socket, { userId }) {
   print_log(`Handling match for user: ${userId}`, 5)
-  let session = userSession.get(userId)
+  let session = await UserSession.findOne({ userId })
 
-  const isNewSession = !session || session.ended || session.currentI >= 3
+  const isNewSession =
+    !session || session.phase === "completed" || session.currentI >= 3
   if (isNewSession) {
-    session = { ...DEFAULT_SESSION }
-
     let assignedOrder, assignedItems
 
     if (MATCH_CONDITION !== "ALL") {
       assignedOrder = [MATCH_CONDITION, MATCH_CONDITION, MATCH_CONDITION]
       assignedItems = getRandomItems()
-    } else if (waitingHumans.size === 0) {
-      const [orderA] = getRandomOrderPair()
-      assignedOrder = orderA
-      assignedItems = getRandomItems()
-      print_log(
-        `No one waiting. Assigned order to ${userId}: ${JSON.stringify(
-          assignedOrder,
-        )}`,
-        5,
-      )
     } else {
-      const waitingUserId = waitingHumans.values().next().value
-      const waitingSession = userSession.get(waitingUserId)
-      print_log(`Found waiting user: ${waitingUserId}`, 5)
-      print_log(
-        `Waiting user's order: ${JSON.stringify(waitingSession.types)}`,
-        5,
-      )
-
-      const matchPair = ORDERS.find(
-        ([orderA]) =>
-          JSON.stringify(orderA) === JSON.stringify(waitingSession.types),
-      )
-      assignedOrder = matchPair ? matchPair[1] : getRandomOrderPair()[1]
+      assignedOrder = getRandomOrderPair()[0]
       assignedItems = getRandomItems()
       print_log(
-        `Matched complementary order for ${userId}: ${JSON.stringify(
-          assignedOrder,
-        )}`,
+        `Assigned order to ${userId}: ${JSON.stringify(assignedOrder)}`,
         5,
       )
     }
 
     const typeList = await createChatRoomListService(userId, assignedOrder)
 
-    session = {
-      ...session,
-      ended: false,
+    session = new UserSession({
+      userId,
+      phase: "waiting",
+      currentI: 0,
       types: assignedOrder,
       items: assignedItems,
-      currentI: 0,
-      currentList: typeList._id,
-    }
-    userSession.set(userId, session)
+      currentChatRoomId: null,
+      currentChatRoomListId: typeList._id.toString(),
+      createdAt: new Date(),
+      lastActivityAt: new Date(),
+      expiresAt: new Date(Date.now() + 3600 * 1000),
+      tags: [],
+    })
+    await session.save()
     print_log(
       `Final order for ${userId}: Order = ${JSON.stringify(session.types)}`,
       5,
@@ -130,12 +122,14 @@ export default async function handleMatchUser(socket, { userId }) {
 
   const curI = session.currentI
   const curItem = session.items[curI]
-  const curList = session.currentList
+  const curList = session.currentChatRoomListId
 
-  session.isMatching = true
-  userSession.set(userId, session)
+  session.phase = "matched"
+  await session.save()
 
   const io = socket.server
+
+  // Handle GPT matching
   if (MATCH_CONDITION === "GPT") {
     const newRoom = await createChatRoomService(
       [userId, AI_UID],
@@ -145,13 +139,10 @@ export default async function handleMatchUser(socket, { userId }) {
     )
     await appendChatRoomService(newRoom._id, curList)
 
-    const updatedSession = {
-      ...session,
-      isMatching: false,
-      currentChatRoom: newRoom,
-      matchedUser: AI_UID,
-    }
-    userSession.set(userId, updatedSession)
+    session.phase = "in_round"
+    session.currentChatRoomId = newRoom._id.toString()
+    session.matchedUserId = AI_UID
+    await session.save()
 
     io.to(onlineUsers.get(userId)).emit("matchedUser", {
       data: {
@@ -159,13 +150,14 @@ export default async function handleMatchUser(socket, { userId }) {
         chatType: "GPT",
         index: curI,
       },
-      session: updatedSession,
+      session: session.toObject(),
     })
 
     print_log(`[Match] ${userId} matched with GPT`, 5)
     return
   }
 
+  // Handle CON matching
   if (MATCH_CONDITION === "CON") {
     const newRoom = await createChatRoomService(
       [userId],
@@ -175,47 +167,56 @@ export default async function handleMatchUser(socket, { userId }) {
     )
     await appendChatRoomService(newRoom._id, curList)
 
-    const updatedSession = {
-      ...session,
-      isMatching: false,
-      currentChatRoom: newRoom,
-      matchedUser: null,
-    }
-    userSession.set(userId, updatedSession)
+    session.phase = "in_round"
+    session.currentChatRoomId = newRoom._id.toString()
+    session.matchedUserId = null
+    await session.save()
 
     io.to(onlineUsers.get(userId)).emit("matchedUser", {
       data: { ...newRoom.toObject(), chatType: "CON", index: curI },
-      session: updatedSession,
+      session: session.toObject(),
     })
 
     print_log(`[Match] ${userId} matched with CON (non-interactive)`, 5)
     return
   }
 
-  if (waitingHumans.size === 0) {
-    waitingHumans.add(userId)
-    print_log(`[Match] ${userId} added to waitingHumans`, 5)
-  } else {
-    const waitingUserId = waitingHumans.values().next().value
-    waitingHumans.delete(waitingUserId)
+  // Handle HUM matching: atomically dequeue a waiting user
+  const waitingUser = await MatchQueue.findOneAndUpdate(
+    {
+      status: "waiting",
+      expiresAt: { $gt: new Date() },
+    },
+    { status: "matching_in_progress" },
+    { sort: { queuedAt: 1 }, new: true },
+  )
 
-    if (!onlineUsers.has(waitingUserId)) {
+  if (waitingUser) {
+    const waitingUserId = waitingUser.userId
+    const waitingSession = await UserSession.findOne({ userId: waitingUserId })
+
+    if (!waitingSession || !onlineUsers.has(waitingUserId)) {
       print_log(
-        `[Guard] Waiting user ${waitingUserId} is offline, re-queuing ${userId}`,
+        `[Guard] Waiting user ${waitingUserId} is offline or missing, re-queuing ${userId}`,
         5,
       )
-      waitingHumans.add(userId)
+      await MatchQueue.updateOne(
+        { _id: waitingUser._id },
+        { status: "waiting" },
+      )
       return
     }
 
     if (waitingUserId === userId) {
-      waitingHumans.add(userId)
       print_log(`[Guard] Prevented self-match for ${userId}`, 5)
+      await MatchQueue.updateOne(
+        { _id: waitingUser._id },
+        { status: "waiting" },
+      )
       return
     }
 
-    const waitingSession = userSession.get(waitingUserId)
-
+    // Create chat room for HUM round
     const newRoom = await createChatRoomService(
       [userId, waitingUserId],
       curItem,
@@ -224,45 +225,77 @@ export default async function handleMatchUser(socket, { userId }) {
     )
     await appendChatRoomService(newRoom._id, curList)
 
-    const updatedSessionA = {
-      ...session,
-      isMatching: false,
-      currentChatRoom: newRoom,
-      matchedUser: waitingUserId,
-    }
+    // Determine complementary order for waiting user
+    const matchedOrder = findComplementaryOrder(session.types)
 
-    const updatedSessionB = {
-      ...waitingSession,
-      isMatching: false,
-      currentChatRoom: newRoom,
-      matchedUser: userId,
-    }
+    // Create Match document
+    const match = new Match({
+      userIdA: userId,
+      userIdB: waitingUserId,
+      userSessionIdA: session._id,
+      userSessionIdB: waitingSession._id,
+      status: "active",
+      expiresAt: new Date(Date.now() + 3600 * 1000),
+      chatRoomListId: session.currentChatRoomListId,
+      metadata: { initiatedBy: userId },
+    })
+    await match.save()
 
-    userSession.set(userId, updatedSessionA)
-    userSession.set(waitingUserId, updatedSessionB)
+    // Update both sessions
+    session.phase = "in_round"
+    session.currentChatRoomId = newRoom._id.toString()
+    session.matchedUserId = waitingUserId
+    session.matchId = match._id.toString()
+    await session.save()
 
+    waitingSession.phase = "in_round"
+    waitingSession.currentChatRoomId = newRoom._id.toString()
+    waitingSession.matchedUserId = userId
+    waitingSession.matchId = match._id.toString()
+    waitingSession.types = matchedOrder
+    await waitingSession.save()
+
+    // Update queue entry
+    await MatchQueue.updateOne(
+      { _id: waitingUser._id },
+      { status: "matched", expiresAt: new Date(Date.now() + 100 * 1000) },
+    )
+
+    // Emit to both users
     print_log(`[Emit] matchedUser to ${userId}`, 5)
     print_log(`[Emit] matchedUser to ${waitingUserId}`, 5)
 
     io.to(onlineUsers.get(userId)).emit("matchedUser", {
       data: {
         ...newRoom.toObject(),
-        chatType: updatedSessionA.types[updatedSessionA.currentI],
-        index: updatedSessionA.currentI,
+        chatType: session.types[session.currentI],
+        index: session.currentI,
       },
-      session: updatedSessionA,
+      session: session.toObject(),
     })
 
     io.to(onlineUsers.get(waitingUserId)).emit("matchedUser", {
       data: {
         ...newRoom.toObject(),
-        chatType: updatedSessionB.types[updatedSessionB.currentI],
-        index: updatedSessionB.currentI,
+        chatType: waitingSession.types[waitingSession.currentI],
+        index: waitingSession.currentI,
       },
-      session: updatedSessionB,
+      session: waitingSession.toObject(),
     })
 
     print_log(`[Match] Matched ${userId} with ${waitingUserId}`, 5)
     print_log(`Chat room created (HUM) for ${userId} and ${waitingUserId}`, 5)
+  } else {
+    // No one waiting; add self to queue
+    const queueEntry = new MatchQueue({
+      userId,
+      userSessionId: session._id,
+      types: session.types,
+      queuedAt: new Date(),
+      expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 min timeout
+      status: "waiting",
+    })
+    await queueEntry.save()
+    print_log(`[Match] ${userId} added to MatchQueue`, 5)
   }
 }

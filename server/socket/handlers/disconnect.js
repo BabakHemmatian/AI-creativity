@@ -2,31 +2,29 @@ import { print_log } from "../../service/utils.js"
 import { getKey } from "../helpers.js"
 import { removeFromWaiting } from "./matchUser.js"
 import { removeFromReady } from "./startRound.js"
+import UserSession from "../../models/UserSession.js"
 
-export default function handleDisconnect(socket) {
+export default async function handleDisconnect(socket) {
   const userId = getKey(onlineUsers, socket.id)
-  const session = userSession.get(userId)
   const now = new Date()
 
-  removeFromWaiting(userId)
+  await removeFromWaiting(userId)
   removeFromReady(userId)
 
   onlineUsers.delete(userId)
   print_log(`logout: ${userId} ${now}`, 4)
 
   try {
+    const session = await UserSession.findOne({ userId })
     if (!session) return
 
     if (recoverUser.has(userId)) {
       recoverUser.delete(userId)
-    } else if (!session.ended) {
-      const partnerId = session.matchedUser
-      if (partnerId) {
-        const partnerSession = userSession.get(partnerId)
+    } else if (session.phase !== "completed") {
+      const partnerId = session.matchedUserId
+      if (partnerId && session.currentChatRoomId) {
         const partnerSocket = onlineUsers.get(partnerId)
-        const room = partnerSession?.currentChatRoom
-
-        if (room?.chatType === "HUM") {
+        if (partnerSocket && session.types && session.types[session.currentI] === "HUM") {
           socket.to(partnerSocket).emit("refresh")
           recoverUser.add(partnerId)
         }
@@ -34,7 +32,7 @@ export default function handleDisconnect(socket) {
     }
 
     session.disconnecttime = now
-    userSession.set(userId, session)
+    await session.save()
   } catch (err) {
     print_log("disconnect: throws an error")
     print_log(err)

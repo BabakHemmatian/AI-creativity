@@ -1,32 +1,42 @@
-import { DEFAULT_SESSION, SESSION_TIME } from "../constants.js"
+import { SESSION_TIME } from "../constants.js"
 import { print_log } from "../../service/utils.js"
+import UserSession from "../../models/UserSession.js"
 
-export default function handleAddUser(socket, userId) {
+export default async function handleAddUser(socket, userId) {
   print_log(`userId: ${userId}`)
 
-  if (!userSession.has(userId)) {
-    userSession.set(userId, { ...DEFAULT_SESSION })
-  }
+  // Try to recover existing session from Mongo (not expired)
+  let session = await UserSession.findOne({
+    userId,
+    expiresAt: { $gt: new Date() },
+  })
 
-  const curTime = new Date()
-  const session = userSession.get(userId)
-  const timediff = (curTime - session.disconnecttime) / 1000
-
-  if (!session.ended && timediff < SESSION_TIME) {
+  if (session) {
     print_log("recover session", 4)
-    // Reset roundStartedFor and not_ai_replied_first_map on refresh
-    session.roundStartedFor = -1
+    // Reset state for refresh
     not_ai_replied_first_map.set(userId, false)
-    userSession.set(userId, session)
-    socket.emit("getSession", { isRecover: true, session })
-  } else if (!session.ended) {
-    print_log("session time out, start new", 4)
-    const newSession = { ...DEFAULT_SESSION }
-    userSession.set(userId, newSession)
-    socket.emit("getSession", { isRecover: false, session: newSession })
+    session.lastActivityAt = new Date()
+    await session.save()
+    socket.emit("getSession", { isRecover: true, session: session.toObject() })
   } else {
-    print_log("previous session ended, start new", 4)
-    socket.emit("getSession", { isRecover: false, session })
+    // Create new session
+    print_log("start new session", 4)
+    session = new UserSession({
+      userId,
+      phase: "waiting",
+      currentI: -1,
+      types: [],
+      items: [],
+      matchedUserId: null,
+      currentChatRoomId: null,
+      currentChatRoomListId: null,
+      createdAt: new Date(),
+      lastActivityAt: new Date(),
+      expiresAt: new Date(Date.now() + SESSION_TIME * 1000),
+      tags: [],
+    })
+    await session.save()
+    socket.emit("getSession", { isRecover: false, session: session.toObject() })
   }
 
   onlineUsers.set(userId, socket.id)
