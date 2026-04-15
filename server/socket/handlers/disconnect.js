@@ -23,9 +23,12 @@ export default async function handleDisconnect(socket) {
     } else if (session.phase !== "completed") {
       const partnerId = session.matchedUserId
       if (partnerId && session.currentChatRoomId) {
-        const partnerSocket = onlineUsers.get(partnerId)
-        if (partnerSocket && session.types && session.types[session.currentI] === "HUM") {
-          socket.to(partnerSocket).emit("refresh")
+        if (
+          onlineUsers.has(partnerId) &&
+          session.types &&
+          session.types[session.currentI] === "HUM"
+        ) {
+          socket.server.to(partnerId).emit("refresh")
           recoverUser.add(partnerId)
         }
       }

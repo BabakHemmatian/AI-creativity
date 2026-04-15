@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react"
 import Message from "./Message"
 import Contact from "./Contact"
 import ChatForm from "./ChatForm"
+import { getMessagesOfChatRoom } from "../../services/ChatService"
 import {
   parseInstruction,
   parseEndInstruction,
@@ -27,7 +28,7 @@ export default function ChatRoom({
   const [countdown, setCountdown] = useState(Math.ceil(DURATION_MS / 1000))
 
   const intervalRef = useRef(null)
-  const currentId = useRef(currentChat._id)
+  const currentId = useRef(String(currentChat._id))
   const currentChatRef = useRef(currentChat)
   const scrollRef = useRef()
 
@@ -35,9 +36,8 @@ export default function ChatRoom({
     console.log("[ChatRoom] currentChat updated:", currentChat)
 
     currentChatRef.current = currentChat
-    currentId.current = currentChat._id
+    currentId.current = String(currentChat._id)
 
-    setReady(0)
     setScratchpad("")
     setMessages([])
     setCountdown(Math.ceil(DURATION_MS / 1000))
@@ -46,26 +46,40 @@ export default function ChatRoom({
 
     if (prevAI) setChange(true)
 
-    // Only auto-start for round 0
-    if (
-      currentSession &&
-      currentSession.currentI === 0 &&
-      !currentChat.isEnd &&
-      currentChat._id &&
-      currentChat.chatType
-    ) {
-      console.log("[AutoStart] Emitting startRound for first round")
-      socket.current.emit("startRound", { userId: currentUser.uid })
-    }
-  }, [currentChat._id])
+    // On recovery (or reload), fetch existing messages from DB
+    const roomId = String(currentChat._id)
+    getMessagesOfChatRoom(roomId).then((dbMessages) => {
+      if (roomId !== currentId.current) return
+      if (dbMessages && dbMessages.length > 0) {
+        const formatted = dbMessages.map((m) => ({
+          sender: m.sender,
+          senderId: m.sender,
+          message: m.message ?? m.text ?? "",
+          roomId: String(m.chatRoomId ?? roomId),
+          createdAt: m.createdAt,
+        }))
+        setMessages(formatted)
+        setReady(3)
+      } else {
+        setReady(0)
+      }
+    }).catch(() => setReady(0))
 
-  useEffect(() => {
-    currentId.current = currentChat._id
-    setReady(0)
-    setMessages([])
-    setCountdown(Math.ceil(DURATION_MS / 1000))
-    clearInterval(intervalRef.current)
-    if (prevAI) setChange(true)
+    // Resume timer from remaining time if recovering mid-round
+    if (currentChat.remainingTime != null && currentChat.remainingTime > 0) {
+      const endTime = Date.now() + currentChat.remainingTime
+      clearInterval(intervalRef.current)
+      intervalRef.current = setInterval(() => {
+        const remaining = endTime - Date.now()
+        if (remaining <= 0) {
+          clearInterval(intervalRef.current)
+          socket.current.emit("checkRoundEnd", { userId: currentUser.uid })
+          setCountdown(0)
+        } else {
+          setCountdown(Math.ceil(remaining / 1000))
+        }
+      }, 500)
+    }
   }, [currentChat._id])
 
   useEffect(() => {
@@ -79,11 +93,13 @@ export default function ChatRoom({
     sock.on("getMessage", (data) => {
       console.log("getMessage: received")
 
-      if (data.roomId === currentId.current) {
+      if (String(data.roomId) === String(currentId.current)) {
         setIncomingMessage({
           senderId: data.senderId,
+          sender: data.senderId,
           message: data.message,
-          roomId: data.roomId,
+          roomId: data.roomId != null ? String(data.roomId) : data.roomId,
+          createdAt: data.createdAt,
         })
 
         if (["GPT", "CON"].includes(currentChatRef.current.chatType)) {
@@ -98,6 +114,7 @@ export default function ChatRoom({
       setReady((prev) => prev | (data.senderId === currentUser.uid ? 2 : 1))
       setIncomingMessage({
         senderId: data.senderId,
+        sender: data.senderId,
         message: "ready",
         roomId: currentId.current,
       })
@@ -185,29 +202,7 @@ export default function ChatRoom({
         userId: currentUser.uid,
       })
 
-      if (["GPT", "CON"].includes(currentChat.chatType)) {
-        const endTime = Date.now() + DURATION_MS
-        clearInterval(intervalRef.current)
-
-        intervalRef.current = setInterval(() => {
-          const remaining = endTime - Date.now()
-
-          if (remaining <= 0) {
-            clearInterval(intervalRef.current)
-
-            socket.current.emit("checkRoundEnd", {
-              userId: currentUser.uid,
-            })
-
-            handleEndChatRoom()
-            currentChatRef.current.isEnd = true
-            setPrevAI(true)
-            setCountdown(0)
-          } else {
-            setCountdown(Math.ceil(remaining / 1000))
-          }
-        }, 500)
-      }
+      // CON/GPT/HUM: server emits roundStarted after ready (single countdown source)
     } else if (ready !== 3) {
       alert("please first type ready!")
     } else if (currentChat.isEnd) {
@@ -274,7 +269,11 @@ export default function ChatRoom({
             </li>
 
             {messages
-              .filter((mess) => mess.roomId === currentId.current)
+              .filter(
+                (mess) =>
+                  String(mess.roomId ?? mess.chatRoomId ?? "") ===
+                  String(currentId.current),
+              )
               .map((message, index) => (
                 <div key={index} ref={scrollRef}>
                   <Message message={message} self={currentUser.uid} />

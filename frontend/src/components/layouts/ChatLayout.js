@@ -51,18 +51,19 @@ export default function ChatLayout() {
       socket.current.emit("addUser", currentUser.uid)
       setLoad(true)
 
-      socket.current.on("getSession", ({ isRecover, session }) => {
-        console.log(`getSession: received`)
-        console.log(
-          "[Socket:Session] Initializing session for user:",
-          currentUser.uid,
-        )
+      socket.current.on("getSession", ({ isRecover, session, chatRoom, remainingTime }) => {
+        console.log(`[Socket:Session] getSession received, isRecover=${isRecover}, phase=${session?.phase}`)
 
-        if (isRecover && session?.currentChatRoom) {
-          const curroom = session.currentChatRoom
-          curroom.index = session.currentI
-          setCurrentChat(curroom)
-          setChatRooms([curroom])
+        if (isRecover && chatRoom) {
+          console.log("[Socket:Session] Recovering chat room:", chatRoom._id)
+          if (remainingTime != null) {
+            chatRoom.remainingTime = remainingTime
+          }
+          setCurrentChat(chatRoom)
+          setChatRooms([chatRoom])
+        } else if (isRecover && session?.phase === "matched" && session.currentI === 0) {
+          console.log("[Socket:Session] Recovering matched state, auto-starting round 0")
+          socket.current.emit("startRound", { userId: currentUser.uid })
         }
 
         setCursession(session)

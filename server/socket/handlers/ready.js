@@ -1,9 +1,11 @@
 import { print_log } from "../../service/utils.js"
 import replyMessage from "../replyMessage.js"
 import { AI_UID } from "../constants.js"
+import UserSession from "../../models/UserSession.js"
 
 const WAIT_TIME = Number(process.env.WAIT_TIME) || 5
 const WAIT_TIME_DIFF = Number(process.env.WAIT_TIME_DIFF) || 2
+const DURATION_MS = (Number(process.env.REACT_APP_SESSION_TIME) || 240) * 1000
 
 function jitterMs(baseSecs, diffSecs, multiplier) {
   const delta =
@@ -12,12 +14,11 @@ function jitterMs(baseSecs, diffSecs, multiplier) {
   return secs * multiplier
 }
 
-export default function handleReady(socket, { chatRoom, userId }) {
+export default async function handleReady(socket, { chatRoom, userId }) {
   const curType = chatRoom.chatType
-  const curId = chatRoom._id.toString()
+  const curId = String(chatRoom._id)
 
   if (curType !== "HUM") {
-    // Local constants per call — avoids shared state mutation across concurrent users
     let waitTime = WAIT_TIME
     let waitTimeDiff = WAIT_TIME_DIFF
     let multiplier = 1000
@@ -31,16 +32,50 @@ export default function handleReady(socket, { chatRoom, userId }) {
       multiplier = 1000
     }
 
+    const sess = await UserSession.findOne({ userId })
+    if (
+      !sess ||
+      String(sess.currentChatRoomId) !== curId ||
+      sess.phase !== "in_round"
+    ) {
+      print_log(`[Ready] ${curType} invalid session or room`, 2)
+      return
+    }
+    if (sess.roundStartedAt) {
+      print_log(`[Ready] ${curType} round clock already started`, 4)
+      return
+    }
+
+    sess.roundStartedAt = new Date()
+    await sess.save()
+
+    const io = socket.server
+    const expectedEndTime = Date.now() + DURATION_MS
+    const curI = sess.currentI
+    io.to(userId).emit("roundStarted", {
+      roundId: curId,
+      expectedEndTime,
+      phase: "in_round",
+      data: {
+        _id: curId,
+        members: chatRoom.members,
+        chatType: curType,
+        index: curI,
+        instruction: sess.items[curI],
+        isEnd: false,
+      },
+    })
+
     socket.emit("userReady", { senderId: AI_UID })
 
     setTimeout(
       async function chatLoop() {
-        const session = userSession.get(userId)
-        const room = session?.currentChatRoom
+        const session = await UserSession.findOne({ userId })
+        const roomId = session?.currentChatRoomId
 
-        if (room && room._id.toString() === curId) {
+        if (session && roomId === curId && session.phase === "in_round") {
           try {
-            await replyMessage(socket, userId)
+            await replyMessage(socket, userId, session)
           } catch (err) {
             print_log(`chatLoop: AI reply failed for ${userId}`, -1)
             print_log(err)
@@ -57,26 +92,75 @@ export default function handleReady(socket, { chatRoom, userId }) {
       jitterMs(waitTime, waitTimeDiff, multiplier),
     )
   } else {
-    const roomId = chatRoom._id.toString()
+    const roomId = String(chatRoom._id)
     if (!global.readyMap) global.readyMap = new Map()
     if (!global.readyMap.has(roomId)) {
       global.readyMap.set(roomId, new Set())
     }
 
+    const otherUser = chatRoom.members?.find((m) => m !== userId)
+    if (!otherUser) {
+      print_log(`[Ready] HUM chatRoom missing counterpart for ${userId}`, 2)
+      return
+    }
+    const io = socket.server
+    if (!onlineUsers.has(otherUser)) {
+      print_log(`[Ready] HUM partner ${otherUser} has no socket (offline?)`, 2)
+      return
+    }
+
     const readySet = global.readyMap.get(roomId)
     readySet.add(userId)
 
-    const otherUser = chatRoom.members.find((m) => m !== userId)
-    const otherSocket = onlineUsers.get(otherUser)
-    socket.to(otherSocket).emit("userReady", { senderId: userId })
+    io.to(otherUser).emit("userReady", { senderId: userId })
 
     if (readySet.size === 2) {
-      const now = Date.now()
-      socket.emit("startChatSession", { startTime: now })
-      socket.to(otherSocket).emit("startChatSession", { startTime: now })
-
-      print_log(`[Server:Ready] Both users ready. Session started at ${now}`, 5)
+      const [uidA, uidB] = [...readySet]
       global.readyMap.delete(roomId)
+
+      const [sessA, sessB] = await Promise.all([
+        UserSession.findOne({ userId: uidA }),
+        UserSession.findOne({ userId: uidB }),
+      ])
+      if (!sessA || !sessB) {
+        print_log("[Ready] HUM missing session when both ready", 1)
+        return
+      }
+
+      const now = new Date()
+      sessA.roundStartedAt = now
+      sessB.roundStartedAt = now
+      await sessA.save()
+      await sessB.save()
+
+      const curI = sessA.currentI
+      const instruction = sessA.items[curI]
+      const payload = {
+        _id: curId,
+        members: chatRoom.members?.length
+          ? chatRoom.members
+          : [uidA, uidB],
+        chatType: "HUM",
+        index: curI,
+        instruction,
+        isEnd: false,
+      }
+
+      const expectedEndTime = Date.now() + DURATION_MS
+      const emitSessionStart = (uid) => {
+        io.to(uid).emit("startChatSession", { startTime: now.getTime() })
+        io.to(uid).emit("roundStarted", {
+          roundId: curId,
+          expectedEndTime,
+          phase: "in_round",
+          data: payload,
+        })
+      }
+
+      emitSessionStart(uidA)
+      emitSessionStart(uidB)
+
+      print_log(`[Server:Ready] HUM both ready; round clock started at ${now.toISOString()}`, 5)
     }
   }
 }

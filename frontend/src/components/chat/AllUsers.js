@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react"
-import Contact from "./Contact"
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ")
@@ -44,69 +43,35 @@ export default function AllUsers({
     if (chatRooms.length === 0) setMatching(false)
   }, [chatRooms])
 
+  // Single handler for all matchedUser events (from matchUser AND startRound)
   useEffect(() => {
     if (!matchedData) return
 
     const { data, session } = matchedData
     const curIndex = session.currentI
-    const chatType = session.types[curIndex]
 
-    data.index = curIndex
-    data.chatType = chatType
-
-    setPendingChat(data)
     setCurrentSession(session)
-    setHasRoom(true)
     setMatching(false)
-
-    if (curIndex === 0) {
-      setCurrentChat(data)
-      socket.current.emit("startRound", { userId: currentUser.uid })
-
-      // Preload pendingChat for next round
-      const nextIndex = 1
-      const nextChatRoom = chatRooms.find(
-        (room) =>
-          !room.isEnd &&
-          room.index === nextIndex &&
-          room.chatType === session.types[nextIndex],
-      )
-      if (nextChatRoom) {
-        nextChatRoom.index = nextIndex
-        nextChatRoom.chatType = session.types[nextIndex]
-        setPendingChat(nextChatRoom)
-      } else {
-        setPendingChat(null)
-      }
-    }
-
     setMatchedData(null)
-  }, [matchedData])
 
-  useEffect(() => {
-    const sock = socket.current
-    if (!sock) return
-
-    const handleMatchedUser = ({ data, index, session }) => {
-      console.log("[Socket] matchedUser received in AllUsers.js", data)
-
-      data.index = index
-      data.chatType = session.types[index]
-
-      setCurrentSession(session)
+    if (data && data._id) {
+      // Real room data from startRound — display the chat room
+      data.index = curIndex
+      data.chatType = session.types[curIndex]
       setPendingChat(data)
-      if (index === 0) {
-        setCurrentChat(data)
+      setCurrentChat(data)
+      setHasRoom(true)
+      setLoadingStart(false)
+    } else {
+      // Pairing only (from matchUser, no room yet) — auto-start round 0
+      setHasRoom(true)
+      if (curIndex === 0) {
+        console.log("[AllUsers] Paired, auto-starting round 0")
         socket.current.emit("startRound", { userId: currentUser.uid })
+        setLoadingStart(true)
       }
     }
-
-    sock.on("matchedUser", handleMatchedUser)
-
-    return () => {
-      sock.off("matchedUser", handleMatchedUser)
-    }
-  }, [socket, setCurrentChat, setCurrentSession])
+  }, [matchedData])
 
   const handleMatchNewUser = () => {
     if (!matching && !hasRoom) {
@@ -120,6 +85,7 @@ export default function AllUsers({
       }, 100)
     }
   }
+
   const handleStartClick = () => {
     if (
       socket &&
@@ -164,17 +130,27 @@ export default function AllUsers({
           )}
         </li>
         <li>
+          {loadingStart && !currentChat?.isEnd && (
+            <div className="dark:text-white flex items-center px-3 py-2 text-sm gap-2">
+              <span className="spinner"></span>
+              {currentSession?.types?.[currentSession.currentI] === "HUM"
+                ? "Waiting for partner to join..."
+                : "Loading round..."}
+            </div>
+          )}
+        </li>
+        <li>
           {currentSession &&
             currentSession.currentI > -1 &&
             currentSession.currentI < 3 &&
-            currentChat?.isEnd && (
+            (currentChat?.isEnd || currentSession.phase === "round_ended") && (
               <button
                 className="dark:text-white transition duration-150 ease-in-out cursor-pointer bg-white border-b border-gray-200 hover:bg-gray-100 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-gray-700 flex items-center px-3 py-2 text-sm gap-2"
                 onClick={handleStartClick}
                 disabled={loadingStart}
               >
                 {loadingStart ? (
-                  currentSession.types[currentSession.currentI + 1] ===
+                  currentSession.types[currentSession.currentI] ===
                   "HUM" ? (
                     <>
                       <span className="spinner"></span>

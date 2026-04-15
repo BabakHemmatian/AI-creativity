@@ -81,9 +81,17 @@ export default async function handleMatchUser(socket, { userId }) {
   print_log(`Handling match for user: ${userId}`, 5)
   let session = await UserSession.findOne({ userId })
 
+  // Treat addUser placeholder (currentI -1 / no study order) as needing a fresh study session
   const isNewSession =
-    !session || session.phase === "completed" || session.currentI >= 3
+    !session ||
+    session.phase === "completed" ||
+    session.currentI >= 3 ||
+    session.currentI < 0 ||
+    !session.types?.length
   if (isNewSession) {
+    // Avoid duplicate UserSession docs per userId (addUser placeholder, completed runs, etc.)
+    await UserSession.deleteMany({ userId })
+
     let assignedOrder, assignedItems
 
     if (MATCH_CONDITION !== "ALL") {
@@ -124,9 +132,6 @@ export default async function handleMatchUser(socket, { userId }) {
   const curItem = session.items[curI]
   const curList = session.currentChatRoomListId
 
-  session.phase = "matched"
-  await session.save()
-
   const io = socket.server
 
   // Handle GPT matching
@@ -142,9 +147,10 @@ export default async function handleMatchUser(socket, { userId }) {
     session.phase = "in_round"
     session.currentChatRoomId = newRoom._id.toString()
     session.matchedUserId = AI_UID
+    session.roundStartedAt = null
     await session.save()
 
-    io.to(onlineUsers.get(userId)).emit("matchedUser", {
+    io.to(userId).emit("matchedUser", {
       data: {
         ...newRoom.toObject(),
         chatType: "GPT",
@@ -170,9 +176,10 @@ export default async function handleMatchUser(socket, { userId }) {
     session.phase = "in_round"
     session.currentChatRoomId = newRoom._id.toString()
     session.matchedUserId = null
+    session.roundStartedAt = null
     await session.save()
 
-    io.to(onlineUsers.get(userId)).emit("matchedUser", {
+    io.to(userId).emit("matchedUser", {
       data: { ...newRoom.toObject(), chatType: "CON", index: curI },
       session: session.toObject(),
     })
@@ -216,15 +223,6 @@ export default async function handleMatchUser(socket, { userId }) {
       return
     }
 
-    // Create chat room for HUM round
-    const newRoom = await createChatRoomService(
-      [userId, waitingUserId],
-      curItem,
-      "HUM",
-      curList,
-    )
-    await appendChatRoomService(newRoom._id, curList)
-
     // Determine complementary order for waiting user
     const matchedOrder = findComplementaryOrder(session.types)
 
@@ -241,15 +239,13 @@ export default async function handleMatchUser(socket, { userId }) {
     })
     await match.save()
 
-    // Update both sessions
-    session.phase = "in_round"
-    session.currentChatRoomId = newRoom._id.toString()
+    // Update both sessions — paired but no room yet (startRound creates rooms)
+    session.phase = "matched"
     session.matchedUserId = waitingUserId
     session.matchId = match._id.toString()
     await session.save()
 
-    waitingSession.phase = "in_round"
-    waitingSession.currentChatRoomId = newRoom._id.toString()
+    waitingSession.phase = "matched"
     waitingSession.matchedUserId = userId
     waitingSession.matchId = match._id.toString()
     waitingSession.types = matchedOrder
@@ -261,30 +257,21 @@ export default async function handleMatchUser(socket, { userId }) {
       { status: "matched", expiresAt: new Date(Date.now() + 100 * 1000) },
     )
 
-    // Emit to both users
+    // Emit to both users — no room data; frontend will call startRound
     print_log(`[Emit] matchedUser to ${userId}`, 5)
     print_log(`[Emit] matchedUser to ${waitingUserId}`, 5)
 
-    io.to(onlineUsers.get(userId)).emit("matchedUser", {
-      data: {
-        ...newRoom.toObject(),
-        chatType: session.types[session.currentI],
-        index: session.currentI,
-      },
+    io.to(userId).emit("matchedUser", {
+      data: null,
       session: session.toObject(),
     })
 
-    io.to(onlineUsers.get(waitingUserId)).emit("matchedUser", {
-      data: {
-        ...newRoom.toObject(),
-        chatType: waitingSession.types[waitingSession.currentI],
-        index: waitingSession.currentI,
-      },
+    io.to(waitingUserId).emit("matchedUser", {
+      data: null,
       session: waitingSession.toObject(),
     })
 
-    print_log(`[Match] Matched ${userId} with ${waitingUserId}`, 5)
-    print_log(`Chat room created (HUM) for ${userId} and ${waitingUserId}`, 5)
+    print_log(`[Match] Paired ${userId} with ${waitingUserId}`, 5)
   } else {
     // No one waiting; add self to queue
     const queueEntry = new MatchQueue({

@@ -3,7 +3,7 @@ import {
   appendChatRoomService,
 } from "../../service/chatRoom.js"
 import { print_log } from "../../service/utils.js"
-import { AI_UID } from "../constants.js"
+import { AI_UID, MATCH_CONDITION } from "../constants.js"
 import { constResponses } from "../../config/constResponse.js"
 import UserSession from "../../models/UserSession.js"
 
@@ -21,6 +21,18 @@ export default async function handleStartRound(socket, { userId }) {
 
   if (!session || session.phase === "completed" || session.currentI >= 3) {
     print_log(`[StartRound] Invalid session for user: ${userId}`, 2)
+    return
+  }
+
+  // Idempotency: if this round is already running with a room, skip
+  if (session.phase === "in_round" && session.currentChatRoomId) {
+    print_log(`[StartRound] Round already in progress for ${userId}, skipping`, 4)
+    return
+  }
+
+  // Human–human study: do not open solo CON/GPT rounds until a partner exists
+  if (MATCH_CONDITION === "ALL" && !session.matchedUserId) {
+    print_log(`[StartRound] Not paired yet for ${userId}`, 4)
     return
   }
 
@@ -74,12 +86,13 @@ export default async function handleStartRound(socket, { userId }) {
 
       session.currentChatRoomId = newRoom._id.toString()
       session.phase = "in_round"
-      session.roundStartedAt = new Date()
+      // HUM: clock + roundStarted event only after both users send "ready" (see ready.js)
+      session.roundStartedAt = null
       await session.save()
 
       otherSession.currentChatRoomId = newRoom._id.toString()
       otherSession.phase = "in_round"
-      otherSession.roundStartedAt = new Date()
+      otherSession.roundStartedAt = null
       await otherSession.save()
 
       print_log(
@@ -99,34 +112,17 @@ export default async function handleStartRound(socket, { userId }) {
       isEnd: false,
     }
 
-    const roundEndTime = new Date(Date.now() + DURATION_MS)
-
-    // Emit matchedUser for UI update (new room data)
-    io.to(onlineUsers.get(userId)).emit("matchedUser", {
+    // Emit matchedUser for UI (room open); do NOT emit roundStarted until both humans ready
+    io.to(userId).emit("matchedUser", {
       data: chatRoomPayload,
       index: curI,
       session: session.toObject(),
     })
 
-    io.to(onlineUsers.get(otherUserId)).emit("matchedUser", {
+    io.to(otherUserId).emit("matchedUser", {
       data: chatRoomPayload,
       index: curI,
       session: otherSession.toObject(),
-    })
-
-    // Emit roundStarted for timer countdown
-    io.to(onlineUsers.get(userId)).emit("roundStarted", {
-      roundId: session.currentChatRoomId,
-      expectedEndTime: roundEndTime.getTime(),
-      phase: "in_round",
-      data: chatRoomPayload,
-    })
-
-    io.to(onlineUsers.get(otherUserId)).emit("roundStarted", {
-      roundId: session.currentChatRoomId,
-      expectedEndTime: roundEndTime.getTime(),
-      phase: "in_round",
-      data: chatRoomPayload,
     })
 
     readyForRound.delete(userId)
@@ -160,7 +156,8 @@ export default async function handleStartRound(socket, { userId }) {
 
   session.currentChatRoomId = newRoom._id.toString()
   session.phase = "in_round"
-  session.roundStartedAt = new Date()
+  // CON/GPT: clock starts only after user sends "ready" (see ready.js)
+  session.roundStartedAt = null
   await session.save()
 
   chatMessage.set(userId, [{ text: curItem, sender: 0, replied: true }])
@@ -174,21 +171,11 @@ export default async function handleStartRound(socket, { userId }) {
     isEnd: false,
   }
 
-  const roundEndTime = new Date(Date.now() + DURATION_MS)
-
-  // Emit matchedUser for UI update (new room data)
-  io.to(onlineUsers.get(userId)).emit("matchedUser", {
+  // Emit matchedUser for UI; roundStarted is emitted from ready.js after "ready"
+  io.to(userId).emit("matchedUser", {
     data: chatRoomPayload,
     index: curI,
     session: session.toObject(),
-  })
-
-  // Emit roundStarted for timer countdown
-  io.to(onlineUsers.get(userId)).emit("roundStarted", {
-    roundId: newRoom._id.toString(),
-    expectedEndTime: roundEndTime.getTime(),
-    phase: "in_round",
-    data: chatRoomPayload,
   })
 
   print_log(`[StartRound] ${curType} room created for ${userId}`, 5)

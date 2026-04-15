@@ -21,6 +21,14 @@ export default async function handleCheckRoundEnd(socket, { userId }) {
     return
   }
 
+  if (!session.roundStartedAt) {
+    print_log(
+      `[CheckRoundEnd] No round clock yet (e.g. HUM waiting for both ready) for ${userId}`,
+      4,
+    )
+    return
+  }
+
   const now = Date.now()
   const roundEndTime =
     session.roundStartedAt.getTime() + DURATION_MS
@@ -33,14 +41,16 @@ export default async function handleCheckRoundEnd(socket, { userId }) {
     return
   }
 
-  // Round is over; advance session
+  // Round is over; end the chat room first
   const curI = session.currentI
+  if (session.currentChatRoomId) {
+    await endChatRoomService(session.currentChatRoomId, false)
+  }
+
   if (curI === 2) {
-    // Last round; session complete
     session.phase = "completed"
     session.currentI = 3
   } else {
-    // Move to next round
     session.phase = "round_ended"
     session.currentI = curI + 1
     session.currentChatRoomId = null
@@ -48,16 +58,23 @@ export default async function handleCheckRoundEnd(socket, { userId }) {
 
   await session.save()
 
-  if (session.currentChatRoomId) {
-    await endChatRoomService(session.currentChatRoomId, false)
-  }
+  const io = socket.server
+  const payload = { session: session.toObject() }
 
-  // Notify client of updated session
-  const socketId = onlineUsers.get(userId)
-  if (socketId) {
-    socket.server.to(socketId).emit("sessionUpdate", {
-      session: session.toObject(),
-    })
+  io.to(userId).emit("sessionUpdate", payload)
+
+  const partnerId = session.matchedUserId
+  if (partnerId) {
+    const partner = await UserSession.findOne({ userId: partnerId })
+    if (partner) {
+      partner.phase = session.phase
+      partner.currentI = session.currentI
+      partner.currentChatRoomId = session.currentChatRoomId
+      await partner.save()
+      io.to(partnerId).emit("sessionUpdate", {
+        session: partner.toObject(),
+      })
+    }
   }
 
   print_log(`[CheckRoundEnd] ${userId} advanced to round ${session.currentI}`, 5)

@@ -16,6 +16,7 @@ const UserSessionSchema = mongoose.Schema(
     lastActivityAt: Date,
     expiresAt: Date,                   // TTL field
     disconnecttime: Date,              // When user went offline
+    conMes: [String],                   // Shuffled CON responses for current round
     tags: [String],                    // Metadata: ["error_code", "retry_count"]
   },
   { timestamps: true }

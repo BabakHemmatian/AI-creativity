@@ -4,11 +4,10 @@ import { generateConReply } from "../service/constantReply.js"
 import { createChatMessageService } from "../service/chatMessage.js"
 import { AI_UID, NON_REPLY_PROMPT } from "./constants.js"
 
-export default async function replyMessage(socket, userId) {
-  const session = userSession.get(userId)
-  const room = session?.currentChatRoom
+export default async function replyMessage(socket, userId, session) {
+  const roomId = session?.currentChatRoomId
 
-  if (!session || !room) {
+  if (!session || !roomId) {
     print_log(`reply_message: missing session or room for user ${userId}`, -1)
     return
   }
@@ -18,13 +17,15 @@ export default async function replyMessage(socket, userId) {
       not_ai_replied_first_map.set(userId, false)
     }
 
-    const roomId = room._id.toString()
     let messages = chatMessage.get(userId)
-    const types = session.types
-    const items = session.items
+    if (!messages) {
+      print_log(`reply_message: no chatMessage buffer for ${userId}`, -1)
+      return
+    }
+
     const curI = session.currentI
-    const curType = types[curI]
-    const curItem = items[curI]
+    const curType = session.types[curI]
+    const curItem = session.items[curI]
     let response = null
 
     if (curType === "CHT") {
@@ -56,19 +57,17 @@ export default async function replyMessage(socket, userId) {
       not_ai_replied_first_map.set(userId, true)
     } else {
       response = await generateConReply(messages, session.conMes)
-      messages.push({ text: response, sender: 2, replied: true })
+      messages.push({ text: response.text, sender: 2, replied: true })
     }
 
-    if (response?.text) {
-      await createChatMessageService(roomId, AI_UID, response.text)
-      const socketId = onlineUsers.get(userId)
-      if (socketId) {
-        socket.server.to(socketId).emit("getMessage", {
-          senderId: AI_UID,
-          message: response.text,
-          roomId,
-        })
-      }
+    const replyText = response?.text ?? response
+    if (replyText) {
+      await createChatMessageService(roomId, AI_UID, replyText)
+      socket.server.to(userId).emit("getMessage", {
+        senderId: AI_UID,
+        message: replyText,
+        roomId,
+      })
     }
   } catch (err) {
     print_log(`replyMessage error for ${userId}`, -1)

@@ -4,27 +4,35 @@ import { AI_UID } from "../constants.js"
 
 export default async function handleSendMessage(
   socket,
-  { senderId, receiverId, message }
+  { senderId, receiverId, message, chatRoom }
 ) {
-  const session = userSession.get(senderId)
-  const room = session?.currentChatRoom
+  const roomId = chatRoom?._id != null ? String(chatRoom._id) : null
 
-  if (!room) {
+  if (!roomId) {
     print_log(`sendMessage: room is undefined or null for ${senderId}`)
     return
   }
 
-  const roomId = room._id.toString()
   const trimmed = message.trim()
+  const io = socket.server
 
-  if (receiverId !== AI_UID) {
-    const receiverSocket = onlineUsers.get(receiverId)
-    if (receiverSocket) {
-      socket
-        .to(receiverSocket)
-        .emit("getMessage", { senderId, message: trimmed, roomId })
+  // CON rooms only include the human in `members`, so the client sends no receiverId.
+  // Route those messages into the same in-memory buffer as GPT→AI traffic.
+  const effectiveReceiver =
+    receiverId ||
+    (chatRoom?.chatType === "CON" ? AI_UID : receiverId)
+
+  if (effectiveReceiver && effectiveReceiver !== AI_UID) {
+    if (onlineUsers.has(effectiveReceiver)) {
+      io.to(effectiveReceiver).emit("getMessage", {
+        senderId,
+        message: trimmed,
+        roomId,
+      })
+    } else {
+      print_log(`sendMessage: receiver ${effectiveReceiver} offline, no socket`, 2)
     }
-    print_log(`sendMessage: ${senderId} to ${receiverId}`, 3)
+    print_log(`sendMessage: ${senderId} to ${effectiveReceiver}`, 3)
   } else {
     const messages = chatMessage.get(senderId)
     messages?.push({ text: trimmed, sender: 1, replied: false })
