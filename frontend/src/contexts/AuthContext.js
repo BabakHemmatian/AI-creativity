@@ -1,6 +1,8 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import {
+  browserSessionPersistence,
   createUserWithEmailAndPassword,
+  setPersistence,
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
@@ -8,6 +10,9 @@ import {
 import auth from "../config/firebase";
 
 const AuthContext = createContext(null);
+
+const SESSION_MAX_MS = 60 * 60 * 1000; // 1 hour
+const LOGIN_TS_KEY = "auth_login_ts";
 
 export function useAuth() {
   return useContext(AuthContext);
@@ -17,42 +22,85 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const logoutTimerRef = useRef(null);
 
-  function register(email, password) {
-    return createUserWithEmailAndPassword(auth, email, password);
+  function scheduleAutoLogout() {
+    if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current);
+
+    const loginTs = Number(sessionStorage.getItem(LOGIN_TS_KEY) || 0);
+    if (!loginTs) return;
+
+    const remaining = SESSION_MAX_MS - (Date.now() - loginTs);
+    if (remaining <= 0) {
+      signOut(auth);
+      sessionStorage.removeItem(LOGIN_TS_KEY);
+      return;
+    }
+    logoutTimerRef.current = setTimeout(() => {
+      signOut(auth);
+      sessionStorage.removeItem(LOGIN_TS_KEY);
+    }, remaining);
   }
 
-  function login(email, password) {
-    return signInWithEmailAndPassword(auth, email, password);
+  async function register(email, password) {
+    await setPersistence(auth, browserSessionPersistence);
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    sessionStorage.setItem(LOGIN_TS_KEY, String(Date.now()));
+    return cred;
+  }
+
+  async function login(email, password) {
+    await setPersistence(auth, browserSessionPersistence);
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    sessionStorage.setItem(LOGIN_TS_KEY, String(Date.now()));
+    return cred;
   }
 
   function logout() {
+    if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current);
+    sessionStorage.removeItem(LOGIN_TS_KEY);
     return signOut(auth);
   }
 
-  // ✅ Ensures avatar updates show immediately and triggers React rerender
   async function updateUserProfile(user, profile) {
-    // Use the live auth user if caller passed something stale
     const targetUser = auth.currentUser || user;
     if (!targetUser) throw new Error("No authenticated user");
 
     await updateProfile(targetUser, profile);
 
-    // refresh auth.currentUser fields like photoURL/displayName
     if (typeof targetUser.reload === "function") {
       await targetUser.reload();
     }
 
-    // IMPORTANT: clone to force rerender (Firebase user object is mutable)
     setCurrentUser(auth.currentUser ? { ...auth.currentUser } : null);
   }
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
-      setCurrentUser(user ? { ...user } : null);
+      if (user) {
+        const loginTs = Number(sessionStorage.getItem(LOGIN_TS_KEY) || 0);
+        if (loginTs && Date.now() - loginTs > SESSION_MAX_MS) {
+          signOut(auth);
+          sessionStorage.removeItem(LOGIN_TS_KEY);
+          setCurrentUser(null);
+          setLoading(false);
+          return;
+        }
+        if (!loginTs) {
+          sessionStorage.setItem(LOGIN_TS_KEY, String(Date.now()));
+        }
+        scheduleAutoLogout();
+        setCurrentUser({ ...user });
+      } else {
+        if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current);
+        setCurrentUser(null);
+      }
       setLoading(false);
     });
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+      if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current);
+    };
   }, []);
 
   const value = {

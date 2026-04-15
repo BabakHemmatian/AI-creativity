@@ -22,6 +22,13 @@ import { print_log } from "./service/utils.js"
 // Load env variables
 dotenv.config()
 
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("[FATAL] Unhandled promise rejection:", reason)
+})
+process.on("uncaughtException", (err) => {
+  console.error("[FATAL] Uncaught exception:", err)
+})
+
 const app = express()
 
 /** Middleware */
@@ -66,33 +73,41 @@ const CLEANUP_INTERVAL_MS = 30 * 60 * 1000
 const STALE_THRESHOLD_MS = 30 * 60 * 1000
 
 setInterval(() => {
-  const now = Date.now()
   let removed = 0
 
-  for (const [userId, session] of global.userSession.entries()) {
-    // Skip users who are currently online
+  const allTrackedUsers = new Set([
+    ...global.chatMessage.keys(),
+    ...global.userToRes.keys(),
+    ...global.not_ai_replied_first_map.keys(),
+    ...global.userToRoom.keys(),
+    ...global.userToTypes.keys(),
+    ...global.userToList.keys(),
+    ...global.userSession.keys(),
+  ])
+
+  for (const userId of allTrackedUsers) {
     if (global.onlineUsers.has(userId)) continue
 
-    const disconnectedAt = session?.disconnecttime
-      ? new Date(session.disconnecttime).getTime()
-      : 0
-    const isStale = now - disconnectedAt > STALE_THRESHOLD_MS
+    global.userSession.delete(userId)
+    global.chatMessage.delete(userId)
+    global.userToRoom.delete(userId)
+    global.userToRes.delete(userId)
+    global.userToTypes.delete(userId)
+    global.userToList.delete(userId)
+    global.not_ai_replied_first_map.delete(userId)
+    removed++
+  }
 
-    if (isStale) {
-      global.userSession.delete(userId)
-      global.chatMessage.delete(userId)
-      global.userToRoom.delete(userId)
-      global.userToRes.delete(userId)
-      global.userToTypes.delete(userId)
-      global.userToList.delete(userId)
-      global.not_ai_replied_first_map.delete(userId)
-      removed++
+  // Also prune stale recoverUser entries
+  for (const userId of global.recoverUser) {
+    if (!global.onlineUsers.has(userId)) {
+      global.recoverUser.delete(userId)
     }
   }
 
   if (removed > 0) {
     print_log(
-      `[Cleanup] Removed ${removed} stale session(s). Active sessions: ${global.userSession.size}`,
+      `[Cleanup] Removed ${removed} stale in-memory entry(s). Online users: ${global.onlineUsers.size}`,
     )
   }
 }, CLEANUP_INTERVAL_MS)

@@ -131,7 +131,7 @@ export const generateCompletion = async (messages) => {
 
       console.log("OpenAI request body:", JSON.stringify(body, null, 2))
 
-      const resp = await axios.post(OPENAI_URL, body, { headers })
+      const resp = await axios.post(OPENAI_URL, body, { headers, timeout: 30000 })
       const text = extractOutputText(resp.data)
 
       if (!text) {

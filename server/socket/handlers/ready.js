@@ -14,7 +14,35 @@ function jitterMs(baseSecs, diffSecs, multiplier) {
   return secs * multiplier
 }
 
+const readyLocks = new Map()
+const activeChatLoops = new Map()
+
+export function cancelChatLoop(userId) {
+  const timerId = activeChatLoops.get(userId)
+  if (timerId) {
+    clearTimeout(timerId)
+    activeChatLoops.delete(userId)
+    print_log(`[Ready] Cancelled chatLoop timer for ${userId}`, 4)
+  }
+}
+
 export default async function handleReady(socket, { chatRoom, userId }) {
+  if (readyLocks.get(userId)) {
+    print_log(`[Ready] Already processing for ${userId}, ignoring duplicate`, 4)
+    return
+  }
+  readyLocks.set(userId, true)
+
+  try {
+    await _handleReady(socket, chatRoom, userId)
+  } catch (err) {
+    print_log(`[Ready] ERROR for ${userId}: ${err.message}`, 1)
+  } finally {
+    readyLocks.delete(userId)
+  }
+}
+
+async function _handleReady(socket, chatRoom, userId) {
   const curType = chatRoom.chatType
   const curId = String(chatRoom._id)
 
@@ -68,7 +96,13 @@ export default async function handleReady(socket, { chatRoom, userId }) {
 
     socket.emit("userReady", { senderId: AI_UID })
 
-    setTimeout(
+    const scheduleLoop = (fn, delay) => {
+      const id = setTimeout(fn, delay)
+      activeChatLoops.set(userId, id)
+      return id
+    }
+
+    scheduleLoop(
       async function chatLoop() {
         const session = await UserSession.findOne({ userId })
         const roomId = session?.currentChatRoomId
@@ -83,8 +117,9 @@ export default async function handleReady(socket, { chatRoom, userId }) {
               message: "AI response failed. Retrying shortly.",
             })
           }
-          setTimeout(chatLoop, jitterMs(waitTime, waitTimeDiff, multiplier))
+          scheduleLoop(chatLoop, jitterMs(waitTime, waitTimeDiff, multiplier))
         } else {
+          activeChatLoops.delete(userId)
           not_ai_replied_first_map.set(userId, false)
           print_log(`AI reply ended for ${userId}`, 1)
         }

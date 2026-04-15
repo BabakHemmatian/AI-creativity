@@ -3,8 +3,25 @@ import { endChatRoomService } from "../../service/chatRoom.js"
 import UserSession from "../../models/UserSession.js"
 
 const DURATION_MS = (Number(process.env.REACT_APP_SESSION_TIME) || 240) * 1000
+const checkRoundEndLocks = new Map()
 
 export default async function handleCheckRoundEnd(socket, { userId }) {
+  if (checkRoundEndLocks.get(userId)) {
+    print_log(`[CheckRoundEnd] Already processing for ${userId}, ignoring duplicate`, 4)
+    return
+  }
+  checkRoundEndLocks.set(userId, true)
+
+  try {
+    await _handleCheckRoundEnd(socket, userId)
+  } catch (err) {
+    print_log(`[CheckRoundEnd] ERROR for ${userId}: ${err.message}`, 1)
+  } finally {
+    checkRoundEndLocks.delete(userId)
+  }
+}
+
+async function _handleCheckRoundEnd(socket, userId) {
   print_log(`[CheckRoundEnd] Received request from ${userId}`, 5)
   let session = await UserSession.findOne({ userId })
 
@@ -41,35 +58,37 @@ export default async function handleCheckRoundEnd(socket, { userId }) {
     return
   }
 
-  // Round is over; end the chat room first
   const curI = session.currentI
   if (session.currentChatRoomId) {
     await endChatRoomService(session.currentChatRoomId, false)
   }
 
+  let newPhase, newI, newRoomId
   if (curI === 2) {
-    session.phase = "completed"
-    session.currentI = 3
+    newPhase = "completed"
+    newI = 3
+    newRoomId = session.currentChatRoomId
   } else {
-    session.phase = "round_ended"
-    session.currentI = curI + 1
-    session.currentChatRoomId = null
+    newPhase = "round_ended"
+    newI = curI + 1
+    newRoomId = null
   }
 
+  session.phase = newPhase
+  session.currentI = newI
+  session.currentChatRoomId = newRoomId
   await session.save()
 
   const io = socket.server
-  const payload = { session: session.toObject() }
-
-  io.to(userId).emit("sessionUpdate", payload)
+  io.to(userId).emit("sessionUpdate", { session: session.toObject() })
 
   const partnerId = session.matchedUserId
   if (partnerId) {
     const partner = await UserSession.findOne({ userId: partnerId })
-    if (partner) {
-      partner.phase = session.phase
-      partner.currentI = session.currentI
-      partner.currentChatRoomId = session.currentChatRoomId
+    if (partner && partner.phase === "in_round") {
+      partner.phase = newPhase
+      partner.currentI = newI
+      partner.currentChatRoomId = newRoomId
       await partner.save()
       io.to(partnerId).emit("sessionUpdate", {
         session: partner.toObject(),
@@ -77,5 +96,5 @@ export default async function handleCheckRoundEnd(socket, { userId }) {
     }
   }
 
-  print_log(`[CheckRoundEnd] ${userId} advanced to round ${session.currentI}`, 5)
+  print_log(`[CheckRoundEnd] ${userId} advanced to round ${newI}`, 5)
 }

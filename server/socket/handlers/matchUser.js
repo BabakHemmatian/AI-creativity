@@ -12,7 +12,7 @@ import Match from "../../models/Match.js"
 let lastItem = -1
 let lastOrder = -1
 
-const ITEMS = process.env.ITEMS.split(",")
+const ITEMS = (process.env.ITEMS || "brick,paperclip,shoe").split(",")
 const ITEMINDEX = [
   [1, 2, 0],
   [1, 0, 2],
@@ -77,7 +77,25 @@ export async function removeFromWaiting(userId) {
   )
 }
 
+const matchLocks = new Map()
+
 export default async function handleMatchUser(socket, { userId }) {
+  if (matchLocks.get(userId)) {
+    print_log(`[Match] Already processing for ${userId}, ignoring duplicate`, 4)
+    return
+  }
+  matchLocks.set(userId, true)
+
+  try {
+    await _handleMatchUser(socket, userId)
+  } catch (err) {
+    print_log(`[Match] ERROR for ${userId}: ${err.message}`, 1)
+  } finally {
+    matchLocks.delete(userId)
+  }
+}
+
+async function _handleMatchUser(socket, userId) {
   print_log(`Handling match for user: ${userId}`, 5)
   let session = await UserSession.findOne({ userId })
 
@@ -204,13 +222,23 @@ export default async function handleMatchUser(socket, { userId }) {
 
     if (!waitingSession || !onlineUsers.has(waitingUserId)) {
       print_log(
-        `[Guard] Waiting user ${waitingUserId} is offline or missing, re-queuing ${userId}`,
+        `[Guard] Waiting user ${waitingUserId} is offline or missing, re-queuing waiter and enqueueing ${userId}`,
         5,
       )
       await MatchQueue.updateOne(
         { _id: waitingUser._id },
-        { status: "waiting" },
+        { status: "timed_out" },
       )
+      const queueEntry = new MatchQueue({
+        userId,
+        userSessionId: session._id,
+        types: session.types,
+        queuedAt: new Date(),
+        expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+        status: "waiting",
+      })
+      await queueEntry.save()
+      print_log(`[Match] ${userId} added to MatchQueue (after stale waiter)`, 5)
       return
     }
 

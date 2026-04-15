@@ -10,12 +10,32 @@ import UserSession from "../../models/UserSession.js"
 const readyForRound = new Map()
 const DURATION_MS = (Number(process.env.REACT_APP_SESSION_TIME) || 240) * 1000
 
+// Per-user lock to prevent concurrent startRound processing
+const startRoundLocks = new Map()
+
 export function removeFromReady(userId) {
   readyForRound.delete(userId)
 }
 
 export default async function handleStartRound(socket, { userId }) {
   print_log(`[StartRound] Received request from ${userId}`, 5)
+
+  if (startRoundLocks.get(userId)) {
+    print_log(`[StartRound] Already processing for ${userId}, ignoring duplicate`, 4)
+    return
+  }
+  startRoundLocks.set(userId, true)
+
+  try {
+    await _handleStartRound(socket, userId)
+  } catch (err) {
+    print_log(`[StartRound] ERROR for ${userId}: ${err.message}`, 1)
+  } finally {
+    startRoundLocks.delete(userId)
+  }
+}
+
+async function _handleStartRound(socket, userId) {
   const session = await UserSession.findOne({ userId })
   const io = socket.server
 

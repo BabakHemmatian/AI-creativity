@@ -6,7 +6,14 @@ import ChatRoom from "../../models/ChatRoom.js"
 export default async function handleAddUser(socket, userId) {
   print_log(`userId: ${userId}`)
 
-  // Try to recover existing session from Mongo (not expired)
+  try {
+    await _handleAddUser(socket, userId)
+  } catch (err) {
+    print_log(`[AddUser] ERROR for ${userId}: ${err.message}`, 1)
+  }
+}
+
+async function _handleAddUser(socket, userId) {
   let session = await UserSession.findOne({
     userId,
     expiresAt: { $gt: new Date() },

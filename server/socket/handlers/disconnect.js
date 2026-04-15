@@ -2,21 +2,41 @@ import { print_log } from "../../service/utils.js"
 import { getKey } from "../helpers.js"
 import { removeFromWaiting } from "./matchUser.js"
 import { removeFromReady } from "./startRound.js"
+import { cancelChatLoop } from "./ready.js"
 import UserSession from "../../models/UserSession.js"
 
 export default async function handleDisconnect(socket) {
-  const userId = getKey(onlineUsers, socket.id)
-  const now = new Date()
-
-  await removeFromWaiting(userId)
-  removeFromReady(userId)
-
-  onlineUsers.delete(userId)
-  print_log(`logout: ${userId} ${now}`, 4)
-
   try {
+    const userId = getKey(onlineUsers, socket.id)
+
+    if (!userId) {
+      print_log("[Disconnect] Could not resolve userId for socket, skipping", 2)
+      return
+    }
+
+    const now = new Date()
+
+    try { await removeFromWaiting(userId) } catch (e) {
+      print_log(`[Disconnect] removeFromWaiting error: ${e.message}`, 1)
+    }
+    removeFromReady(userId)
+    cancelChatLoop(userId)
+
+    onlineUsers.delete(userId)
+    print_log(`logout: ${userId} ${now}`, 4)
+
     const session = await UserSession.findOne({ userId })
     if (!session) return
+
+    // Clean up readyMap entries for HUM rooms this user was in
+    if (global.readyMap) {
+      for (const [roomId, readySet] of global.readyMap.entries()) {
+        if (readySet.has(userId)) {
+          readySet.delete(userId)
+          if (readySet.size === 0) global.readyMap.delete(roomId)
+        }
+      }
+    }
 
     if (recoverUser.has(userId)) {
       recoverUser.delete(userId)
@@ -37,7 +57,6 @@ export default async function handleDisconnect(socket) {
     session.disconnecttime = now
     await session.save()
   } catch (err) {
-    print_log("disconnect: throws an error")
-    print_log(err)
+    print_log(`[Disconnect] ERROR: ${err.message}`, 1)
   }
 }
