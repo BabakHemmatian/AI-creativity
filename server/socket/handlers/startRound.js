@@ -5,8 +5,10 @@ import {
 import { print_log } from "../../service/utils.js"
 import { AI_UID } from "../constants.js"
 import { constResponses } from "../../config/constResponse.js"
+import UserSession from "../../models/UserSession.js"
 
 const readyForRound = new Map()
+const DURATION_MS = (Number(process.env.REACT_APP_SESSION_TIME) || 240) * 1000
 
 export function removeFromReady(userId) {
   readyForRound.delete(userId)
@@ -14,10 +16,10 @@ export function removeFromReady(userId) {
 
 export default async function handleStartRound(socket, { userId }) {
   print_log(`[StartRound] Received request from ${userId}`, 5)
-  const session = userSession.get(userId)
+  const session = await UserSession.findOne({ userId })
   const io = socket.server
 
-  if (!session || session.ended || session.currentI >= 3) {
+  if (!session || session.phase === "completed" || session.currentI >= 3) {
     print_log(`[StartRound] Invalid session for user: ${userId}`, 2)
     return
   }
@@ -25,23 +27,18 @@ export default async function handleStartRound(socket, { userId }) {
   const curI = session.currentI
   const curType = session.types[curI]
   const curItem = session.items[curI]
-  const curList = session.currentList
+  const curList = session.currentChatRoomListId
   const isHumanRound = curType === "HUM"
 
-  if (session.roundStartedFor === curI) {
-    print_log(`[StartRound] Round ${curI} already started for ${userId}`, 4)
-    return
-  }
-
-  session.roundStartedFor = curI
   print_log(
     `[StartRound] User ${userId} starting round ${curI} (${curType})`,
     5,
   )
+
   if (isHumanRound) {
     print_log(`[StartRound] HUM round`, 5)
 
-    const otherUserId = session.matchedUser
+    const otherUserId = session.matchedUserId
     if (!otherUserId) {
       print_log(`[StartRound] ERROR: No matched user for HUM round`, 1)
       return
@@ -56,25 +53,34 @@ export default async function handleStartRound(socket, { userId }) {
       return
     }
 
-    let chatRoom = session.currentChatRoom
+    const otherSession = await UserSession.findOne({ userId: otherUserId })
+    if (!otherSession) {
+      print_log(`[StartRound] ERROR: Other session not found for ${otherUserId}`, 1)
+      return
+    }
+
+    let chatRoom = session.currentChatRoomId
     const isNewRoomNeeded =
-      !chatRoom || chatRoom.isEnd || chatRoom.index !== curI
+      !chatRoom || session.phase === "round_ended" || session.currentI !== curI
 
     if (isNewRoomNeeded) {
-      chatRoom = await createChatRoomService(
+      const newRoom = await createChatRoomService(
         [userId, otherUserId],
         curItem,
         curType,
         curList,
       )
-      await appendChatRoomService(chatRoom._id, curList)
+      await appendChatRoomService(newRoom._id, curList)
 
-      session.currentChatRoom = chatRoom
-      const otherSession = userSession.get(otherUserId)
-      otherSession.currentChatRoom = chatRoom
+      session.currentChatRoomId = newRoom._id.toString()
+      session.phase = "in_round"
+      session.roundStartedAt = new Date()
+      await session.save()
 
-      userSession.set(userId, session)
-      userSession.set(otherUserId, otherSession)
+      otherSession.currentChatRoomId = newRoom._id.toString()
+      otherSession.phase = "in_round"
+      otherSession.roundStartedAt = new Date()
+      await otherSession.save()
 
       print_log(
         `[StartRound] New HUM room created for ${userId} & ${otherUserId}`,
@@ -85,7 +91,7 @@ export default async function handleStartRound(socket, { userId }) {
     }
 
     const chatRoomPayload = {
-      ...chatRoom.toObject(),
+      _id: session.currentChatRoomId,
       members: [userId, otherUserId],
       chatType: curType,
       index: curI,
@@ -93,16 +99,20 @@ export default async function handleStartRound(socket, { userId }) {
       isEnd: false,
     }
 
-    io.to(onlineUsers.get(userId)).emit("matchedUser", {
+    const roundEndTime = new Date(Date.now() + DURATION_MS)
+
+    io.to(onlineUsers.get(userId)).emit("roundStarted", {
+      roundId: session.currentChatRoomId,
+      expectedEndTime: roundEndTime.getTime(),
+      phase: "in_round",
       data: chatRoomPayload,
-      index: curI,
-      session,
     })
 
-    io.to(onlineUsers.get(otherUserId)).emit("matchedUser", {
+    io.to(onlineUsers.get(otherUserId)).emit("roundStarted", {
+      roundId: session.currentChatRoomId,
+      expectedEndTime: roundEndTime.getTime(),
+      phase: "in_round",
       data: chatRoomPayload,
-      index: curI,
-      session: userSession.get(otherUserId),
     })
 
     readyForRound.delete(userId)
@@ -111,15 +121,15 @@ export default async function handleStartRound(socket, { userId }) {
     return
   }
 
-  if (curType === "CON" && !session.conMes) {
+  // Handle CON round
+  if (curType === "CON") {
     const quality =
       Math.random() >= 0.66 ? "high" : Math.random() >= 0.5 ? "gpt" : "low"
-    session.quality = quality
 
     const allRes = constResponses[curItem]?.[quality]
     if (!Array.isArray(allRes)) {
       print_log(
-        `[startRound] WARNING: Missing replies for ${curItem} (${quality}). Using fallback`,
+        `[StartRound] WARNING: Missing replies for ${curItem} (${quality}). Using fallback`,
         2,
       )
       session.conMes = ["Sorry, I don't have a reply."]
@@ -128,22 +138,16 @@ export default async function handleStartRound(socket, { userId }) {
     }
   }
 
+  // Handle CON and GPT (separate rooms)
   const members = curType === "GPT" ? [userId, AI_UID] : [userId]
 
-  const newRoom = await createChatRoomService(
-    members,
-    curItem,
-    curType,
-    curList,
-  )
-
+  const newRoom = await createChatRoomService(members, curItem, curType, curList)
   await appendChatRoomService(newRoom._id, curList)
 
-  const updatedSession = {
-    ...session,
-    currentChatRoom: newRoom,
-  }
-  userSession.set(userId, updatedSession)
+  session.currentChatRoomId = newRoom._id.toString()
+  session.phase = "in_round"
+  session.roundStartedAt = new Date()
+  await session.save()
 
   chatMessage.set(userId, [{ text: curItem, sender: 0, replied: true }])
   not_ai_replied_first_map.set(userId, false)
@@ -156,11 +160,14 @@ export default async function handleStartRound(socket, { userId }) {
     isEnd: false,
   }
 
-  io.to(onlineUsers.get(userId)).emit("matchedUser", {
+  const roundEndTime = new Date(Date.now() + DURATION_MS)
+
+  io.to(onlineUsers.get(userId)).emit("roundStarted", {
+    roundId: newRoom._id.toString(),
+    expectedEndTime: roundEndTime.getTime(),
+    phase: "in_round",
     data: chatRoomPayload,
-    index: curI,
-    session: updatedSession,
   })
 
-  print_log(`[StartRound] AI room created for ${userId} in ${curType} round`, 5)
+  print_log(`[StartRound] ${curType} room created for ${userId}`, 5)
 }

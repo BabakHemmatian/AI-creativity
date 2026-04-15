@@ -4,7 +4,7 @@ import handleMatchUser from "./handlers/matchUser.js"
 import handleStartRound from "./handlers/startRound.js"
 import handleSendMessage from "./handlers/sendMessage.js"
 import handleReady from "./handlers/ready.js"
-import handleTimeout from "./handlers/timeout.js"
+import handleCheckRoundEnd from "./handlers/checkRoundEnd.js"
 import handlePing from "./handlers/ping.js"
 import { print_log } from "../service/utils.js"
 
@@ -59,7 +59,7 @@ export default function setupSocket(io) {
       handleSendMessage(socket, data)
     })
     socket.on("ready", (data) => handleReady(socket, data))
-    socket.on("timeout", (data) => handleTimeout(socket, data))
+    socket.on("checkRoundEnd", (data) => handleCheckRoundEnd(socket, data))
     socket.on("ping", (data) => handlePing(socket, data))
   })
 }
