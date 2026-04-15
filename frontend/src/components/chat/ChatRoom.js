@@ -103,9 +103,9 @@ export default function ChatRoom({
       })
     })
 
-    sock.on("startChatSession", ({ startTime }) => {
-      console.log("startChatSession received:", startTime)
-      const endTime = startTime + DURATION_MS
+    sock.on("roundStarted", ({ expectedEndTime }) => {
+      console.log("roundStarted received, expectedEndTime:", expectedEndTime)
+      const endTime = expectedEndTime
       clearInterval(intervalRef.current)
 
       intervalRef.current = setInterval(() => {
@@ -113,19 +113,8 @@ export default function ChatRoom({
 
         if (remaining <= 0) {
           clearInterval(intervalRef.current)
-
-          const roomId = currentChatRef.current._id
-          const chatType = currentChatRef.current.chatType
-
-          socket.current.emit("timeout", {
-            roomId,
-            userId: currentUser.uid,
-          })
-
-          handleEndChatRoom()
-          currentChatRef.current.isEnd = true
-
-          if (chatType !== "HUM") setPrevAI(true)
+          // Round should be over; ask server to confirm
+          socket.current.emit("checkRoundEnd", { userId: currentUser.uid })
           setCountdown(0)
         } else {
           setCountdown(Math.ceil(remaining / 1000))
@@ -135,15 +124,24 @@ export default function ChatRoom({
 
     sock.on("refresh", () => {
       alert(
-        "The co-player’s connection to the server was severed. Please refresh this page to start this session again. We apologize for the inconvenience.",
+        "The co-player's connection to the server was severed. Please refresh this page to start this session again. We apologize for the inconvenience.",
       )
+    })
+
+    sock.on("sessionUpdate", ({ session }) => {
+      console.log("[sessionUpdate]", session)
+      // Mark chat as ended so UI updates
+      if (currentChatRef.current) {
+        currentChatRef.current.isEnd = true
+      }
     })
 
     return () => {
       sock.off("getMessage")
       sock.off("userReady")
-      sock.off("startChatSession")
+      sock.off("roundStarted")
       sock.off("refresh")
+      sock.off("sessionUpdate")
       clearInterval(intervalRef.current)
     }
   }, [socket, currentUser.uid, handleEndChatRoom])
@@ -197,9 +195,7 @@ export default function ChatRoom({
           if (remaining <= 0) {
             clearInterval(intervalRef.current)
 
-            const roomId = currentChatRef.current._id
-            socket.current.emit("timeout", {
-              roomId,
+            socket.current.emit("checkRoundEnd", {
               userId: currentUser.uid,
             })
 

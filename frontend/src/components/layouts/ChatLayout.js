@@ -75,6 +75,8 @@ export default function ChatLayout() {
           session.currentI,
         )
         setCursession(session)
+        // Mark current chat as ended when round ends
+        setCurrentChat((prev) => prev ? { ...prev, isEnd: true } : null)
       })
     }
 

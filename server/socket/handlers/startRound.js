@@ -101,6 +101,20 @@ export default async function handleStartRound(socket, { userId }) {
 
     const roundEndTime = new Date(Date.now() + DURATION_MS)
 
+    // Emit matchedUser for UI update (new room data)
+    io.to(onlineUsers.get(userId)).emit("matchedUser", {
+      data: chatRoomPayload,
+      index: curI,
+      session: session.toObject(),
+    })
+
+    io.to(onlineUsers.get(otherUserId)).emit("matchedUser", {
+      data: chatRoomPayload,
+      index: curI,
+      session: otherSession.toObject(),
+    })
+
+    // Emit roundStarted for timer countdown
     io.to(onlineUsers.get(userId)).emit("roundStarted", {
       roundId: session.currentChatRoomId,
       expectedEndTime: roundEndTime.getTime(),
@@ -162,6 +176,14 @@ export default async function handleStartRound(socket, { userId }) {
 
   const roundEndTime = new Date(Date.now() + DURATION_MS)
 
+  // Emit matchedUser for UI update (new room data)
+  io.to(onlineUsers.get(userId)).emit("matchedUser", {
+    data: chatRoomPayload,
+    index: curI,
+    session: session.toObject(),
+  })
+
+  // Emit roundStarted for timer countdown
   io.to(onlineUsers.get(userId)).emit("roundStarted", {
     roundId: newRoom._id.toString(),
     expectedEndTime: roundEndTime.getTime(),
