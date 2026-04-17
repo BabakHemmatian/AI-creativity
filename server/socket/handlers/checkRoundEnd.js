@@ -82,10 +82,28 @@ async function _handleCheckRoundEnd(socket, userId) {
   const io = socket.server
   io.to(userId).emit("sessionUpdate", { session: session.toObject() })
 
+  // Partner sync is ONLY correct for HUM rounds, where both users share the
+  // same ChatRoom and must advance together. For CON/GPT rounds each user
+  // has their own room and their own clock (clock starts when *that* user
+  // types "ready"), so advancing the partner here would (a) kick them out
+  // of an unrelated live round and (b) leave their room with isEnd:false
+  // forever — the only place that stamps isEnd:true is this very function
+  // acting on session.currentChatRoomId, and we'd have just nulled it out.
+  //
+  // We also defensively verify the partner is in the *same* round and the
+  // *same* room, so a stale matchedUserId from a previous HUM pairing
+  // can't trigger a cross-round advance.
+  const curType = session.types?.[curI]
   const partnerId = session.matchedUserId
-  if (partnerId) {
+  if (curType === "HUM" && partnerId) {
     const partner = await UserSession.findOne({ userId: partnerId })
-    if (partner && partner.phase === "in_round") {
+    if (
+      partner &&
+      partner.phase === "in_round" &&
+      partner.roundStartedAt &&
+      partner.currentI === curI &&
+      String(partner.currentChatRoomId) === String(session.currentChatRoomId)
+    ) {
       partner.phase = newPhase
       partner.currentI = newI
       partner.currentChatRoomId = newRoomId

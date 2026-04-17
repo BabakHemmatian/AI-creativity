@@ -204,7 +204,9 @@ async function _handleMatchUser(socket, userId) {
     )
     await appendChatRoomService(newRoom._id, curList)
 
-    session.phase = "in_round"
+    // Room created but round clock has not started. ready.js flips this
+    // to "in_round" when the user types "ready".
+    session.phase = "ready_check"
     session.currentChatRoomId = newRoom._id.toString()
     session.matchedUserId = AI_UID
     session.roundStartedAt = null
@@ -233,7 +235,7 @@ async function _handleMatchUser(socket, userId) {
     )
     await appendChatRoomService(newRoom._id, curList)
 
-    session.phase = "in_round"
+    session.phase = "ready_check"
     session.currentChatRoomId = newRoom._id.toString()
     session.matchedUserId = null
     session.roundStartedAt = null

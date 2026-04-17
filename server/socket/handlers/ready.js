@@ -2,6 +2,7 @@ import { print_log } from "../../service/utils.js"
 import replyMessage from "../replyMessage.js"
 import { AI_UID } from "../constants.js"
 import UserSession from "../../models/UserSession.js"
+import { setChatRoomStartedAtService } from "../../service/chatRoom.js"
 
 const WAIT_TIME = Number(process.env.WAIT_TIME) || 5
 const WAIT_TIME_DIFF = Number(process.env.WAIT_TIME_DIFF) || 2
@@ -26,6 +27,62 @@ export function cancelChatLoop(userId) {
   }
 }
 
+function cadenceFor(curType) {
+  if (curType === "GPT") {
+    return { waitTime: 12, waitTimeDiff: 1, multiplier: 100 }
+  }
+  if (curType === "CON") {
+    return { waitTime: 13, waitTimeDiff: WAIT_TIME_DIFF, multiplier: 1000 }
+  }
+  return { waitTime: WAIT_TIME, waitTimeDiff: WAIT_TIME_DIFF, multiplier: 1000 }
+}
+
+/**
+ * Start (or resume) the AI reply loop for a non-HUM room. Safe to call
+ * even if a loop is already active for this user — it will replace the
+ * existing timer rather than double-firing.
+ *
+ * Callers:
+ *  - `_handleReady`: initial start after the user types "ready".
+ *  - `_handleAddUser` (recovery): resume after a transient disconnect so
+ *    the AI continues to reply in the same GPT/CON round.
+ */
+export function startChatLoop(socket, userId, curType, curId) {
+  const { waitTime, waitTimeDiff, multiplier } = cadenceFor(curType)
+
+  // Replace any stale timer so we never end up with two concurrent loops
+  // for the same user (e.g. recover races with a still-running loop).
+  cancelChatLoop(userId)
+
+  const scheduleLoop = (fn, delay) => {
+    const id = setTimeout(fn, delay)
+    activeChatLoops.set(userId, id)
+    return id
+  }
+
+  scheduleLoop(async function chatLoop() {
+    const session = await UserSession.findOne({ userId })
+    const roomId = session?.currentChatRoomId
+
+    if (session && roomId === curId && session.phase === "in_round") {
+      try {
+        await replyMessage(socket, userId, session)
+      } catch (err) {
+        print_log(`chatLoop: AI reply failed for ${userId}`, -1)
+        print_log(err)
+        socket.emit("aiError", {
+          message: "AI response failed. Retrying shortly.",
+        })
+      }
+      scheduleLoop(chatLoop, jitterMs(waitTime, waitTimeDiff, multiplier))
+    } else {
+      activeChatLoops.delete(userId)
+      not_ai_replied_first_map.set(userId, false)
+      print_log(`AI reply ended for ${userId}`, 1)
+    }
+  }, jitterMs(waitTime, waitTimeDiff, multiplier))
+}
+
 export default async function handleReady(socket, { chatRoom, userId }) {
   if (readyLocks.get(userId)) {
     print_log(`[Ready] Already processing for ${userId}, ignoring duplicate`, 4)
@@ -47,35 +104,26 @@ async function _handleReady(socket, chatRoom, userId) {
   const curId = String(chatRoom._id)
 
   if (curType !== "HUM") {
-    let waitTime = WAIT_TIME
-    let waitTimeDiff = WAIT_TIME_DIFF
-    let multiplier = 1000
-    if (curType === "GPT") {
-      waitTime = 12
-      waitTimeDiff = 1
-      multiplier = 100
-    } else if (curType === "CON") {
-      waitTime = 13
-      waitTimeDiff = WAIT_TIME_DIFF
-      multiplier = 1000
-    }
-
     const sess = await UserSession.findOne({ userId })
     if (
       !sess ||
       String(sess.currentChatRoomId) !== curId ||
-      sess.phase !== "in_round"
+      sess.phase !== "ready_check"
     ) {
-      print_log(`[Ready] ${curType} invalid session or room`, 2)
-      return
-    }
-    if (sess.roundStartedAt) {
-      print_log(`[Ready] ${curType} round clock already started`, 4)
+      print_log(
+        `[Ready] ${curType} invalid session/room/phase (phase=${sess?.phase})`,
+        2,
+      )
       return
     }
 
-    sess.roundStartedAt = new Date()
+    // Flip ready_check → in_round atomically with setting roundStartedAt.
+    // Past this point, `phase === "in_round"` ↔ "clock is ticking".
+    const startedAt = new Date()
+    sess.phase = "in_round"
+    sess.roundStartedAt = startedAt
     await sess.save()
+    await setChatRoomStartedAtService(curId, startedAt)
 
     const io = socket.server
     const expectedEndTime = Date.now() + DURATION_MS
@@ -96,36 +144,7 @@ async function _handleReady(socket, chatRoom, userId) {
 
     socket.emit("userReady", { senderId: AI_UID })
 
-    const scheduleLoop = (fn, delay) => {
-      const id = setTimeout(fn, delay)
-      activeChatLoops.set(userId, id)
-      return id
-    }
-
-    scheduleLoop(
-      async function chatLoop() {
-        const session = await UserSession.findOne({ userId })
-        const roomId = session?.currentChatRoomId
-
-        if (session && roomId === curId && session.phase === "in_round") {
-          try {
-            await replyMessage(socket, userId, session)
-          } catch (err) {
-            print_log(`chatLoop: AI reply failed for ${userId}`, -1)
-            print_log(err)
-            socket.emit("aiError", {
-              message: "AI response failed. Retrying shortly.",
-            })
-          }
-          scheduleLoop(chatLoop, jitterMs(waitTime, waitTimeDiff, multiplier))
-        } else {
-          activeChatLoops.delete(userId)
-          not_ai_replied_first_map.set(userId, false)
-          print_log(`AI reply ended for ${userId}`, 1)
-        }
-      },
-      jitterMs(waitTime, waitTimeDiff, multiplier),
-    )
+    startChatLoop(socket, userId, curType, curId)
   } else {
     const roomId = String(chatRoom._id)
     if (!global.readyMap) global.readyMap = new Map()
@@ -162,11 +181,17 @@ async function _handleReady(socket, chatRoom, userId) {
         return
       }
 
+      // Flip both partners from ready_check → in_round in the same save
+      // pass that stamps the clock. This is the moment a HUM round
+      // "actually starts".
       const now = new Date()
+      sessA.phase = "in_round"
+      sessB.phase = "in_round"
       sessA.roundStartedAt = now
       sessB.roundStartedAt = now
       await sessA.save()
       await sessB.save()
+      await setChatRoomStartedAtService(roomId, now)
 
       const curI = sessA.currentI
       const instruction = sessA.items[curI]

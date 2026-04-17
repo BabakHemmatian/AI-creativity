@@ -3,7 +3,13 @@ import mongoose from "mongoose"
 const UserSessionSchema = mongoose.Schema(
   {
     userId: String,                    // Firebase uid
-    phase: String,                     // "waiting" | "matched" | "in_round" | "round_ended" | "completed" | "abandoned"
+    phase: String,                     // "waiting" | "matched" | "ready_check" | "in_round" | "round_ended" | "completed" | "abandoned"
+    // "ready_check": ChatRoom has been created and the user (or both HUM
+    //    partners) can see it, but nobody has typed "ready" yet so the
+    //    round clock has NOT started. `roundStartedAt` is null here.
+    // "in_round":    The round clock is actually ticking. For GPT/CON
+    //    this means the user typed "ready"; for HUM it means both
+    //    partners did. `roundStartedAt` is set.
     currentI: Number,                  // 0, 1, 2 (round index); -1 when idle
     types: [String],                   // e.g., ["CON", "HUM", "GPT"]
     items: [String],                   // e.g., [item0, item1, item2]

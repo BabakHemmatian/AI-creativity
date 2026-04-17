@@ -44,9 +44,14 @@ async function _handleStartRound(socket, userId) {
     return
   }
 
-  // Idempotency: if this round is already running with a room, skip
-  if (session.phase === "in_round" && session.currentChatRoomId) {
-    print_log(`[StartRound] Round already in progress for ${userId}, skipping`, 4)
+  // Idempotency: once a ChatRoom exists for this round (either awaiting
+  // "ready" in `ready_check` or already ticking in `in_round`), a
+  // subsequent startRound click is a no-op.
+  if (
+    (session.phase === "ready_check" || session.phase === "in_round") &&
+    session.currentChatRoomId
+  ) {
+    print_log(`[StartRound] Round already set up for ${userId} (phase=${session.phase}), skipping`, 4)
     return
   }
 
@@ -105,13 +110,14 @@ async function _handleStartRound(socket, userId) {
       await appendChatRoomService(newRoom._id, curList)
 
       session.currentChatRoomId = newRoom._id.toString()
-      session.phase = "in_round"
-      // HUM: clock + roundStarted event only after both users send "ready" (see ready.js)
+      // HUM: room exists, but the clock (and phase=in_round) only fire
+      // when BOTH partners type "ready" — see ready.js HUM branch.
+      session.phase = "ready_check"
       session.roundStartedAt = null
       await session.save()
 
       otherSession.currentChatRoomId = newRoom._id.toString()
-      otherSession.phase = "in_round"
+      otherSession.phase = "ready_check"
       otherSession.roundStartedAt = null
       await otherSession.save()
 
@@ -175,8 +181,9 @@ async function _handleStartRound(socket, userId) {
   await appendChatRoomService(newRoom._id, curList)
 
   session.currentChatRoomId = newRoom._id.toString()
-  session.phase = "in_round"
-  // CON/GPT: clock starts only after user sends "ready" (see ready.js)
+  // CON/GPT: room exists, clock + phase=in_round flip in ready.js after
+  // the user types "ready".
+  session.phase = "ready_check"
   session.roundStartedAt = null
   await session.save()
 

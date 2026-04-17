@@ -2,6 +2,8 @@ import { SESSION_TIME } from "../constants.js"
 import { print_log } from "../../service/utils.js"
 import UserSession from "../../models/UserSession.js"
 import ChatRoom from "../../models/ChatRoom.js"
+import { startChatLoop } from "./ready.js"
+import { cancelPendingEarlyEnd } from "./disconnect.js"
 
 export default async function handleAddUser(socket, userId) {
   print_log(`userId: ${userId}`)
@@ -14,6 +16,11 @@ export default async function handleAddUser(socket, userId) {
 }
 
 async function _handleAddUser(socket, userId) {
+  // Reconnect: if the user disconnected mid-HUM-round and we scheduled a
+  // deferred `earlyEnd` close, cancel it now. They are back, so the room
+  // should keep living and the dashboard shouldn't tick it to "ended".
+  cancelPendingEarlyEnd(userId)
+
   let session = await UserSession.findOne({
     userId,
     expiresAt: { $gt: new Date() },
@@ -52,6 +59,36 @@ async function _handleAddUser(socket, userId) {
       chatRoom,
       remainingTime,
     })
+
+    // Resume the AI reply loop for GPT / CON rounds that were mid-flight
+    // when the user disconnected. HUM rounds don't need this (no AI side).
+    // Guard: only resume if the round hasn't already timed out — otherwise
+    // the natural `checkRoundEnd` path will close it cleanly.
+    const curType = session.types?.[session.currentI]
+    const isAiRound = curType === "GPT" || curType === "CON"
+    const roundStillLive =
+      session.phase === "in_round" &&
+      session.currentChatRoomId &&
+      session.roundStartedAt &&
+      remainingTime != null &&
+      remainingTime > 0
+    if (isAiRound && roundStillLive) {
+      try {
+        startChatLoop(
+          socket,
+          userId,
+          curType,
+          String(session.currentChatRoomId),
+        )
+        print_log(
+          `[AddUser] Resumed ${curType} chatLoop for ${userId} ` +
+            `(${Math.ceil(remainingTime / 1000)}s left)`,
+          4,
+        )
+      } catch (e) {
+        print_log(`[AddUser] Failed to resume chatLoop: ${e.message}`, 1)
+      }
+    }
   } else {
     if (!session) {
       print_log("[AddUser] Creating new session", 4)
