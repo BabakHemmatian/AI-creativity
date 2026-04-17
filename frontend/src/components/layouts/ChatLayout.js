@@ -9,6 +9,7 @@ import { useAuth } from "../../contexts/AuthContext"
 import ChatRoom from "../chat/ChatRoom"
 import Welcome from "../chat/Welcome"
 import AllUsers from "../chat/AllUsers"
+import SurveyReminderPopup from "../chat/SurveyReminderPopup"
 
 export default function ChatLayout() {
   const [users, SetUsers] = useState([])
@@ -27,6 +28,22 @@ export default function ChatLayout() {
   const { currentUser } = useAuth()
 
   const [matchedData, setMatchedData] = useState(null)
+
+  // Qualtrics reminder popup: shown on every round end and on study
+  // completion. Dismissal is keyed by "<phase>:<currentI>" so that
+  // dismissing it for round 0's end does NOT suppress it when round 1
+  // later ends. The popup is purely presentational — it never touches
+  // socket/session state.
+  const [surveyReminderDismissedKey, setSurveyReminderDismissedKey] =
+    useState(null)
+  const surveyReminderKey =
+    cursession?.phase === "round_ended"
+      ? `round_ended:${cursession.currentI}`
+      : cursession?.phase === "completed"
+        ? "completed"
+        : null
+  const showSurveyReminder =
+    !!surveyReminderKey && surveyReminderDismissedKey !== surveyReminderKey
 
   useEffect(() => {
     const getSocket = async () => {
@@ -76,8 +93,8 @@ export default function ChatLayout() {
           session.currentI,
         )
         setCursession(session)
-        // Mark current chat as ended when round ends
-        setCurrentChat((prev) => prev ? { ...prev, isEnd: true } : null)
+        // Round-ended state is derived from session.phase; no need to
+        // mutate currentChat.isEnd here. See AllUsers/ChatRoom.
       })
     }
 
@@ -164,6 +181,12 @@ export default function ChatLayout() {
           <Welcome />
         )}
       </div>
+
+      <SurveyReminderPopup
+        open={showSurveyReminder}
+        onClose={() => setSurveyReminderDismissedKey(surveyReminderKey)}
+        isCompleted={cursession?.phase === "completed"}
+      />
     </div>
   )
 }

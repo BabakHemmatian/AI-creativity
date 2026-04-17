@@ -145,20 +145,14 @@ export default function ChatRoom({
       )
     })
 
-    sock.on("sessionUpdate", ({ session }) => {
-      console.log("[sessionUpdate]", session)
-      // Mark chat as ended so UI updates
-      if (currentChatRef.current) {
-        currentChatRef.current.isEnd = true
-      }
-    })
+    // Round-ended state is derived from currentSession.phase at render time
+    // (see handleFormSubmit below); no local mutation of currentChat needed.
 
     return () => {
       sock.off("getMessage")
       sock.off("userReady")
       sock.off("roundStarted")
       sock.off("refresh")
-      sock.off("sessionUpdate")
       clearInterval(intervalRef.current)
     }
   }, [socket, currentUser.uid, handleEndChatRoom])
@@ -205,7 +199,10 @@ export default function ChatRoom({
       // CON/GPT/HUM: server emits roundStarted after ready (single countdown source)
     } else if (ready !== 3) {
       alert("please first type ready!")
-    } else if (currentChat.isEnd) {
+    } else if (
+      currentSession?.phase === "round_ended" ||
+      currentSession?.phase === "completed"
+    ) {
       alert("current chat room has ended, but you can match a new one")
     } else {
       const receiverId = currentChat.members.find(

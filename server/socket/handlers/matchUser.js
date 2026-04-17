@@ -9,9 +9,6 @@ import UserSession from "../../models/UserSession.js"
 import MatchQueue from "../../models/MatchQueue.js"
 import Match from "../../models/Match.js"
 
-let lastItem = -1
-let lastOrder = -1
-
 const ITEMS = (process.env.ITEMS || "brick,paperclip,shoe").split(",")
 const ITEMINDEX = [
   [1, 2, 0],
@@ -42,9 +39,7 @@ const ORDERS = [
 ]
 
 function getRandomOrderPair() {
-  const idx =
-    lastOrder === -1 ? Math.floor(Math.random() * ORDERS.length) : lastOrder
-  lastOrder = lastOrder === -1 ? idx : -1
+  const idx = Math.floor(Math.random() * ORDERS.length)
   print_log(
     `Selected Pair: ${JSON.stringify(ORDERS[idx][0])} ↔ ${JSON.stringify(
       ORDERS[idx][1],
@@ -55,19 +50,25 @@ function getRandomOrderPair() {
 }
 
 function getRandomItems() {
-  const items = []
-  const idx =
-    lastItem === -1 ? Math.floor(Math.random() * ITEMINDEX.length) : lastItem
-  lastItem = lastItem === -1 ? idx : -1
-  ITEMINDEX[idx].forEach((i) => items.push(ITEMS[i]))
-  return items
+  const idx = Math.floor(Math.random() * ITEMINDEX.length)
+  return ITEMINDEX[idx].map((i) => ITEMS[i])
 }
 
 function findComplementaryOrder(userOrder) {
   const pair = ORDERS.find(
     ([orderA]) => JSON.stringify(orderA) === JSON.stringify(userOrder),
   )
-  return pair ? pair[1] : getRandomOrderPair()[1]
+  if (!pair) {
+    // Unreachable in normal flow: matchers are always assigned orderA.
+    // If this ever fires, the ORDERS table and the assignment path drifted.
+    print_log(
+      `[Match] No complementary order for ${JSON.stringify(userOrder)}; ` +
+        `falling back to a random complement`,
+      1,
+    )
+    return getRandomOrderPair()[1]
+  }
+  return pair[1]
 }
 
 export async function removeFromWaiting(userId) {
@@ -99,6 +100,25 @@ async function _handleMatchUser(socket, userId) {
   print_log(`Handling match for user: ${userId}`, 5)
   let session = await UserSession.findOne({ userId })
 
+  // BUG 1 guard: if the user is already paired, in a round, or between
+  // rounds, do NOT run matching again. Re-running would overwrite
+  // matchedUserId and could queue a duplicate MatchQueue entry,
+  // letting a third user silently steal the partnership.
+  if (
+    session &&
+    session.matchedUserId &&
+    (session.phase === "matched" ||
+      session.phase === "in_round" ||
+      session.phase === "round_ended")
+  ) {
+    print_log(
+      `[Match] ${userId} already has partner ${session.matchedUserId} ` +
+        `(phase=${session.phase}); skipping re-match`,
+      4,
+    )
+    return
+  }
+
   // Treat addUser placeholder (currentI -1 / no study order) as needing a fresh study session
   const isNewSession =
     !session ||
@@ -109,6 +129,12 @@ async function _handleMatchUser(socket, userId) {
   if (isNewSession) {
     // Avoid duplicate UserSession docs per userId (addUser placeholder, completed runs, etc.)
     await UserSession.deleteMany({ userId })
+    // BUG 4 fix: also retire any stale "waiting" queue entries owned by this
+    // userId so another matcher can't dequeue a ghost referencing the now-deleted session.
+    await MatchQueue.updateMany(
+      { userId, status: "waiting" },
+      { status: "timed_out" },
+    )
 
     let assignedOrder, assignedItems
 
@@ -148,7 +174,23 @@ async function _handleMatchUser(socket, userId) {
 
   const curI = session.currentI
   const curItem = session.items[curI]
-  const curList = session.currentChatRoomListId
+  let curList = session.currentChatRoomListId
+
+  // BUG 5 fix: the GPT/CON/HUM branches below assume a ChatRoomList exists
+  // on this session. Normally the isNewSession block created it, but on
+  // recovered / partially-initialized sessions it can be missing. Create
+  // one on demand so downstream createChatRoomService / appendChatRoomService
+  // never silently write to a null listId.
+  if (!curList) {
+    print_log(
+      `[Match] Session for ${userId} missing currentChatRoomListId; creating one`,
+      2,
+    )
+    const typeList = await createChatRoomListService(userId, session.types)
+    curList = typeList._id.toString()
+    session.currentChatRoomListId = curList
+    await session.save()
+  }
 
   const io = socket.server
 
@@ -277,6 +319,12 @@ async function _handleMatchUser(socket, userId) {
     waitingSession.matchedUserId = userId
     waitingSession.matchId = match._id.toString()
     waitingSession.types = matchedOrder
+    // BUG 3 fix: both paired users must see the same item for each round index.
+    // The HUM room's instruction is taken from whichever partner calls startRound
+    // first; if items diverge, the other partner's session.items disagrees with
+    // what they actually saw. Force the waiter to adopt the matcher's item
+    // sequence so the persisted data matches the chat.
+    waitingSession.items = Array.isArray(session.items) ? [...session.items] : []
     await waitingSession.save()
 
     // Update queue entry

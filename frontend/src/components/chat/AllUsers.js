@@ -130,7 +130,7 @@ export default function AllUsers({
           )}
         </li>
         <li>
-          {loadingStart && !currentChat?.isEnd && (
+          {loadingStart && currentSession?.phase !== "round_ended" && (
             <div className="dark:text-white flex items-center px-3 py-2 text-sm gap-2">
               <span className="spinner"></span>
               {currentSession?.types?.[currentSession.currentI] === "HUM"
@@ -143,7 +143,7 @@ export default function AllUsers({
           {currentSession &&
             currentSession.currentI > -1 &&
             currentSession.currentI < 3 &&
-            (currentChat?.isEnd || currentSession.phase === "round_ended") && (
+            currentSession.phase === "round_ended" && (
               <button
                 className="dark:text-white transition duration-150 ease-in-out cursor-pointer bg-white border-b border-gray-200 hover:bg-gray-100 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-gray-700 flex items-center px-3 py-2 text-sm gap-2"
                 onClick={handleStartClick}

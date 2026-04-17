@@ -3,6 +3,7 @@ import { getKey } from "../helpers.js"
 import { removeFromWaiting } from "./matchUser.js"
 import { removeFromReady } from "./startRound.js"
 import { cancelChatLoop } from "./ready.js"
+import { endChatRoomService } from "../../service/chatRoom.js"
 import UserSession from "../../models/UserSession.js"
 
 export default async function handleDisconnect(socket) {
@@ -35,6 +36,26 @@ export default async function handleDisconnect(socket) {
           readySet.delete(userId)
           if (readySet.size === 0) global.readyMap.delete(roomId)
         }
+      }
+    }
+
+    // Close the current ChatRoom as an early end so the DB reflects abandonment.
+    // Recovery path (`recoverUser`) still handles partner refresh below; we close
+    // the room regardless because the ChatRoom._id won't be reused on recovery.
+    const isMidRound =
+      session.currentChatRoomId &&
+      session.phase !== "completed" &&
+      session.phase !== "round_ended" &&
+      session.phase !== "waiting"
+    if (isMidRound) {
+      try {
+        await endChatRoomService(session.currentChatRoomId, true)
+        print_log(
+          `[Disconnect] Marked room ${session.currentChatRoomId} as earlyEnd for ${userId}`,
+          4,
+        )
+      } catch (e) {
+        print_log(`[Disconnect] endChatRoomService error: ${e.message}`, 1)
       }
     }
 
