@@ -9,6 +9,7 @@ import "./config/mongo.js"
 import "./models/UserSession.js"
 import "./models/MatchQueue.js"
 import "./models/Match.js"
+import "./models/PairAnnotation.js"
 
 import { VerifyToken, VerifySocketToken } from "./middlewares/VerifyToken.js"
 import chatRoomRoutes from "./routes/chatRoom.js"

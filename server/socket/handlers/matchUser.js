@@ -8,6 +8,7 @@ import { MATCH_CONDITION, AI_UID } from "../constants.js"
 import UserSession from "../../models/UserSession.js"
 import MatchQueue from "../../models/MatchQueue.js"
 import Match from "../../models/Match.js"
+import PairAnnotation from "../../models/PairAnnotation.js"
 
 const ITEMS = (process.env.ITEMS || "brick,paperclip,shoe").split(",")
 const ITEMINDEX = [
@@ -310,6 +311,13 @@ async function _handleMatchUser(socket, userId) {
       metadata: { initiatedBy: userId },
     })
     await match.save()
+
+    const pairId = [userId, waitingUserId].sort().join("__")
+    await PairAnnotation.findOneAndUpdate(
+      { pairId },
+      { $setOnInsert: { pairId }, $set: { lastMatchId: match._id } },
+      { upsert: true, new: true },
+    )
 
     // Update both sessions — paired but no room yet (startRound creates rooms)
     session.phase = "matched"

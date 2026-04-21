@@ -180,7 +180,13 @@ export default function ChatRoom({
     if (currentChat.chatType === "GPT" && isProcessing) return
     if (currentChat.chatType === "GPT") setIsProcessing(true)
 
-    if (message === "ready" && ready !== 3) {
+    // Accept "ready" case-insensitively and tolerate leading/trailing whitespace
+    // so variants like "Ready", "READY", " ready\n" all trigger the round start.
+    const normalizedMessage =
+      typeof message === "string" ? message.trim().toLowerCase() : ""
+    const isReadyMessage = normalizedMessage === "ready"
+
+    if (isReadyMessage && ready !== 3) {
       setReady((prev) => prev | 2)
       setMessages([
         ...messages,
