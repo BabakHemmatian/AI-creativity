@@ -3,13 +3,11 @@ import { useState, useEffect, useRef } from "react"
 import Message from "./Message"
 import Contact from "./Contact"
 import ChatForm from "./ChatForm"
+import { getMessagesOfChatRoom } from "../../services/ChatService"
 import {
   parseInstruction,
   parseEndInstruction,
 } from "../../utils/parseInstruction"
-
-const START_KEYWORD = "ready"
-const START_KEYWORDS = new Set(["Ready", "READY"]) // backward compatibility
 
 export default function ChatRoom({
   currentChat,
@@ -26,10 +24,11 @@ export default function ChatRoom({
   const [change, setChange] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [scratchpad, setScratchpad] = useState("")
+
   const [countdown, setCountdown] = useState(Math.ceil(DURATION_MS / 1000))
 
   const intervalRef = useRef(null)
-  const currentId = useRef(currentChat._id)
+  const currentId = useRef(String(currentChat._id))
   const currentChatRef = useRef(currentChat)
   const scrollRef = useRef()
 
@@ -37,9 +36,8 @@ export default function ChatRoom({
     console.log("[ChatRoom] currentChat updated:", currentChat)
 
     currentChatRef.current = currentChat
-    currentId.current = currentChat._id
+    currentId.current = String(currentChat._id)
 
-    setReady(0)
     setScratchpad("")
     setMessages([])
     setCountdown(Math.ceil(DURATION_MS / 1000))
@@ -48,16 +46,39 @@ export default function ChatRoom({
 
     if (prevAI) setChange(true)
 
-    // Only auto-start for round 0
-    if (
-      currentSession &&
-      currentSession.currentI === 0 &&
-      !currentChat.isEnd &&
-      currentChat._id &&
-      currentChat.chatType
-    ) {
-      console.log("[AutoStart] Emitting startRound for first round")
-      socket.current.emit("startRound", { userId: currentUser.uid })
+    // On recovery (or reload), fetch existing messages from DB
+    const roomId = String(currentChat._id)
+    getMessagesOfChatRoom(roomId).then((dbMessages) => {
+      if (roomId !== currentId.current) return
+      if (dbMessages && dbMessages.length > 0) {
+        const formatted = dbMessages.map((m) => ({
+          sender: m.sender,
+          senderId: m.sender,
+          message: m.message ?? m.text ?? "",
+          roomId: String(m.chatRoomId ?? roomId),
+          createdAt: m.createdAt,
+        }))
+        setMessages(formatted)
+        setReady(3)
+      } else {
+        setReady(0)
+      }
+    }).catch(() => setReady(0))
+
+    // Resume timer from remaining time if recovering mid-round
+    if (currentChat.remainingTime != null && currentChat.remainingTime > 0) {
+      const endTime = Date.now() + currentChat.remainingTime
+      clearInterval(intervalRef.current)
+      intervalRef.current = setInterval(() => {
+        const remaining = endTime - Date.now()
+        if (remaining <= 0) {
+          clearInterval(intervalRef.current)
+          socket.current.emit("checkRoundEnd", { userId: currentUser.uid })
+          setCountdown(0)
+        } else {
+          setCountdown(Math.ceil(remaining / 1000))
+        }
+      }, 500)
     }
   }, [currentChat._id])
 
@@ -72,11 +93,13 @@ export default function ChatRoom({
     sock.on("getMessage", (data) => {
       console.log("getMessage: received")
 
-      if (data.roomId === currentId.current) {
+      if (String(data.roomId) === String(currentId.current)) {
         setIncomingMessage({
           senderId: data.senderId,
+          sender: data.senderId,
           message: data.message,
-          roomId: data.roomId,
+          roomId: data.roomId != null ? String(data.roomId) : data.roomId,
+          createdAt: data.createdAt,
         })
 
         if (["GPT", "CON"].includes(currentChatRef.current.chatType)) {
@@ -91,14 +114,15 @@ export default function ChatRoom({
       setReady((prev) => prev | (data.senderId === currentUser.uid ? 2 : 1))
       setIncomingMessage({
         senderId: data.senderId,
-        message: START_KEYWORD,
+        sender: data.senderId,
+        message: "ready",
         roomId: currentId.current,
       })
     })
 
-    sock.on("startChatSession", ({ startTime }) => {
-      console.log("startChatSession received:", startTime)
-      const endTime = startTime + DURATION_MS
+    sock.on("roundStarted", ({ expectedEndTime }) => {
+      console.log("roundStarted received, expectedEndTime:", expectedEndTime)
+      const endTime = expectedEndTime
       clearInterval(intervalRef.current)
 
       intervalRef.current = setInterval(() => {
@@ -106,19 +130,8 @@ export default function ChatRoom({
 
         if (remaining <= 0) {
           clearInterval(intervalRef.current)
-
-          const roomId = currentChatRef.current._id
-          const chatType = currentChatRef.current.chatType
-
-          socket.current.emit("timeout", {
-            roomId,
-            userId: currentUser.uid,
-          })
-
-          handleEndChatRoom()
-          currentChatRef.current.isEnd = true
-
-          if (chatType !== "HUM") setPrevAI(true)
+          // Round should be over; ask server to confirm
+          socket.current.emit("checkRoundEnd", { userId: currentUser.uid })
           setCountdown(0)
         } else {
           setCountdown(Math.ceil(remaining / 1000))
@@ -128,33 +141,33 @@ export default function ChatRoom({
 
     sock.on("refresh", () => {
       alert(
-        "Se ha interrumpido la conexión del otro jugador con el servidor. Por favor, actualiza esta página para reiniciar la sesión. Lamentamos las molestias.",
+        "The co-player's connection to the server was severed. Please refresh this page to start this session again. We apologize for the inconvenience.",
       )
     })
+
+    // Round-ended state is derived from currentSession.phase at render time
+    // (see handleFormSubmit below); no local mutation of currentChat needed.
 
     return () => {
       sock.off("getMessage")
       sock.off("userReady")
-      sock.off("startChatSession")
+      sock.off("roundStarted")
       sock.off("refresh")
       clearInterval(intervalRef.current)
     }
   }, [socket, currentUser.uid, handleEndChatRoom])
 
   useEffect(() => {
-    if (incomingMessage) {
-      setMessages((prev) => [...prev, incomingMessage])
-    }
+    incomingMessage && setMessages((prev) => [...prev, incomingMessage])
   }, [incomingMessage])
 
   useEffect(() => {
     if (currentChat.chatType === "GPT" && messages.length > 0) {
       const lastMsg = messages[messages.length - 1]
-      const normalizedLastMessage = lastMsg.message?.trim().toLowerCase()
 
       if (
         lastMsg.senderId === "GPT" &&
-        START_KEYWORDS.has(normalizedLastMessage)
+        lastMsg.message.trim().toLowerCase() === "ready"
       ) {
         setIsProcessing(false)
       }
@@ -164,18 +177,23 @@ export default function ChatRoom({
   const handleFormSubmit = async (message) => {
     console.log(`HandleFormSubmit: ${message}`)
 
-    const normalizedMessage = message.trim().toLowerCase()
-
     if (currentChat.chatType === "GPT" && isProcessing) return
+    if (currentChat.chatType === "GPT") setIsProcessing(true)
 
-    if (START_KEYWORDS.has(normalizedMessage) && ready !== 3) {
+    // Accept "ready" case-insensitively and tolerate leading/trailing whitespace
+    // so variants like "Ready", "READY", " ready\n" all trigger the round start.
+    const normalizedMessage =
+      typeof message === "string" ? message.trim().toLowerCase() : ""
+    const isReadyMessage = normalizedMessage === "ready"
+
+    if (isReadyMessage && ready !== 3) {
       setReady((prev) => prev | 2)
-      setMessages((prev) => [
-        ...prev,
+      setMessages([
+        ...messages,
         {
           roomId: currentId.current,
           sender: currentUser.uid,
-          message: START_KEYWORD,
+          message: "ready",
         },
       ])
 
@@ -184,68 +202,35 @@ export default function ChatRoom({
         userId: currentUser.uid,
       })
 
-      if (["GPT", "CON"].includes(currentChat.chatType)) {
-        const endTime = Date.now() + DURATION_MS
-        clearInterval(intervalRef.current)
+      // CON/GPT/HUM: server emits roundStarted after ready (single countdown source)
+    } else if (ready !== 3) {
+      alert("please first type ready!")
+    } else if (
+      currentSession?.phase === "round_ended" ||
+      currentSession?.phase === "completed"
+    ) {
+      alert("current chat room has ended, but you can match a new one")
+    } else {
+      const receiverId = currentChat.members.find(
+        (member) => member !== currentUser.uid,
+      )
 
-        intervalRef.current = setInterval(() => {
-          const remaining = endTime - Date.now()
-
-          if (remaining <= 0) {
-            clearInterval(intervalRef.current)
-
-            const roomId = currentChatRef.current._id
-            socket.current.emit("timeout", {
-              roomId,
-              userId: currentUser.uid,
-            })
-
-            handleEndChatRoom()
-            currentChatRef.current.isEnd = true
-            setPrevAI(true)
-            setCountdown(0)
-          } else {
-            setCountdown(Math.ceil(remaining / 1000))
-          }
-        }, 500)
-      }
-
-      return
-    }
-
-    if (ready !== 3) {
-      alert("¡Primero escribe 'listo'!")
-      return
-    }
-
-    if (currentChat.isEnd) {
-      alert("La sala de chat actual se ha cerrado, pero puedes buscar una nueva.")
-      return
-    }
-
-    if (currentChat.chatType === "GPT") {
-      setIsProcessing(true)
-    }
-
-    const receiverId = currentChat.members.find(
-      (member) => member !== currentUser.uid,
-    )
-
-    socket.current.emit("sendMessage", {
-      senderId: currentUser.uid,
-      receiverId,
-      message,
-      chatRoom: currentChat,
-    })
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        roomId: currentId.current,
-        sender: currentUser.uid,
+      socket.current.emit("sendMessage", {
+        senderId: currentUser.uid,
+        receiverId,
         message,
-      },
-    ])
+        chatRoom: currentChat,
+      })
+
+      setMessages([
+        ...messages,
+        {
+          roomId: currentId.current,
+          sender: currentUser.uid,
+          message,
+        },
+      ])
+    }
   }
 
   return (
@@ -253,15 +238,18 @@ export default function ChatRoom({
       <div className="w-full">
         <div className="p-3 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
           {currentChat.chatType === "CON" ? (
+            // CON: always text-only
             <div className="text-gray-800 dark:text-white font-semibold">
-              Agente no interactivo
+              Non-Interactive Agent
             </div>
           ) : currentChat.chatType === "HUM" &&
             currentChat.members.length === 1 ? (
+            // HUM but not yet paired
             <div className="text-gray-800 dark:text-white font-semibold">
-              Compañero humano interactivo
+              Interactive Human Partner
             </div>
           ) : (
+            // HUM OR GPT: show avatar + label via Contact
             <Contact chatRoom={currentChat} currentUser={currentUser} />
           )}
         </div>
@@ -279,12 +267,16 @@ export default function ChatRoom({
             <li className="dark:text-white" style={{ fontWeight: "bold" }}>
               <div>
                 {ready === 3 &&
-                  `El objeto para el que idearás usos creativos es: ${currentChat.instruction}`}
+                  `The object you will be coming up with creative uses for is: ${currentChat.instruction}`}
               </div>
             </li>
 
             {messages
-              .filter((mess) => mess.roomId === currentId.current)
+              .filter(
+                (mess) =>
+                  String(mess.roomId ?? mess.chatRoomId ?? "") ===
+                  String(currentId.current),
+              )
               .map((message, index) => (
                 <div key={index} ref={scrollRef}>
                   <Message message={message} self={currentUser.uid} />
@@ -292,7 +284,7 @@ export default function ChatRoom({
               ))}
 
             <li className="dark:text-white" style={{ fontWeight: "bold" }}>
-              {`Esta sala de chat terminará en ${countdown} segundos.`}
+              {`This chat room will end in ${countdown} seconds`}
             </li>
 
             <li className="dark:text-white" style={{ fontWeight: "bold" }}>
@@ -303,12 +295,12 @@ export default function ChatRoom({
 
         <div className="p-3 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
           <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-            Bloc de notas (privado, no se envía al chat)
+            Scratchpad (private, not sent to chat)
           </label>
           <textarea
             value={scratchpad}
             onChange={(e) => setScratchpad(e.target.value)}
-            placeholder="Puedes organizar tus ideas aquí..."
+            placeholder="You can organize ideas here..."
             className="w-full p-1 text-sm rounded-md dark:bg-gray-800 dark:text-gray-300"
             rows={4}
           />

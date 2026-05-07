@@ -4,14 +4,16 @@ import handleMatchUser from "./handlers/matchUser.js"
 import handleStartRound from "./handlers/startRound.js"
 import handleSendMessage from "./handlers/sendMessage.js"
 import handleReady from "./handlers/ready.js"
-import handleTimeout from "./handlers/timeout.js"
+import handleCheckRoundEnd from "./handlers/checkRoundEnd.js"
 import handlePing from "./handlers/ping.js"
 import { print_log } from "../service/utils.js"
 
 // ─── Per-user rate limiter ────────────────────────────────────────────────────
 const RATE_LIMITS = {
-  sendMessage: { maxEvents: 20, windowMs: 10_000 }, // 20 messages per 10s
-  matchUser: { maxEvents: 5, windowMs: 10_000 }, // 5 match attempts per 10s
+  sendMessage: { maxEvents: 20, windowMs: 10_000 },
+  matchUser: { maxEvents: 5, windowMs: 10_000 },
+  startRound: { maxEvents: 3, windowMs: 10_000 },
+  ready: { maxEvents: 3, windowMs: 10_000 },
 }
 const rateLimitCounters = new Map() // userId → { eventName → [timestamps] }
 
@@ -53,13 +55,19 @@ export default function setupSocket(io) {
       if (isRateLimited(data?.userId, "matchUser")) return
       handleMatchUser(socket, data)
     })
-    socket.on("startRound", (data) => handleStartRound(socket, data))
+    socket.on("startRound", (data) => {
+      if (isRateLimited(data?.userId, "startRound")) return
+      handleStartRound(socket, data)
+    })
     socket.on("sendMessage", (data) => {
       if (isRateLimited(data?.senderId, "sendMessage")) return
       handleSendMessage(socket, data)
     })
-    socket.on("ready", (data) => handleReady(socket, data))
-    socket.on("timeout", (data) => handleTimeout(socket, data))
+    socket.on("ready", (data) => {
+      if (isRateLimited(data?.userId, "ready")) return
+      handleReady(socket, data)
+    })
+    socket.on("checkRoundEnd", (data) => handleCheckRoundEnd(socket, data))
     socket.on("ping", (data) => handlePing(socket, data))
   })
 }

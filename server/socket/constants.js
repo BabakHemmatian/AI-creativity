@@ -1,5 +1,5 @@
 export const AI_UID = process.env.AI_UID || ""
-export const SESSION_TIME = process.env.SESSION_TIME || 120
+export const SESSION_TIME = process.env.SESSION_TIME || 3600
 export const MATCH_CONDITION = process.env.MATCH_CONDITION || "ALL"
 export const NON_REPLY_PROMPT =
   process.env.NON_REPLY_PROMPT || "Could you elaborate?"

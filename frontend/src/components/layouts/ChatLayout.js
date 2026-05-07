@@ -9,6 +9,7 @@ import { useAuth } from "../../contexts/AuthContext"
 import ChatRoom from "../chat/ChatRoom"
 import Welcome from "../chat/Welcome"
 import AllUsers from "../chat/AllUsers"
+import SurveyReminderPopup from "../chat/SurveyReminderPopup"
 
 export default function ChatLayout() {
   const [users, SetUsers] = useState([])
@@ -27,6 +28,22 @@ export default function ChatLayout() {
   const { currentUser } = useAuth()
 
   const [matchedData, setMatchedData] = useState(null)
+
+  // Qualtrics reminder popup: shown on every round end and on study
+  // completion. Dismissal is keyed by "<phase>:<currentI>" so that
+  // dismissing it for round 0's end does NOT suppress it when round 1
+  // later ends. The popup is purely presentational — it never touches
+  // socket/session state.
+  const [surveyReminderDismissedKey, setSurveyReminderDismissedKey] =
+    useState(null)
+  const surveyReminderKey =
+    cursession?.phase === "round_ended"
+      ? `round_ended:${cursession.currentI}`
+      : cursession?.phase === "completed"
+        ? "completed"
+        : null
+  const showSurveyReminder =
+    !!surveyReminderKey && surveyReminderDismissedKey !== surveyReminderKey
 
   useEffect(() => {
     const getSocket = async () => {
@@ -51,18 +68,19 @@ export default function ChatLayout() {
       socket.current.emit("addUser", currentUser.uid)
       setLoad(true)
 
-      socket.current.on("getSession", ({ isRecover, session }) => {
-        console.log(`getSession: received`)
-        console.log(
-          "[Socket:Session] Initializing session for user:",
-          currentUser.uid,
-        )
+      socket.current.on("getSession", ({ isRecover, session, chatRoom, remainingTime }) => {
+        console.log(`[Socket:Session] getSession received, isRecover=${isRecover}, phase=${session?.phase}`)
 
-        if (isRecover && session?.currentChatRoom) {
-          const curroom = session.currentChatRoom
-          curroom.index = session.currentI
-          setCurrentChat(curroom)
-          setChatRooms([curroom])
+        if (isRecover && chatRoom) {
+          console.log("[Socket:Session] Recovering chat room:", chatRoom._id)
+          if (remainingTime != null) {
+            chatRoom.remainingTime = remainingTime
+          }
+          setCurrentChat(chatRoom)
+          setChatRooms([chatRoom])
+        } else if (isRecover && session?.phase === "matched" && session.currentI === 0) {
+          console.log("[Socket:Session] Recovering matched state, auto-starting round 0")
+          socket.current.emit("startRound", { userId: currentUser.uid })
         }
 
         setCursession(session)
@@ -75,6 +93,8 @@ export default function ChatLayout() {
           session.currentI,
         )
         setCursession(session)
+        // Round-ended state is derived from session.phase; no need to
+        // mutate currentChat.isEnd here. See AllUsers/ChatRoom.
       })
     }
 
@@ -161,6 +181,12 @@ export default function ChatLayout() {
           <Welcome />
         )}
       </div>
+
+      <SurveyReminderPopup
+        open={showSurveyReminder}
+        onClose={() => setSurveyReminderDismissedKey(surveyReminderKey)}
+        isCompleted={cursession?.phase === "completed"}
+      />
     </div>
   )
 }

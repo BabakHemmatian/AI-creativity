@@ -70,6 +70,25 @@ export const createChatRoomService = async (members, insText, type, listId) => {
     }
 }
 
+/**
+ * Stamp `startedAt` exactly once, when the round clock actually starts.
+ * Idempotent: if `startedAt` is already set (e.g. partner raced us for a
+ * HUM round, or the client reconnected and re-emitted "ready") the
+ * existing value is preserved.
+ */
+export const setChatRoomStartedAtService = async (roomId, when) => {
+    try {
+        await ChatRoom.updateOne(
+            { _id: roomId, startedAt: null },
+            { startedAt: when },
+        );
+        return true;
+    } catch (error) {
+        console.log(error);
+        return false;
+    }
+}
+
 export const endChatRoomService = async (roomId, isEarly) => {
     try {
         console.log("start service");
