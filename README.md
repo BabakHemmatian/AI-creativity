@@ -1,6 +1,6 @@
 # An Experimental Testbed for Evaluating Co-Creativity in Human-Human and Human-AI Teams
 
-*Developed by Babak Hemmatian, Yijun Lin, Shravan Ramamoorthy, Haotian Wang, and Naman Raina*
+*Developed by Babak Hemmatian, Yijun Lin, Shravan Ramamoorthy, Jayesh Rathi*
 
 ---
 
@@ -85,3 +85,6 @@ Please refresh the page and the chat app will restart from the round you were cu
 
 ### I want to provide feedback on the chat app. Who should I contact?
 Please contact [Babak Hemmatian, Ph.D.](mailto:babak.hemmatian@stonybrook.edu).
+
+## Acknowledgments
+We thank Naman Raina and Haotian Wang for their help with the development of this tool. 
